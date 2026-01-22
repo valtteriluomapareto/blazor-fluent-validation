@@ -25,13 +25,16 @@ Use the .NET 10 SDK (projects target `net10.0`).
 - `dotnet watch --project src/App.Ui` — run UI with hot reload.
 - `dotnet publish src/App.Ui/App.Ui.csproj -c Release` — produce UI deployable output.
 - `docker build -t formvalidationtest-ui -f src/App.Ui/Dockerfile .` — build the UI container image.
+- `dotnet tool restore` — restore local dotnet tools (CSharpier).
+- `dotnet csharpier .` — format the repo.
+- `dotnet csharpier --check .` — verify formatting in CI.
 
 ## Coding Style & Naming Conventions
 - Indentation: 4 spaces in C# and Razor.
 - Components and classes: PascalCase; files match component/class name (e.g., `Counter.razor`).
 - Locals and parameters: camelCase.
 - Nullable reference types are enabled; prefer explicit null checks and `?` where appropriate.
-- No formatter is configured; follow existing patterns in `Program.cs` and `Components/`.
+- Formatting is enforced with CSharpier; run `dotnet csharpier .` before committing.
 
 ## Testing Guidelines
 There are no test projects in this repository yet. If you add tests:

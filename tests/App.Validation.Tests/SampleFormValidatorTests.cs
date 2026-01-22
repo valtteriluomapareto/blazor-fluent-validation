@@ -15,8 +15,7 @@ public sealed class SampleFormValidatorTests
 
         var result = validator.TestValidate(model);
 
-        result.ShouldHaveValidationErrorFor(x => x.Name)
-            .WithErrorCode("name.required");
+        result.ShouldHaveValidationErrorFor(x => x.Name).WithErrorCode("name.required");
     }
 
     [Fact]
@@ -26,8 +25,7 @@ public sealed class SampleFormValidatorTests
 
         var result = validator.TestValidate(model);
 
-        result.ShouldHaveValidationErrorFor(x => x.Age)
-            .WithErrorCode("age.range");
+        result.ShouldHaveValidationErrorFor(x => x.Age).WithErrorCode("age.range");
     }
 
     [Fact]
