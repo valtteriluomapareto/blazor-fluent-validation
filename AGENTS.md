@@ -37,10 +37,13 @@ Use the .NET 10 SDK (projects target `net10.0`).
 - Formatting is enforced with CSharpier; run `dotnet csharpier .` before committing.
 
 ## Testing Guidelines
-There are no test projects in this repository yet. If you add tests:
-- Place them in a sibling project under `src/` or `tests/` (e.g., `tests/App.Validation.Tests/`).
+Existing test project:
+- `tests/App.Validation.Tests` — validation unit tests.
+
+If you add more tests:
+- Place them in a sibling project under `src/` or `tests/` (e.g., `tests/App.Api.Tests/`, `tests/App.E2E.Tests/`).
 - Run `dotnet test` — executes all tests in the solution.
-Name test files to mirror the unit under test (e.g., `WeatherForecastTests.cs`).
+- Name test files to mirror the unit under test (e.g., `WeatherForecastTests.cs`).
 
 ## Commit & Pull Request Guidelines
 - Commit history is minimal and uses short sentence case (e.g., “Initial scaffolding”). Keep subjects concise and action-oriented.
