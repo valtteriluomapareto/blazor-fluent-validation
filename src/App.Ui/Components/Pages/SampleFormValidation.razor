@@ -19,64 +19,70 @@
     </ul>
 </div>
 
-<EditForm EditContext="editContext" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+<EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
     <FluentValidator RuleSets="@(new[] { "Local" })" />
     <ValidationSummary />
 
     <div class="mb-3">
         <label class="form-label" for="name">Name</label>
-        <InputText id="name" class="form-control" @bind-Value="model.Name" />
-        <ValidationMessage For="() => model.Name" />
+        <InputText id="name" class="form-control" @bind-Value="_model.Name" />
+        <ValidationMessage For="() => _model.Name" />
     </div>
 
     <div class="mb-3">
         <label class="form-label" for="age">Age</label>
-        <InputNumber id="age" class="form-control" @bind-Value="model.Age" />
-        <ValidationMessage For="() => model.Age" />
+        <InputNumber id="age" class="form-control" @bind-Value="_model.Age" />
+        <ValidationMessage For="() => _model.Age" />
     </div>
 
-    <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
-        @(isSubmitting ? "Submitting..." : "Submit")
+    <button type="submit" class="btn btn-primary" disabled="@_isSubmitting">
+        @(_isSubmitting ? "Submitting..." : "Submit")
     </button>
 
-    @if (!string.IsNullOrWhiteSpace(submitMessage))
+    @if (!string.IsNullOrWhiteSpace(_submitMessage))
     {
         <div class="alert alert-info mt-3" role="status">
-            @submitMessage
+            @_submitMessage
         </div>
     }
 </EditForm>
 
 @code {
-    private readonly SampleForm model = new();
-    private EditContext editContext = default!;
-    private ValidationMessageStore? messageStore;
-    private string? submitMessage;
-    private bool isSubmitting;
+    private readonly SampleForm _model = new();
+    private EditContext _editContext = null!;
+    private ValidationMessageStore? _messageStore;
+    private string? _submitMessage;
+    private bool _isSubmitting;
 
     protected override void OnInitialized()
     {
-        editContext = new EditContext(model);
-        messageStore = new ValidationMessageStore(editContext);
+        _editContext = new EditContext(_model);
+        _messageStore = new ValidationMessageStore(_editContext);
+        _editContext.OnFieldChanged += (_, args) =>
+        {
+            _messageStore?.Clear(args.FieldIdentifier);
+            _editContext.NotifyValidationStateChanged();
+            _submitMessage = null;
+        };
     }
 
     private async Task HandleValidSubmit()
     {
-        submitMessage = null;
-        messageStore?.Clear();
-        editContext.NotifyValidationStateChanged();
+        _submitMessage = null;
+        _messageStore?.Clear();
+        _editContext.NotifyValidationStateChanged();
 
-        isSubmitting = true;
+        _isSubmitting = true;
 
         try
         {
             var client = HttpClientFactory.CreateClient("Api");
-            var response = await client.PostAsJsonAsync("api/sample-form", model);
+            var response = await client.PostAsJsonAsync("api/sample-form", _model);
 
             if (response.IsSuccessStatusCode)
             {
                 var apiResponse = await response.Content.ReadFromJsonAsync<SampleFormResponse>();
-                submitMessage = apiResponse?.Message ?? "Form submitted.";
+                _submitMessage = apiResponse?.Message ?? "Form submitted.";
                 return;
             }
 
@@ -87,29 +93,29 @@
                 {
                     foreach (var (field, messages) in problemDetails.Errors)
                     {
-                        messageStore?.Add(new FieldIdentifier(model, field), messages);
+                        _messageStore?.Add(new FieldIdentifier(_model, field), messages);
                     }
 
-                    editContext.NotifyValidationStateChanged();
-                    submitMessage = "Please fix the validation errors.";
+                    _editContext.NotifyValidationStateChanged();
+                    _submitMessage = "Please fix the validation errors.";
                     return;
                 }
             }
 
-            submitMessage = "Server error. Please try again.";
+            _submitMessage = "Server error. Please try again.";
         }
         catch (HttpRequestException)
         {
-            submitMessage = "Could not reach the API. Make sure App.Api is running on http://localhost:5113.";
+            _submitMessage = "Could not reach the API. Make sure App.Api is running on http://localhost:5113.";
         }
         finally
         {
-            isSubmitting = false;
+            _isSubmitting = false;
         }
     }
 
     private void HandleInvalidSubmit()
     {
-        submitMessage = "Please fix the validation errors.";
+        _submitMessage = "Please fix the validation errors.";
     }
 }
