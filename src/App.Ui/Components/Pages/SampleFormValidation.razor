@@ -1,5 +1,8 @@
 @page "/sample-form"
 @using global::App.Contracts
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Mvc
+@inject IHttpClientFactory HttpClientFactory
 
 <PageTitle>Sample Form</PageTitle>
 
@@ -7,7 +10,7 @@
 
 <p>Validates using <code>SampleFormValidator</code> via Blazilla's <code>FluentValidator</code> component.</p>
 
-<EditForm Model="model" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+<EditForm EditContext="editContext" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
     <FluentValidator />
     <ValidationSummary />
 
@@ -23,7 +26,9 @@
         <ValidationMessage For="() => model.Age" />
     </div>
 
-    <button type="submit" class="btn btn-primary">Submit</button>
+    <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+        @(isSubmitting ? "Submitting..." : "Submit")
+    </button>
 
     @if (!string.IsNullOrWhiteSpace(submitMessage))
     {
@@ -35,11 +40,59 @@
 
 @code {
     private readonly SampleForm model = new();
+    private EditContext editContext = default!;
+    private ValidationMessageStore? messageStore;
     private string? submitMessage;
+    private bool isSubmitting;
 
-    private void HandleValidSubmit()
+    protected override void OnInitialized()
     {
-        submitMessage = "Form is valid.";
+        editContext = new EditContext(model);
+        messageStore = new ValidationMessageStore(editContext);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        submitMessage = null;
+        messageStore?.Clear();
+        editContext.NotifyValidationStateChanged();
+
+        isSubmitting = true;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("Api");
+            var response = await client.PostAsJsonAsync("api/sample-form", model);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = await response.Content.ReadFromJsonAsync<SampleFormResponse>();
+                submitMessage = apiResponse?.Message ?? "Form submitted.";
+                return;
+            }
+
+            if ((int)response.StatusCode == StatusCodes.Status400BadRequest)
+            {
+                var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+                if (problemDetails?.Errors is { Count: > 0 })
+                {
+                    foreach (var (field, messages) in problemDetails.Errors)
+                    {
+                        messageStore?.Add(new FieldIdentifier(model, field), messages);
+                    }
+
+                    editContext.NotifyValidationStateChanged();
+                    submitMessage = "Please fix the validation errors.";
+                    return;
+                }
+            }
+
+            submitMessage = "Server error. Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
     }
 
     private void HandleInvalidSubmit()

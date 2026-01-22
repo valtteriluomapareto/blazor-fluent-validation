@@ -8,6 +8,19 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
+builder.Services.AddHttpClient(
+    "Api",
+    client =>
+    {
+        var baseUrl = builder.Configuration["Api:BaseUrl"];
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            baseUrl = "http://localhost:5113";
+        }
+
+        client.BaseAddress = new Uri(baseUrl);
+    }
+);
 
 var app = builder.Build();
 
