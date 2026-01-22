@@ -1,7 +1,6 @@
 @page "/sample-form"
 @using global::App.Contracts
 @using Microsoft.AspNetCore.Http
-@using Microsoft.AspNetCore.Mvc
 @inject IHttpClientFactory HttpClientFactory
 
 <PageTitle>Sample Form</PageTitle>
@@ -88,10 +87,10 @@
 
             if ((int)response.StatusCode == StatusCodes.Status400BadRequest)
             {
-                var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
-                if (problemDetails?.Errors is { Count: > 0 })
+                var errorResponse = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>();
+                if (errorResponse?.Errors is { Count: > 0 })
                 {
-                    foreach (var (field, messages) in problemDetails.Errors)
+                    foreach (var (field, messages) in errorResponse.Errors)
                     {
                         _messageStore?.Add(new FieldIdentifier(_model, field), messages);
                     }
