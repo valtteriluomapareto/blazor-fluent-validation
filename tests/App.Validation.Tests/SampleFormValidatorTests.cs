@@ -13,7 +13,7 @@ public sealed class SampleFormValidatorTests
     {
         var model = new SampleForm { Name = "", Age = 25 };
 
-        var result = validator.TestValidate(model);
+        var result = validator.TestValidate(model, options => options.IncludeRuleSets("Local"));
 
         result.ShouldHaveValidationErrorFor(x => x.Name).WithErrorCode("name.required");
     }
@@ -23,7 +23,7 @@ public sealed class SampleFormValidatorTests
     {
         var model = new SampleForm { Name = "Jane", Age = 10 };
 
-        var result = validator.TestValidate(model);
+        var result = validator.TestValidate(model, options => options.IncludeRuleSets("Local"));
 
         result.ShouldHaveValidationErrorFor(x => x.Age).WithErrorCode("age.range");
     }
@@ -33,8 +33,18 @@ public sealed class SampleFormValidatorTests
     {
         var model = new SampleForm { Name = "Jane", Age = 30 };
 
-        var result = validator.TestValidate(model);
+        var result = validator.TestValidate(model, options => options.IncludeRuleSets("Local"));
 
         result.ShouldNotHaveAnyValidationErrors();
+    }
+
+    [Fact]
+    public void Server_rule_should_block_reserved_name()
+    {
+        var model = new SampleForm { Name = "Server", Age = 30 };
+
+        var result = validator.TestValidate(model, options => options.IncludeRuleSets("Server"));
+
+        result.ShouldHaveValidationErrorFor(x => x.Name).WithErrorCode("name.server_reserved");
     }
 }

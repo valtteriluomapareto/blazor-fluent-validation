@@ -10,8 +10,17 @@
 
 <p>Validates using <code>SampleFormValidator</code> via Blazilla's <code>FluentValidator</code> component.</p>
 
+<div class="alert alert-secondary">
+    <strong>Testing guide</strong>
+    <ul class="mb-0">
+        <li><strong>Local UI rules:</strong> leave Name empty or Age below 18 to see immediate client-side errors.</li>
+        <li><strong>Server rule-set:</strong> use Name <code>Server</code> with a valid Age to trigger API validation.</li>
+        <li><strong>Endpoint-only check:</strong> use Name <code>ApiOnly</code> with a valid Age to trigger API-only validation.</li>
+    </ul>
+</div>
+
 <EditForm EditContext="editContext" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
-    <FluentValidator />
+    <FluentValidator RuleSets="@(new[] { "Local" })" />
     <ValidationSummary />
 
     <div class="mb-3">
