@@ -9,9 +9,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Content Include="..\.dockerignore">
+      <Content Include="..\\..\\.dockerignore">
         <Link>.dockerignore</Link>
       </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\App.Contracts\App.Contracts.csproj" />
+      <ProjectReference Include="..\App.Validation\App.Validation.csproj" />
     </ItemGroup>
 
 </Project>

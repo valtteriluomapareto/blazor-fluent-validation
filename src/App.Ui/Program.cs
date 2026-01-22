@@ -1,4 +1,4 @@
-using FormValidationTest.Components;
+using App.Ui.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
