@@ -57,3 +57,17 @@ Run the API:
 ```bash
 dotnet run --project src/App.Api
 ```
+
+## Troubleshooting
+
+Styles missing or CSS isolation not applying (scoped CSS selectors like `.page[b-...]` don't match the rendered HTML):
+1) Stop the running app.
+2) Delete build artifacts (per project):
+   - `src/App.Ui/bin`
+   - `src/App.Ui/obj`
+3) Rebuild and run the UI again:
+```bash
+dotnet build src/App.Ui/App.Ui.csproj
+dotnet run --project src/App.Ui
+```
+This clears stale generated scoped CSS and static web asset manifests that can get out of sync.
