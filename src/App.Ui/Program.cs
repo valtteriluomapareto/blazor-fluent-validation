@@ -1,4 +1,4 @@
-using App.Ui.Components;
+using FormValidationTest.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +22,7 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
-app.MapRazorComponents<App>()
+app.MapRazorComponents<FormValidationTest.Components.App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
