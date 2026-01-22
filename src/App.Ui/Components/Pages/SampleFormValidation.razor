@@ -98,6 +98,10 @@
 
             submitMessage = "Server error. Please try again.";
         }
+        catch (HttpRequestException)
+        {
+            submitMessage = "Could not reach the API. Make sure App.Api is running on http://localhost:5113.";
+        }
         finally
         {
             isSubmitting = false;

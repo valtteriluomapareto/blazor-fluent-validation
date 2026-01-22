@@ -58,6 +58,12 @@ Run the API:
 dotnet run --project src/App.Api
 ```
 
+Run UI + API together:
+```bash
+./scripts/dev.sh
+```
+This uses `dotnet watch` for both projects and will open the UI browser based on `launchSettings.json`.
+
 ## Troubleshooting
 
 Styles missing or CSS isolation not applying (scoped CSS selectors like `.page[b-...]` don't match the rendered HTML):
