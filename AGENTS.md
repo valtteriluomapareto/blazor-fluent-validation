@@ -26,8 +26,8 @@ Use the .NET 10 SDK (projects target `net10.0`).
 - `dotnet publish src/App.Ui/App.Ui.csproj -c Release` — produce UI deployable output.
 - `docker build -t formvalidationtest-ui -f src/App.Ui/Dockerfile .` — build the UI container image.
 - `dotnet tool restore` — restore local dotnet tools (CSharpier).
-- `dotnet csharpier .` — format the repo.
-- `dotnet csharpier --check .` — verify formatting in CI.
+- `dotnet csharpier format .` — format the repo.
+- `dotnet csharpier check .` — verify formatting in CI.
 
 ## Coding Style & Naming Conventions
 - Indentation: 4 spaces in C# and Razor.

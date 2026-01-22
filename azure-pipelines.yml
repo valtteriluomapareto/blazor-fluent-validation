@@ -17,7 +17,7 @@ steps:
   - script: dotnet tool restore
     displayName: 'Restore dotnet tools'
 
-  - script: dotnet csharpier --check .
+  - script: dotnet csharpier check .
     displayName: 'CSharpier check'
 
   - script: dotnet build FormValidationTest.sln -c $(buildConfiguration)

@@ -18,4 +18,8 @@
     <ProjectReference Include="..\App.Contracts\App.Contracts.csproj" />
     <ProjectReference Include="..\App.Validation\App.Validation.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazilla" Version="2.2.1" />
+  </ItemGroup>
 </Project>

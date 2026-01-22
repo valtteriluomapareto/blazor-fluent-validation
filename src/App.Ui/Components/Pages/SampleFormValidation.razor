@@ -1,0 +1,49 @@
+@page "/sample-form"
+@using global::App.Contracts
+
+<PageTitle>Sample Form</PageTitle>
+
+<h1>Sample Form</h1>
+
+<p>Validates using <code>SampleFormValidator</code> via Blazilla's <code>FluentValidator</code> component.</p>
+
+<EditForm Model="model" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+    <FluentValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label" for="name">Name</label>
+        <InputText id="name" class="form-control" @bind-Value="model.Name" />
+        <ValidationMessage For="() => model.Name" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="age">Age</label>
+        <InputNumber id="age" class="form-control" @bind-Value="model.Age" />
+        <ValidationMessage For="() => model.Age" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+
+    @if (!string.IsNullOrWhiteSpace(submitMessage))
+    {
+        <div class="alert alert-info mt-3" role="status">
+            @submitMessage
+        </div>
+    }
+</EditForm>
+
+@code {
+    private readonly SampleForm model = new();
+    private string? submitMessage;
+
+    private void HandleValidSubmit()
+    {
+        submitMessage = "Form is valid.";
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        submitMessage = "Please fix the validation errors.";
+    }
+}

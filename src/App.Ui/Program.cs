@@ -1,9 +1,13 @@
+using App.Contracts;
+using App.Validation;
+using FluentValidation;
 using FormValidationTest.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
 
 var app = builder.Build();
 
