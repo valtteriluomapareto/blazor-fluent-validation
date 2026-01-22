@@ -6,15 +6,16 @@ Blazor Web App + Minimal API + FluentValidation solution organized for a validat
 - .NET SDK 10.0.x
 
 ## Solution Layout
-- UI: `src/App.Ui`
-- API: `src/App.Api`
+- UI: `src/App.Ui` — Blazor Web App frontend. Uses contracts + validators for local form feedback and submits to the API.
+- API: `src/App.Api` — Minimal API backend. Runs full validation (local + server rules), returns standardized error contracts.
 - Shared:
-  - `src/App.Contracts`
-  - `src/App.Abstractions`
-  - `src/App.Validation`
-  - `src/App.Integrations`
+  - `src/App.Contracts` — DTOs and shared response/error contracts used by UI and API.
+  - `src/App.Abstractions` — Interfaces used by validation or API orchestration without coupling to integrations (placeholder for future async checks).
+  - `src/App.Validation` — FluentValidation rules for contracts (local + server rule sets).
+  - `src/App.Integrations` — External API adapters and vendor DTOs (placeholder for future integrations).
 - Tests:
-  - `tests/App.Validation.Tests`
+  - `tests/App.Validation.Tests` — Unit tests for validators and error codes.
+  - `tests/App.Api.Tests` — API tests validating response shapes and validation behavior.
 
 ## Commands (from repo root)
 
