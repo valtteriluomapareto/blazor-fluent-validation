@@ -19,7 +19,7 @@ public sealed class SampleFormValidator : AbstractValidator<SampleForm>
             RuleFor(x => x.Name)
                 .NotEqual("Server")
                 .WithErrorCode("name.server_reserved")
-                .WithMessage("Name cannot be 'Server'.");
+                .WithMessage("Name cannot be 'Server'. (SampleFormValidator)");
         });
     }
 }
