@@ -3,3 +3,6 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+node_modules/
+src/App.Ui/wwwroot/styles.css
+src/App.Ui/wwwroot/styles.css.map

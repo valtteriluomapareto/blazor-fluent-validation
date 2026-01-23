@@ -1,0 +1,11 @@
+{
+  "name": "app-ui",
+  "private": true,
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  },
+  "scripts": {
+    "tailwind:build": "tailwindcss -i ./Styles/tailwind.css -o ./wwwroot/styles.css",
+    "tailwind:watch": "tailwindcss -i ./Styles/tailwind.css -o ./wwwroot/styles.css --watch"
+  }
+}

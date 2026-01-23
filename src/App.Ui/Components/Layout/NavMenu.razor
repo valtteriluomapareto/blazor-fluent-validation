@@ -1,35 +1,31 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Form Validation</a>
+﻿<div class="relative">
+    <div class="px-4 pb-3 pt-4 md:pb-4 md:pt-6">
+        <a class="text-lg font-semibold tracking-tight text-white" href="">Form Validation</a>
     </div>
-</div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
+    <input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+    <div class="nav-scrollable px-3 pb-6" onclick="document.querySelector('.navbar-toggler').click()">
+        <nav class="space-y-1" aria-label="Primary">
+        <NavLink class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white" ActiveClass="bg-white/20 text-white shadow-sm" href="" Match="NavLinkMatch.All">
+            <span class="bi bi-house-door-fill-nav-menu shrink-0" aria-hidden="true"></span>
+            <span>Home</span>
+        </NavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
+        <NavLink class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white" ActiveClass="bg-white/20 text-white shadow-sm" href="counter">
+            <span class="bi bi-plus-square-fill-nav-menu shrink-0" aria-hidden="true"></span>
+            <span>Counter</span>
+        </NavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
+        <NavLink class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white" ActiveClass="bg-white/20 text-white shadow-sm" href="weather">
+            <span class="bi bi-list-nested-nav-menu shrink-0" aria-hidden="true"></span>
+            <span>Weather</span>
+        </NavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="sample-form">
-                <span class="bi bi-card-checklist" aria-hidden="true"></span> Sample Form
-            </NavLink>
-        </div>
-    </nav>
+        <NavLink class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white" ActiveClass="bg-white/20 text-white shadow-sm" href="sample-form">
+            <span class="bi bi-card-checklist shrink-0" aria-hidden="true"></span>
+            <span>Sample Form</span>
+        </NavLink>
+        </nav>
+    </div>
 </div>

@@ -4,6 +4,7 @@ Blazor Web App + Minimal API + FluentValidation solution organized for a validat
 
 ## Prerequisites
 - .NET SDK 10.0.x
+- Node.js (for Tailwind CSS)
 
 ## Solution Layout
 - UI: `src/App.Ui` — Blazor Web App frontend. Uses contracts + validators for local form feedback and submits to the API.
@@ -65,6 +66,41 @@ Run UI + API together:
 ```
 This uses `dotnet watch` for both projects and will open the UI browser based on `launchSettings.json`.
 
+## Tailwind CSS
+
+Initial setup (once per machine):
+```bash
+cd src/App.Ui
+npm install
+```
+
+Build the CSS manually:
+```bash
+cd src/App.Ui
+npm run tailwind:build
+```
+
+Watch for changes during development:
+```bash
+cd src/App.Ui
+npm run tailwind:watch
+```
+
+The UI build runs Tailwind automatically when the CLI is installed locally.
+The generated file lives at `src/App.Ui/wwwroot/styles.css` and is intentionally not committed.
+
+## Git commit guidance (Tailwind)
+
+Commit:
+- `src/App.Ui/tailwind.config.js`
+- `src/App.Ui/Styles/tailwind.css`
+- `src/App.Ui/package.json` and `src/App.Ui/package-lock.json`
+- Any Razor/CSS/HTML updates that use Tailwind
+
+Do not commit:
+- `node_modules/`
+- `src/App.Ui/wwwroot/styles.css` (generated)
+
 ## Troubleshooting
 
 Styles missing or CSS isolation not applying (scoped CSS selectors like `.page[b-...]` don't match the rendered HTML):
@@ -78,3 +114,12 @@ dotnet build src/App.Ui/App.Ui.csproj
 dotnet run --project src/App.Ui
 ```
 This clears stale generated scoped CSS and static web asset manifests that can get out of sync.
+
+If Tailwind styles are missing:
+1) Ensure Node.js is installed.
+2) Run:
+```bash
+cd src/App.Ui
+npm install
+npm run tailwind:build
+```

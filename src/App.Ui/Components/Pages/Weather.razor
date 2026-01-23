@@ -3,40 +3,45 @@
 
 <PageTitle>Weather</PageTitle>
 
-<h1>Weather</h1>
+<div class="space-y-4">
+    <h1>Weather</h1>
+    <p class="text-slate-600">This component demonstrates showing data.</p>
 
-<p>This component demonstrates showing data.</p>
-
-@if (forecasts == null)
-{
-    <p>
-        <em>Loading...</em>
-    </p>
-}
-else
-{
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Date</th>
-            <th aria-label="Temperature in Celsius">Temp. (C)</th>
-            <th aria-label="Temperature in Fahrenheit">Temp. (F)</th>
-            <th>Summary</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var forecast in forecasts)
-        {
-            <tr>
-                <td>@forecast.Date.ToShortDateString()</td>
-                <td>@forecast.TemperatureC</td>
-                <td>@forecast.TemperatureF</td>
-                <td>@forecast.Summary</td>
-            </tr>
-        }
-        </tbody>
-    </table>
-}
+    @if (forecasts == null)
+    {
+        <p class="text-slate-500">
+            <em>Loading...</em>
+        </p>
+    }
+    else
+    {
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead class="bg-slate-50 text-slate-600">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold">Date</th>
+                        <th class="px-4 py-3 text-left font-semibold" aria-label="Temperature in Celsius">Temp. (C)</th>
+                        <th class="px-4 py-3 text-left font-semibold" aria-label="Temperature in Fahrenheit">Temp. (F)</th>
+                        <th class="px-4 py-3 text-left font-semibold">Summary</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                    @foreach (var forecast in forecasts)
+                    {
+                        <tr class="hover:bg-slate-50">
+                            <td class="whitespace-nowrap px-4 py-3">@forecast.Date.ToShortDateString()</td>
+                            <td class="whitespace-nowrap px-4 py-3">@forecast.TemperatureC</td>
+                            <td class="whitespace-nowrap px-4 py-3">@forecast.TemperatureF</td>
+                            <td class="px-4 py-3">@forecast.Summary</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
 
 @code {
     private WeatherForecast[]? forecasts;

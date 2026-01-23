@@ -5,46 +5,54 @@
 
 <PageTitle>Sample Form</PageTitle>
 
-<h1>Sample Form</h1>
+<div class="space-y-6">
+    <div class="space-y-2">
+        <h1>Sample Form</h1>
+        <p class="text-slate-600">Validates using <code>SampleFormValidator</code> via Blazilla's <code>FluentValidator</code> component.</p>
+    </div>
 
-<p>Validates using <code>SampleFormValidator</code> via Blazilla's <code>FluentValidator</code> component.</p>
+    <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="text-sm font-semibold text-slate-700">Testing guide</p>
+        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+            <li><strong>Local UI rules:</strong> leave Name empty or Age below 18 to see immediate client-side errors.</li>
+            <li><strong>Server rule-set:</strong> use Name <code>Server</code> with a valid Age to trigger API validation.</li>
+            <li><strong>Endpoint-only check:</strong> use Name <code>ApiOnly</code> with a valid Age to trigger API-only validation.</li>
+        </ul>
+    </div>
 
-<div class="alert alert-secondary">
-    <strong>Testing guide</strong>
-    <ul class="mb-0">
-        <li><strong>Local UI rules:</strong> leave Name empty or Age below 18 to see immediate client-side errors.</li>
-        <li><strong>Server rule-set:</strong> use Name <code>Server</code> with a valid Age to trigger API validation.</li>
-        <li><strong>Endpoint-only check:</strong> use Name <code>ApiOnly</code> with a valid Age to trigger API-only validation.</li>
-    </ul>
+    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit" class="space-y-5">
+            <FluentValidator RuleSets="@(new[] { "Local" })" />
+            <ValidationSummary class="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 empty:hidden" />
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium text-slate-700" for="name">Name</label>
+                <InputText id="name" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200" @bind-Value="_model.Name" />
+                <ValidationMessage For="() => _model.Name" class="text-sm text-rose-600" />
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium text-slate-700" for="age">Age</label>
+                <InputNumber id="age" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200" @bind-Value="_model.Age" />
+                <ValidationMessage For="() => _model.Age" class="text-sm text-rose-600" />
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button type="submit" class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled="@_isSubmitting">
+                    @(_isSubmitting ? "Submitting..." : "Submit")
+                </button>
+                <span class="text-xs text-slate-500">Server: <code>http://localhost:5113</code></span>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_submitMessage))
+            {
+                <div class="rounded-md border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800" role="status">
+                    @_submitMessage
+                </div>
+            }
+        </EditForm>
+    </div>
 </div>
-
-<EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
-    <FluentValidator RuleSets="@(new[] { "Local" })" />
-    <ValidationSummary />
-
-    <div class="mb-3">
-        <label class="form-label" for="name">Name</label>
-        <InputText id="name" class="form-control" @bind-Value="_model.Name" />
-        <ValidationMessage For="() => _model.Name" />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label" for="age">Age</label>
-        <InputNumber id="age" class="form-control" @bind-Value="_model.Age" />
-        <ValidationMessage For="() => _model.Age" />
-    </div>
-
-    <button type="submit" class="btn btn-primary" disabled="@_isSubmitting">
-        @(_isSubmitting ? "Submitting..." : "Submit")
-    </button>
-
-    @if (!string.IsNullOrWhiteSpace(_submitMessage))
-    {
-        <div class="alert alert-info mt-3" role="status">
-            @_submitMessage
-        </div>
-    }
-</EditForm>
 
 @code {
     private readonly SampleForm _model = new();
