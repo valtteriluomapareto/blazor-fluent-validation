@@ -6,8 +6,6 @@
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <RootNamespace>FormValidationTest</RootNamespace>
-    <TailwindCli Condition="Exists('node_modules/.bin/tailwindcss')">node_modules/.bin/tailwindcss</TailwindCli>
-    <TailwindCli Condition="Exists('node_modules\\.bin\\tailwindcss.cmd')">node_modules\\.bin\\tailwindcss.cmd</TailwindCli>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,15 +27,16 @@
     <PackageReference Include="Blazilla" Version="2.2.1" />
   </ItemGroup>
 
-  <Target Name="TailwindDebug" BeforeTargets="Compile" Condition="'$(Configuration)' == 'Debug' and '$(TailwindCli)' != ''">
-    <Exec Command="&quot;$(TailwindCli)&quot; -i ./Styles/tailwind.css -o ./wwwroot/styles.css" WorkingDirectory="$(ProjectDir)" />
+  <Target Name="TailwindInstall" BeforeTargets="TailwindDebug;TailwindRelease"
+          Condition="Exists('package.json') and !Exists('node_modules/.bin/tailwindcss') and !Exists('node_modules\\.bin\\tailwindcss.cmd')">
+    <Exec Command="npm install" WorkingDirectory="$(ProjectDir)" />
   </Target>
 
-  <Target Name="TailwindRelease" BeforeTargets="Compile" Condition="'$(Configuration)' == 'Release' and '$(TailwindCli)' != ''">
-    <Exec EnvironmentVariables="NODE_ENV=production" Command="&quot;$(TailwindCli)&quot; -i ./Styles/tailwind.css -o ./wwwroot/styles.css --minify" WorkingDirectory="$(ProjectDir)" />
+  <Target Name="TailwindDebug" BeforeTargets="Compile" Condition="'$(Configuration)' == 'Debug' and Exists('package.json')">
+    <Exec Command="npm exec -- tailwindcss -i ./Styles/tailwind.css -o ./wwwroot/styles.css" WorkingDirectory="$(ProjectDir)" />
   </Target>
 
-  <Target Name="TailwindMissing" BeforeTargets="Compile" Condition="'$(TailwindCli)' == ''">
-    <Message Importance="high" Text="Tailwind CLI not found. Run npm install in src/App.Ui to enable CSS generation." />
+  <Target Name="TailwindRelease" BeforeTargets="Compile" Condition="'$(Configuration)' == 'Release' and Exists('package.json')">
+    <Exec EnvironmentVariables="NODE_ENV=production" Command="npm exec -- tailwindcss -i ./Styles/tailwind.css -o ./wwwroot/styles.css --minify" WorkingDirectory="$(ProjectDir)" />
   </Target>
 </Project>

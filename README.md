@@ -68,7 +68,7 @@ This uses `dotnet watch` for both projects and will open the UI browser based on
 
 ## Tailwind CSS
 
-Initial setup (once per machine):
+Initial setup (optional, speeds up first build):
 ```bash
 cd src/App.Ui
 npm install
@@ -86,7 +86,7 @@ cd src/App.Ui
 npm run tailwind:watch
 ```
 
-The UI build runs Tailwind automatically when the CLI is installed locally.
+The UI build runs Tailwind automatically and will install npm dependencies if missing.
 The generated file lives at `src/App.Ui/wwwroot/styles.css` and is intentionally not committed.
 
 ## Git commit guidance (Tailwind)
