@@ -50,6 +50,22 @@ public sealed class SampleFormEndpointTests : IClassFixture<WebApplicationFactor
     }
 
     [Fact]
+    public async Task Used_name_returns_error()
+    {
+        var model = new SampleForm { Name = "Taken", Age = 30 };
+
+        var response = await client.PostAsJsonAsync("/api/sample-form", model);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var errors = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>();
+
+        Assert.NotNull(errors);
+        Assert.Contains("Name", errors!.Errors.Keys);
+        Assert.Contains("name.already_used", errors.ErrorCodes["Name"]);
+    }
+
+    [Fact]
     public async Task Endpoint_only_check_returns_error()
     {
         var model = new SampleForm { Name = "ApiOnly", Age = 30 };

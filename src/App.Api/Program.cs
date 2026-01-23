@@ -1,11 +1,14 @@
 using App.Api.Validation;
+using App.Abstractions;
 using App.Contracts;
+using App.Integrations;
 using App.Validation;
 using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
+builder.Services.AddSingleton<IUsedNameLookup, MockUsedNameLookup>();
 
 var app = builder.Build();
 

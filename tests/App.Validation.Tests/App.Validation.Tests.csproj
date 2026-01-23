@@ -21,5 +21,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\App.Validation\App.Validation.csproj" />
     <ProjectReference Include="..\..\src\App.Contracts\App.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\App.Abstractions\App.Abstractions.csproj" />
   </ItemGroup>
 </Project>

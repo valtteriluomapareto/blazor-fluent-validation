@@ -16,13 +16,14 @@
         <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
             <li><strong>Local UI rules:</strong> leave Name empty or Age below 18 to see immediate client-side errors.</li>
             <li><strong>Server rule-set:</strong> use Name <code>Server</code> with a valid Age to trigger API validation.</li>
+            <li><strong>Integration lookup:</strong> use Name <code>Taken</code> with a valid Age to trigger async validation.</li>
             <li><strong>Endpoint-only check:</strong> use Name <code>ApiOnly</code> with a valid Age to trigger API-only validation.</li>
         </ul>
     </div>
 
     <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit" class="space-y-5">
-            <FluentValidator RuleSets="@(new[] { "Local" })" />
+        <EditForm EditContext="_editContext" OnSubmit="HandleSubmit" class="space-y-5">
+            <FluentValidator AsyncMode="true" RuleSets="@(new[] { "Local" })" />
             <ValidationSummary class="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 empty:hidden" />
 
             <div class="space-y-2">
@@ -73,11 +74,18 @@
         };
     }
 
-    private async Task HandleValidSubmit()
+    private async Task HandleSubmit(EditContext editContext)
     {
         _submitMessage = null;
         _messageStore?.Clear();
-        _editContext.NotifyValidationStateChanged();
+        editContext.NotifyValidationStateChanged();
+
+        var isValid = await editContext.ValidateAsync();
+        if (!isValid)
+        {
+            _submitMessage = "Please fix the validation errors.";
+            return;
+        }
 
         _isSubmitting = true;
 
@@ -119,10 +127,5 @@
         {
             _isSubmitting = false;
         }
-    }
-
-    private void HandleInvalidSubmit()
-    {
-        _submitMessage = "Please fix the validation errors.";
     }
 }

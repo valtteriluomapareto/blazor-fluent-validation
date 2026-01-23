@@ -1,3 +1,4 @@
+using App.Abstractions;
 using App.Contracts;
 using FluentValidation;
 
@@ -5,8 +6,12 @@ namespace App.Validation;
 
 public sealed class SampleFormValidator : AbstractValidator<SampleForm>
 {
-    public SampleFormValidator()
+    private readonly IUsedNameLookup usedNameLookup;
+
+    public SampleFormValidator(IUsedNameLookup usedNameLookup)
     {
+        this.usedNameLookup = usedNameLookup;
+
         RuleSet("Local", () =>
         {
             RuleFor(x => x.Name).NotEmpty().WithErrorCode("name.required");
@@ -20,6 +25,16 @@ public sealed class SampleFormValidator : AbstractValidator<SampleForm>
                 .NotEqual("Server")
                 .WithErrorCode("name.server_reserved")
                 .WithMessage("Name cannot be 'Server'. (SampleFormValidator)");
+
+            RuleFor(x => x.Name)
+                .MustAsync(async (name, cancellationToken) =>
+                {
+                    var usedNames = await usedNameLookup.GetUsedNamesAsync(cancellationToken);
+                    return !usedNames.Contains(name, StringComparer.OrdinalIgnoreCase);
+                })
+                .WithErrorCode("name.already_used")
+                .WithMessage("Name is already used.")
+                .When(x => !string.IsNullOrWhiteSpace(x.Name));
         });
     }
 }
