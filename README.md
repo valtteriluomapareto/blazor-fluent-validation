@@ -7,6 +7,7 @@ Blazor Web App + Minimal API + FluentValidation solution organized for a validat
 - Node.js (for Tailwind CSS)
 
 ## Solution Layout
+- Host: `src/App.Host` — Single entry point that runs UI + API together (recommended for demos).
 - UI: `src/App.Ui` — Blazor Web App frontend. Uses contracts + validators for local form feedback and submits to the API.
 - API: `src/App.Api` — Minimal API backend. Runs full validation (local + server rules), returns standardized error contracts.
 - Shared:
@@ -50,7 +51,12 @@ Check formatting (CI):
 dotnet csharpier check .
 ```
 
-Run the UI:
+Run UI + API in a single host (recommended):
+```bash
+dotnet run --project src/App.Host
+```
+
+Run the UI only (requires API running at `Api:BaseUrl`):
 ```bash
 dotnet run --project src/App.Ui
 ```

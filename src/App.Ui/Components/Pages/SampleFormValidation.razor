@@ -1,7 +1,9 @@
 @page "/sample-form"
 @using global::App.Contracts
 @using Microsoft.AspNetCore.Http
+@inject IConfiguration Configuration
 @inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
 
 <PageTitle>Sample Form</PageTitle>
 
@@ -42,7 +44,7 @@
                 <button type="submit" class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled="@_isSubmitting">
                     @(_isSubmitting ? "Submitting..." : "Submit")
                 </button>
-                <span class="text-xs text-slate-500">Server: <code>http://localhost:5113</code></span>
+                <span class="text-xs text-slate-500">Server: <code>@ApiBaseUrl</code></span>
             </div>
 
             @if (!string.IsNullOrWhiteSpace(_submitMessage))
@@ -88,11 +90,15 @@
         }
 
         _isSubmitting = true;
+        var apiBaseUri = GetApiBaseUri();
 
         try
         {
             var client = HttpClientFactory.CreateClient("Api");
-            var response = await client.PostAsJsonAsync("api/sample-form", _model);
+            var response = await client.PostAsJsonAsync(
+                new Uri(apiBaseUri, "api/sample-form"),
+                _model
+            );
 
             if (response.IsSuccessStatusCode)
             {
@@ -121,11 +127,24 @@
         }
         catch (HttpRequestException)
         {
-            _submitMessage = "Could not reach the API. Make sure App.Api is running on http://localhost:5113.";
+            _submitMessage = $"Could not reach the API at {apiBaseUri}.";
         }
         finally
         {
             _isSubmitting = false;
         }
+    }
+
+    private string ApiBaseUrl =>
+        GetApiBaseUri().GetLeftPart(UriPartial.Authority);
+
+    private Uri GetApiBaseUri()
+    {
+        var configuredBaseUrl = Configuration["Api:BaseUrl"];
+        var baseUrl = string.IsNullOrWhiteSpace(configuredBaseUrl)
+            ? NavigationManager.BaseUri
+            : configuredBaseUrl;
+
+        return new Uri(baseUrl, UriKind.Absolute);
     }
 }

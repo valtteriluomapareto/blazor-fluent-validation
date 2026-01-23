@@ -14,6 +14,14 @@
 
 ## Solution Structure (Projects)
 
+### `App.Host`
+**Purpose**
+- Single-host entry point that runs UI + API together for demos and local development.
+- Wires services and endpoints via `App.Api` extension methods.
+
+**Rules**
+- References `App.Ui` and `App.Api`.
+
 ### `App.Contracts`
 **Purpose**
 - Shared request/response DTOs.
@@ -57,7 +65,7 @@
 ### `App.Api`
 **Purpose**
 - Minimal API endpoints.
-- DI configuration and cross-cutting concerns.
+- DI configuration and cross-cutting concerns (exposed via module extensions).
 - Centralized validation filter and error contract mapping.
 
 **Rules**
@@ -67,7 +75,7 @@
 **Purpose**
 - Blazor Web App UI.
 - Uses DTOs from `App.Contracts`.
-- Runs local validation for immediate feedback.
+- Runs local validation for immediate feedback (Blazilla `AsyncMode` + `RuleSets`).
 
 **Rules**
 - Depends on `App.Contracts`, `App.Validation`.
@@ -81,9 +89,9 @@ Split rules into two modes to avoid UI dependency on remote services:
 - **Remote rules**: async checks that require external lookups; run only on API submit.
 
 **Implementation options**
-- Tag rules using a custom rule set or a validation context flag.
-- UI adapter passes a context flag to exclude remote rules.
-- API uses full rule set by default.
+- Tag rules using rule sets (implemented as `"Local"` and `"Server"`).
+- UI runs `RuleSets="Local"` with Blazilla `AsyncMode="true"` to support a single validator.
+- API uses both rule sets by default.
 
 ### Error Codes and Property Paths
 - Every rule must emit a stable error code.
@@ -93,11 +101,11 @@ Split rules into two modes to avoid UI dependency on remote services:
 - Use a route-group filter or endpoint filter to:
   - Resolve `IValidator<T>` from DI.
   - Run `ValidateAsync`.
-  - Produce a consistent ProblemDetails response with both messages and codes.
+  - Produce a consistent error response with both messages and codes.
 
 **Error contract**
 - Standardize a single shape for validation failures, for example:
-  - HTTP 400 with ProblemDetails
+  - HTTP 400 with `ValidationErrorResponse`
   - `errors`: dictionary of property path to messages
   - `errorCodes`: dictionary of property path to codes
 
@@ -111,6 +119,7 @@ Split rules into two modes to avoid UI dependency on remote services:
 - Isolate vendor DTOs inside `App.Integrations`.
 - Normalize external errors into internal error contracts.
 - Enforce timeouts by default; retries only for safe/idempotent calls.
+- Current demo uses a mock lookup integration for "used names."
 
 ## Testing Strategy
 
@@ -151,10 +160,10 @@ Split rules into two modes to avoid UI dependency on remote services:
 ## Open Questions (with Proposed Solutions)
 
 1. **Should UI and API be in a single host or separate deployments?**
-   - Proposed solution: start with a single host for simplicity. Separate later if scaling or security boundaries require it.
+   - Implemented: `App.Host` runs UI + API in one process for demos. Separate deployments can be added later if needed.
 
 2. **How to handle remote validation rules in the UI?**
-   - Proposed solution: run only local rules in the UI, run full validation in the API, and map API errors back into the form.
+   - Implemented: UI runs `RuleSets="Local"` with Blazilla `AsyncMode="true"`, API runs all rules, and API errors are mapped back into the form.
 
 3. **Where should async validation interfaces live?**
    - Proposed solution: place them in `App.Abstractions` so `App.Validation` can depend on them without dragging in integrations.
@@ -167,4 +176,3 @@ Split rules into two modes to avoid UI dependency on remote services:
 
 6. **Resilience policy defaults for external APIs?**
    - Proposed solution: standard timeouts and limited retries for idempotent calls, with circuit breaker for unstable providers.
-
