@@ -15,6 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Watch Include="Styles\\tailwind.css" Exclude="wwwroot\\**\\*;obj\\**\\*;bin\\**\\*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\App.Contracts\App.Contracts.csproj" />
     <ProjectReference Include="..\App.Validation\App.Validation.csproj" />
   </ItemGroup>
@@ -22,4 +26,12 @@
   <ItemGroup>
     <PackageReference Include="Blazilla" Version="2.2.1" />
   </ItemGroup>
+
+  <Target Name="TailwindDebug" BeforeTargets="Compile" Condition="'$(Configuration)' == 'Debug'">
+    <Exec Command="npx tailwindcss -i ./Styles/tailwind.css -o ./wwwroot/styles.css" />
+  </Target>
+
+  <Target Name="TailwindRelease" BeforeTargets="Compile" Condition="'$(Configuration)' == 'Release'">
+    <Exec EnvironmentVariables="NODE_ENV=production" Command="npx tailwindcss -i ./Styles/tailwind.css -o ./wwwroot/styles.css --minify" />
+  </Target>
 </Project>
