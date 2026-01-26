@@ -1,12 +1,12 @@
 @if (Tabs.Count > 0)
 {
-    <div class="@ContainerClassValue">
+    <div class="flex gap-2 border-b border-slate-200 py-2">
         @for (var index = 0; index < Tabs.Count; index++)
         {
             var tabIndex = index;
             var isActive = tabIndex == ActiveTab;
             <button type="button"
-                    class="@GetTabClass(isActive)"
+                    class="rounded-md px-3 py-1.5 text-sm font-medium transition @(isActive ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100")"
                     @onclick="() => SetTabAsync(tabIndex)">
                 @(Tabs[tabIndex])
             </button>
@@ -15,7 +15,7 @@
         @if (ShowStepIndicator)
         {
             <div class="flex w-full justify-end">
-                <span class="@StepClassValue">Step @(ActiveTab + 1) of @Tabs.Count</span>
+                <span class="text-xs text-slate-500">Step @(ActiveTab + 1) of @Tabs.Count</span>
             </div>
         }
     </div>
@@ -26,34 +26,6 @@
     [Parameter] public int ActiveTab { get; set; }
     [Parameter] public EventCallback<int> ActiveTabChanged { get; set; }
     [Parameter] public bool ShowStepIndicator { get; set; } = true;
-    [Parameter] public string ContainerClass { get; set; } = string.Empty;
-    [Parameter] public string ActiveTabClass { get; set; } = string.Empty;
-    [Parameter] public string InactiveTabClass { get; set; } = string.Empty;
-    [Parameter] public string StepClass { get; set; } = string.Empty;
-
-    private const string BaseContainerClass = "flex gap-2 border-b border-slate-200 py-2";
-    private const string BaseTabClass = "rounded-md px-3 py-1.5 text-sm font-medium transition";
-    private const string BaseActiveTabClass = "bg-slate-900 text-white shadow-sm";
-    private const string BaseInactiveTabClass = "text-slate-600 hover:bg-slate-100";
-    private const string BaseStepClass = "text-xs text-slate-500";
-
-    private string ContainerClassValue =>
-        string.IsNullOrWhiteSpace(ContainerClass)
-            ? BaseContainerClass
-            : $"{BaseContainerClass} {ContainerClass}";
-
-    private string StepClassValue =>
-        string.IsNullOrWhiteSpace(StepClass) ? BaseStepClass : $"{BaseStepClass} {StepClass}";
-
-    private string GetTabClass(bool isActive)
-    {
-        var stateClass = isActive ? BaseActiveTabClass : BaseInactiveTabClass;
-        var extraClass = isActive ? ActiveTabClass : InactiveTabClass;
-
-        return string.IsNullOrWhiteSpace(extraClass)
-            ? $"{BaseTabClass} {stateClass}"
-            : $"{BaseTabClass} {stateClass} {extraClass}";
-    }
 
     private async Task SetTabAsync(int index)
     {

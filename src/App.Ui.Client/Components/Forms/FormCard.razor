@@ -1,13 +1,7 @@
-<div class="@CardClass">
+<div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
     @ChildContent
 </div>
 
 @code {
-    [Parameter] public string Class { get; set; } = string.Empty;
     [Parameter] public RenderFragment? ChildContent { get; set; }
-
-    private const string BaseClass = "rounded-xl border border-slate-200 bg-white shadow-sm p-6";
-
-    private string CardClass =>
-        string.IsNullOrWhiteSpace(Class) ? BaseClass : $"{BaseClass} {Class}";
 }

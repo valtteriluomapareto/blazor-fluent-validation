@@ -14,7 +14,7 @@
         <p class="text-slate-600">Form validation demo using <code>SampleFormValidator</code> in WebAssembly.</p>
     </div>
 
-    <FormCard Class="p-4">
+    <FormCard>
         <p class="text-sm font-semibold text-slate-700">Testing guide</p>
         <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
             <li><strong>Local UI rules:</strong> leave Name empty or Age below 18 to see immediate client-side errors.</li>
@@ -24,7 +24,7 @@
         </ul>
     </FormCard>
 
-    <FormCard Class="p-6">
+    <FormCard>
         <EditForm EditContext="_editContext" OnSubmit="HandleSubmit" class="space-y-5">
             <FluentValidator AsyncMode="true" RuleSets="@(new[] { "Local" })" />
             <ValidationSummary class="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 empty:hidden" />

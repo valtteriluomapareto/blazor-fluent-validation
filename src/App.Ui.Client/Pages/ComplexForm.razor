@@ -10,7 +10,7 @@
         <p class="text-slate-600">Example form using reusable presentation components for multiple input types.</p>
     </div>
 
-    <FormCard Class="p-4">
+    <FormCard>
         <p class="text-sm font-semibold text-slate-700">What this shows</p>
         <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
             <li>Text, numbers, decimals, dates, text areas, and enums.</li>
@@ -19,7 +19,7 @@
         </ul>
     </FormCard>
 
-    <FormCard Class="p-6">
+    <FormCard>
         <EditForm EditContext="_editContext" OnSubmit="HandleSubmit" class="space-y-6">
             <FluentValidator AsyncMode="true" RuleSets="@(new[] { "Local" })" />
             <ValidationSummary class="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 empty:hidden" />

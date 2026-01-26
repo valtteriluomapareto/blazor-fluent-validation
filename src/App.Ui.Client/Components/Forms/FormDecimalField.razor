@@ -4,7 +4,7 @@
     <InputNumber
         TValue="decimal"
         id="@Id"
-        class="@InputClassValue"
+        class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
         @bind-Value="CurrentValue"
         @bind-Value:event="@(UpdateOnInput ? "oninput" : "onchange")"
         @attributes="MergedInputAttributes" />
@@ -20,7 +20,6 @@
     [Parameter] public string? Placeholder { get; set; }
     [Parameter] public string? Step { get; set; } = "0.01";
     [Parameter] public bool UpdateOnInput { get; set; }
-    [Parameter] public string InputClass { get; set; } = string.Empty;
     [Parameter] public Dictionary<string, object>? InputAttributes { get; set; }
 
     private decimal CurrentValue
@@ -65,9 +64,4 @@
         }
     }
 
-    private const string BaseInputClass =
-        "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200";
-
-    private string InputClassValue =>
-        string.IsNullOrWhiteSpace(InputClass) ? BaseInputClass : $"{BaseInputClass} {InputClass}";
 }

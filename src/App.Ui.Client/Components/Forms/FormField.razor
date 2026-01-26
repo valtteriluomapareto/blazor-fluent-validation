@@ -1,22 +1,22 @@
 @using System.Linq.Expressions
 @typeparam TValue
 
-<div class="@ContainerClassValue">
+<div class="space-y-2">
     @if (!string.IsNullOrWhiteSpace(Label))
     {
-        <label class="@LabelClassValue" for="@Id">@Label</label>
+        <label class="text-sm font-medium text-slate-700" for="@Id">@Label</label>
     }
 
     @ChildContent
 
     @if (ValueExpression is not null)
     {
-        <ValidationMessage For="ValueExpression" class="@ValidationClassValue" />
+        <ValidationMessage For="ValueExpression" class="text-sm text-rose-600" />
     }
 
     @if (!string.IsNullOrWhiteSpace(HelpText))
     {
-        <p class="@HelpClassValue">@HelpText</p>
+        <p class="text-xs text-slate-500">@HelpText</p>
     }
 </div>
 
@@ -24,31 +24,6 @@
     [Parameter] public string Id { get; set; } = string.Empty;
     [Parameter] public string Label { get; set; } = string.Empty;
     [Parameter] public string? HelpText { get; set; }
-    [Parameter] public string ContainerClass { get; set; } = string.Empty;
-    [Parameter] public string LabelClass { get; set; } = string.Empty;
-    [Parameter] public string ValidationClass { get; set; } = string.Empty;
-    [Parameter] public string HelpClass { get; set; } = string.Empty;
     [Parameter] public Expression<Func<TValue>>? ValueExpression { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
-
-    private const string BaseContainerClass = "space-y-2";
-    private const string BaseLabelClass = "text-sm font-medium text-slate-700";
-    private const string BaseValidationClass = "text-sm text-rose-600";
-    private const string BaseHelpClass = "text-xs text-slate-500";
-
-    private string ContainerClassValue =>
-        string.IsNullOrWhiteSpace(ContainerClass)
-            ? BaseContainerClass
-            : $"{BaseContainerClass} {ContainerClass}";
-
-    private string LabelClassValue =>
-        string.IsNullOrWhiteSpace(LabelClass) ? BaseLabelClass : $"{BaseLabelClass} {LabelClass}";
-
-    private string ValidationClassValue =>
-        string.IsNullOrWhiteSpace(ValidationClass)
-            ? BaseValidationClass
-            : $"{BaseValidationClass} {ValidationClass}";
-
-    private string HelpClassValue =>
-        string.IsNullOrWhiteSpace(HelpClass) ? BaseHelpClass : $"{BaseHelpClass} {HelpClass}";
 }
