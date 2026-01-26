@@ -29,8 +29,8 @@
             <FluentValidator AsyncMode="true" RuleSets="@(new[] { "Local" })" />
             <ValidationSummary class="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 empty:hidden" />
 
-            <FormTextField Id="name" Label="Name" @bind-Value="_model.Name" ValueExpression="() => _model.Name" />
-            <FormNumberField Id="age" Label="Age" @bind-Value="_model.Age" ValueExpression="() => _model.Age" />
+            <FormTextField Id="name" Label="Name" @bind-Value="_model.Name" />
+            <FormNumberField Id="age" Label="Age" @bind-Value="_model.Age" />
 
             <div class="flex items-center gap-3">
                 <button type="submit" class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled="@_isSubmitting">

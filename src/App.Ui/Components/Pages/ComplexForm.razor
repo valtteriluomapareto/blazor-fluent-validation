@@ -29,35 +29,30 @@
                     Id="customer-name"
                     Label="Customer name"
                     Placeholder="Acme Corp"
-                    @bind-Value="_model.CustomerName"
-                    ValueExpression="() => _model.CustomerName" />
+                    @bind-Value="_model.CustomerName" />
 
                 <FormTextField
                     Id="contact-email"
                     Label="Contact email"
                     InputType="email"
                     Placeholder="name@company.com"
-                    @bind-Value="_model.ContactEmail"
-                    ValueExpression="() => _model.ContactEmail" />
+                    @bind-Value="_model.ContactEmail" />
 
                 <FormSelectEnumField TEnum="IndustryType"
                     Id="industry"
                     Label="Industry"
-                    @bind-Value="_model.Industry"
-                    ValueExpression="() => _model.Industry" />
+                    @bind-Value="_model.Industry" />
 
                 <FormSelectEnumField TEnum="ContractType"
                     Id="contract-type"
                     Label="Contract type"
-                    @bind-Value="_model.ContractType"
-                    ValueExpression="() => _model.ContractType" />
+                    @bind-Value="_model.ContractType" />
 
                 <FormNumberField
                     Id="seats"
                     Label="Seats"
                     Placeholder="25"
                     @bind-Value="_model.Seats"
-                    ValueExpression="() => _model.Seats"
                     InputAttributes="@_seatsInputAttributes" />
 
                 <FormDecimalField
@@ -66,14 +61,12 @@
                     Placeholder="120000"
                     Step="0.01"
                     @bind-Value="_model.EstimatedAnnualValue"
-                    ValueExpression="() => _model.EstimatedAnnualValue"
                     InputAttributes="@_valueInputAttributes" />
 
                 <FormDateField
                     Id="start-date"
                     Label="Expected start date"
-                    @bind-Value="_model.ExpectedStartDate"
-                    ValueExpression="() => _model.ExpectedStartDate" />
+                    @bind-Value="_model.ExpectedStartDate" />
             </div>
 
             <FormTextAreaField
@@ -81,8 +74,7 @@
                 Label="Notes"
                 Rows="4"
                 Placeholder="Include any customer context or CRM details here."
-                @bind-Value="_model.Notes"
-                ValueExpression="() => _model.Notes" />
+                @bind-Value="_model.Notes" />
 
             <div class="flex items-center gap-3">
                 <button type="submit" class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled="@_isSubmitting">
