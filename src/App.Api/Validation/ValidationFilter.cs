@@ -1,4 +1,3 @@
-using App.Contracts;
 using FluentValidation;
 
 namespace App.Api.Validation;
@@ -61,7 +60,7 @@ public sealed class ValidationFilter<T> : IEndpointFilter
             );
 
         return Results.BadRequest(
-            new ValidationErrorResponse("Validation failed.", StatusCodes.Status400BadRequest, errors, errorCodes)
+            ValidationErrorResponseFactory.Create(context.HttpContext, errors, errorCodes)
         );
     }
 }

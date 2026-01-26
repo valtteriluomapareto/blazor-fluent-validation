@@ -12,9 +12,10 @@ Done
 - Validation-first flow: local rule sets in UI, full rule sets in API.
 - Dual-mode UI (Server + WASM) for demo purposes.
 - Mock integration in `App.Integrations` for async validation.
+- ProblemDetails-style validation error contract wired into API.
 
 In progress / remaining
-- Formalize validation error response shape and tests.
+- Add API tests to lock the validation error response shape.
 - Localization strategy for validation messages.
 - Resilience defaults for external API calls.
 - E2E test suite (Playwright) to cover key flows.
@@ -23,9 +24,7 @@ In progress / remaining
 Use these as concrete work items with suggested priority and owner placeholders.
 
 P0 (Next)
-- Define validation error response contract (ProblemDetails + errors + errorCodes). Owner: TBD.
 - Add API tests to lock the error contract. Owner: TBD.
-- Wire response contract into API endpoints / filters. Owner: TBD.
 
 P1 (Soon)
 - Decide localization strategy for validation messages (error codes -> UI mapping). Owner: TBD.
@@ -150,7 +149,7 @@ Split rules into two modes to avoid UI dependency on remote services:
 - Property paths must align with DTO property names used in the UI.
 
 **Status**
-- Partially implemented; error response shape + tests still needed.
+- Partially implemented; error response tests still needed.
 
 ## API Validation Integration
 - Use a route-group filter or endpoint filter to:
@@ -165,7 +164,7 @@ Split rules into two modes to avoid UI dependency on remote services:
   - `errorCodes`: dictionary of property path to codes
 
 **Status**
-- Pending: formalize contract + add API tests to lock it down.
+- Contract implemented; add API tests to lock it down.
 
 ## UI Validation Integration
 - Use a FluentValidation adapter for Blazor forms.
@@ -250,6 +249,7 @@ Split rules into two modes to avoid UI dependency on remote services:
 
 4. **What should the validation error response shape be?**
    - Proposed solution: ProblemDetails + `errors` + `errorCodes`, with stable property paths. Add API tests to lock the contract.
+   - Status: contract implemented in API; tests pending.
 
 5. **Localization strategy for validation messages?**
    - Proposed solution: keep stable error codes now; defer localization to a later phase by mapping codes to localized strings in UI.

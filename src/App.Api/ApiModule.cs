@@ -21,22 +21,26 @@ public static class ApiModule
     {
         app.MapPost(
             "/api/sample-form",
-            (SampleForm model) =>
+            (HttpContext httpContext, SampleForm model) =>
             {
                 if (string.Equals(model.Name, "ApiOnly", StringComparison.OrdinalIgnoreCase))
                 {
+                    var errors = new Dictionary<string, string[]>
+                    {
+                        ["Name"] = ["Name cannot be 'ApiOnly'. (POST /api/sample-form endpoint)"]
+                    };
+
+                    var errorCodes = new Dictionary<string, string[]>
+                    {
+                        ["Name"] = ["name.api_reserved"]
+                    };
+
                     return Results.BadRequest(
-                        new ValidationErrorResponse(
-                            "Validation failed.",
-                            StatusCodes.Status400BadRequest,
-                            new Dictionary<string, string[]>
-                            {
-                                ["Name"] = ["Name cannot be 'ApiOnly'. (POST /api/sample-form endpoint)"]
-                            },
-                            new Dictionary<string, string[]>
-                            {
-                                ["Name"] = ["name.api_reserved"]
-                            }
+                        ValidationErrorResponseFactory.Create(
+                            httpContext,
+                            errors,
+                            errorCodes,
+                            detail: "Endpoint-only validation failed."
                         )
                     );
                 }
