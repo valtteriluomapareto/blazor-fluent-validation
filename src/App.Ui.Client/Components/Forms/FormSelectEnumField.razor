@@ -2,7 +2,7 @@
 @typeparam TEnum where TEnum : struct, Enum
 
 <FormField TValue="TEnum" Id="@Id" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
-    <InputSelect TValue="TEnum" id="@Id" class="@InputClass" @bind-Value="CurrentValue" @attributes="InputAttributes">
+    <InputSelect TValue="TEnum" id="@Id" class="@InputClassValue" @bind-Value="CurrentValue" @attributes="InputAttributes">
         @foreach (var option in Enum.GetValues<TEnum>())
         {
             <option value="@option">@GetOptionLabel(option)</option>
@@ -18,8 +18,7 @@
     [Parameter] public EventCallback<TEnum> ValueChanged { get; set; }
     [Parameter] public Expression<Func<TEnum>>? ValueExpression { get; set; }
     [Parameter] public Func<TEnum, string>? OptionLabel { get; set; }
-    [Parameter] public string InputClass { get; set; } =
-        "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200";
+    [Parameter] public string InputClass { get; set; } = string.Empty;
     [Parameter] public Dictionary<string, object>? InputAttributes { get; set; }
 
     private TEnum CurrentValue
@@ -36,6 +35,12 @@
             _ = ValueChanged.InvokeAsync(value);
         }
     }
+
+    private const string BaseInputClass =
+        "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200";
+
+    private string InputClassValue =>
+        string.IsNullOrWhiteSpace(InputClass) ? BaseInputClass : $"{BaseInputClass} {InputClass}";
 
     private string GetOptionLabel(TEnum value)
     {

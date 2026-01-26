@@ -1,6 +1,6 @@
 @if (Tabs.Count > 0)
 {
-    <div class="@ContainerClass">
+    <div class="@ContainerClassValue">
         @for (var index = 0; index < Tabs.Count; index++)
         {
             var tabIndex = index;
@@ -14,7 +14,9 @@
 
         @if (ShowStepIndicator)
         {
-            <div class="flex w-full justify-end"><span class="@StepClass">Step @(ActiveTab + 1) of @Tabs.Count</span></div>
+            <div class="flex w-full justify-end">
+                <span class="@StepClassValue">Step @(ActiveTab + 1) of @Tabs.Count</span>
+            </div>
         }
     </div>
 }
@@ -24,16 +26,34 @@
     [Parameter] public int ActiveTab { get; set; }
     [Parameter] public EventCallback<int> ActiveTabChanged { get; set; }
     [Parameter] public bool ShowStepIndicator { get; set; } = true;
-    [Parameter] public string ContainerClass { get; set; } =
-        "flex gap-2 border-b border-slate-200 py-2";
-    [Parameter] public string ActiveTabClass { get; set; } =
-        "rounded-md px-3 py-1.5 text-sm font-medium transition bg-slate-900 text-white shadow-sm";
-    [Parameter] public string InactiveTabClass { get; set; } =
-        "rounded-md px-3 py-1.5 text-sm font-medium transition text-slate-600 hover:bg-slate-100";
-    [Parameter] public string StepClass { get; set; } =
-        "ml-auto text-xs text-slate-500";
+    [Parameter] public string ContainerClass { get; set; } = string.Empty;
+    [Parameter] public string ActiveTabClass { get; set; } = string.Empty;
+    [Parameter] public string InactiveTabClass { get; set; } = string.Empty;
+    [Parameter] public string StepClass { get; set; } = string.Empty;
 
-    private string GetTabClass(bool isActive) => isActive ? ActiveTabClass : InactiveTabClass;
+    private const string BaseContainerClass = "flex gap-2 border-b border-slate-200 py-2";
+    private const string BaseTabClass = "rounded-md px-3 py-1.5 text-sm font-medium transition";
+    private const string BaseActiveTabClass = "bg-slate-900 text-white shadow-sm";
+    private const string BaseInactiveTabClass = "text-slate-600 hover:bg-slate-100";
+    private const string BaseStepClass = "text-xs text-slate-500";
+
+    private string ContainerClassValue =>
+        string.IsNullOrWhiteSpace(ContainerClass)
+            ? BaseContainerClass
+            : $"{BaseContainerClass} {ContainerClass}";
+
+    private string StepClassValue =>
+        string.IsNullOrWhiteSpace(StepClass) ? BaseStepClass : $"{BaseStepClass} {StepClass}";
+
+    private string GetTabClass(bool isActive)
+    {
+        var stateClass = isActive ? BaseActiveTabClass : BaseInactiveTabClass;
+        var extraClass = isActive ? ActiveTabClass : InactiveTabClass;
+
+        return string.IsNullOrWhiteSpace(extraClass)
+            ? $"{BaseTabClass} {stateClass}"
+            : $"{BaseTabClass} {stateClass} {extraClass}";
+    }
 
     private async Task SetTabAsync(int index)
     {
