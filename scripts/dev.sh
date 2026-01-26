@@ -16,10 +16,10 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
-dotnet watch --project src/App.Api &
+dotnet watch --project src/App.Host &
 pids+=("$!")
 
-dotnet watch --project src/App.Ui &
+dotnet watch --project src/App.Ui.Client &
 pids+=("$!")
 
 wait

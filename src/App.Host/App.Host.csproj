@@ -12,6 +12,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Watch Include="..\App.Ui\Components\**\*.razor" />
+    <Watch Include="..\App.Ui\Components\**\*.razor.css" />
+    <Watch Include="..\App.Ui\wwwroot\**\*" />
+    <Watch Include="..\App.Ui.Client\**\*.razor" />
+    <Watch Include="..\App.Ui.Client\**\*.cs" />
+    <Watch Include="..\App.Ui.Client\wwwroot\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference
       Include="Microsoft.AspNetCore.Components.WebAssembly.Server"
       Version="10.0.2"

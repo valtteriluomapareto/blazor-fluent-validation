@@ -81,6 +81,7 @@ Run UI + API in a single host (recommended):
 ```bash
 dotnet run --project src/App.Host
 ```
+When running the host from Rider with Hot Reload enabled, changes under `src/App.Ui` and `src/App.Ui.Client` are watched by the host project for live updates.
 
 Run the UI only (requires API running at `Api:BaseUrl`):
 ```bash
@@ -96,7 +97,7 @@ Run UI + API together:
 ```bash
 ./scripts/dev.sh
 ```
-This uses `dotnet watch` for both projects and will open the UI browser based on `launchSettings.json`.
+This runs `dotnet watch` on the host plus the WASM client for hot reload and opens the UI browser based on `launchSettings.json`.
 
 ## Tailwind CSS
 
