@@ -1,4 +1,5 @@
 using FormValidationTest.Client.Components.Forms;
+using Microsoft.AspNetCore.Components;
 
 namespace App.Ui.Client.Tests;
 
@@ -116,6 +117,26 @@ public sealed class FormComponentsTests : IDisposable
         Assert.Equal("Unknown", options[0].TextContent);
         Assert.Equal("Alpha", options[1].TextContent);
         Assert.Equal("Beta", options[2].TextContent);
+    }
+
+    [Fact]
+    public void FormTabs_invokes_active_tab_changed()
+    {
+        var activeTab = 0;
+
+        var cut = context.Render<FormTabs>(parameters =>
+            parameters
+                .Add(p => p.Tabs, new[] { "One", "Two", "Three" })
+                .Add(p => p.ActiveTab, activeTab)
+                .Add(
+                    p => p.ActiveTabChanged,
+                    EventCallback.Factory.Create<int>(this, index => activeTab = index)
+                )
+        );
+
+        cut.FindAll("button")[1].Click();
+
+        Assert.Equal(1, activeTab);
     }
 
     private enum TestOption

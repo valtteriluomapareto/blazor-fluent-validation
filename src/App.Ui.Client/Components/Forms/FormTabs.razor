@@ -1,0 +1,55 @@
+@if (Tabs.Count > 0)
+{
+    <div class="@ContainerClass">
+        @for (var index = 0; index < Tabs.Count; index++)
+        {
+            var tabIndex = index;
+            var isActive = tabIndex == ActiveTab;
+            <button type="button"
+                    class="@GetTabClass(isActive)"
+                    @onclick="() => SetTabAsync(tabIndex)">
+                @(Tabs[tabIndex])
+            </button>
+        }
+
+        @if (ShowStepIndicator)
+        {
+            <div class="flex w-full justify-end"><span class="@StepClass">Step @(ActiveTab + 1) of @Tabs.Count</span></div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<string> Tabs { get; set; } = Array.Empty<string>();
+    [Parameter] public int ActiveTab { get; set; }
+    [Parameter] public EventCallback<int> ActiveTabChanged { get; set; }
+    [Parameter] public bool ShowStepIndicator { get; set; } = true;
+    [Parameter] public string ContainerClass { get; set; } =
+        "flex gap-2 border-b border-slate-200 py-2";
+    [Parameter] public string ActiveTabClass { get; set; } =
+        "rounded-md px-3 py-1.5 text-sm font-medium transition bg-slate-900 text-white shadow-sm";
+    [Parameter] public string InactiveTabClass { get; set; } =
+        "rounded-md px-3 py-1.5 text-sm font-medium transition text-slate-600 hover:bg-slate-100";
+    [Parameter] public string StepClass { get; set; } =
+        "ml-auto text-xs text-slate-500";
+
+    private string GetTabClass(bool isActive) => isActive ? ActiveTabClass : InactiveTabClass;
+
+    private async Task SetTabAsync(int index)
+    {
+        if (index < 0 || index >= Tabs.Count)
+        {
+            return;
+        }
+
+        if (index == ActiveTab)
+        {
+            return;
+        }
+
+        if (ActiveTabChanged.HasDelegate)
+        {
+            await ActiveTabChanged.InvokeAsync(index);
+        }
+    }
+}

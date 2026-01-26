@@ -15,19 +15,7 @@
             <FluentValidator AsyncMode="true" RuleSets="@(new[] { "Local" })" />
             <ValidationSummary class="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 empty:hidden" />
 
-            <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
-                @for (var index = 0; index < _tabs.Length; index++)
-                {
-                    var tabIndex = index;
-                    var isActive = tabIndex == _activeTab;
-                    <button type="button"
-                            class="rounded-md px-3 py-1.5 text-sm font-medium transition @(isActive ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100")"
-                            @onclick="() => SetTab(tabIndex)">
-                        @(_tabs[tabIndex])
-                    </button>
-                }
-                <span class="ml-auto text-xs text-slate-500">Step @(_activeTab + 1) of @_tabs.Length</span>
-            </div>
+            <FormTabs Tabs="_tabs" @bind-ActiveTab="_activeTab" />
 
             <div class="space-y-5">
                 @if (_activeTab == 0)
@@ -186,16 +174,6 @@
     {
         _editContext = new EditContext(_model);
         _editContext.OnFieldChanged += (_, _) => _submitMessage = null;
-    }
-
-    private void SetTab(int index)
-    {
-        if (index < 0 || index >= _tabs.Length)
-        {
-            return;
-        }
-
-        _activeTab = index;
     }
 
     private void NextTab()
