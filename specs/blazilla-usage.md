@@ -25,7 +25,7 @@ builder.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
 ## Async validation rules
 - When validators contain async rules, use `AsyncMode="true"` and handle submission with `OnSubmit` + `ValidateAsync()` on the `EditContext`.
 - This is the approach used in the sample form so we can keep a single validator while still supporting async rules.
-- See `src/App.Ui/Components/Pages/SampleFormValidation.razor` for the live example in this repo.
+- See `src/App.Ui.Client/Pages/SampleFormValidationWasm.razor` for the live example in this repo.
 
 ```razor
 <EditForm EditContext="@editContext" OnSubmit="@HandleSubmit">

@@ -130,7 +130,7 @@ Guidance:
 ## Forms and validation
 - Blazor uses `EditForm` + `EditContext`.
 - Validation can be built-in (DataAnnotations) or custom (FluentValidation).
-- In this repo, FluentValidation is used; see `specs/blazilla-usage.md`, `src/App.Ui/Components/Pages/SampleFormValidation.razor`, and `src/App.Ui.Client/Pages/SampleFormValidationWasm.razor`.
+- In this repo, FluentValidation is used; see `specs/blazilla-usage.md` and `src/App.Ui.Client/Pages/SampleFormValidationWasm.razor`.
 
 ## DI and services
 - Use constructor injection for services in `.razor.cs` (code-behind) or `@inject` in `.razor`.
@@ -183,7 +183,7 @@ Guidance:
 - WASM pages live in `src/App.Ui.Client/Pages/`.
 - Layouts live in `src/App.Ui/Components/Layout/`.
 - This repo is set up for dual-mode; see `src/App.Ui/Program.cs` and `src/App.Host/Program.cs`.
-- Demo routes: `/sample-form` (server) and `/sample-form-wasm` (WASM).
+- Demo routes: `/sample-form` (WASM, with `/sample-form-wasm` as an alias), plus `/complex-form` and `/tabbed-form` (WASM).
 
 ## Open questions / clarifications
 - Do you want guidance on testing Blazor components (bUnit, integration tests)?

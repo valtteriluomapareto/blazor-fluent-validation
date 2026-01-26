@@ -1,3 +1,4 @@
+@page "/sample-form"
 @page "/sample-form-wasm"
 @rendermode InteractiveWebAssembly
 @using global::App.Contracts
@@ -5,12 +6,12 @@
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 
-<PageTitle>Sample Form (WASM)</PageTitle>
+<PageTitle>Sample Form</PageTitle>
 
 <div class="space-y-6">
     <div class="space-y-2">
-        <h1>Sample Form (WASM)</h1>
-        <p class="text-slate-600">WebAssembly version of the form validation demo using <code>SampleFormValidator</code>.</p>
+        <h1>Sample Form</h1>
+        <p class="text-slate-600">Form validation demo using <code>SampleFormValidator</code> in WebAssembly.</p>
     </div>
 
     <FormCard Class="p-4">
