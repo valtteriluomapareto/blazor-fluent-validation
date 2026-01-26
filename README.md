@@ -51,6 +51,23 @@ Check formatting (CI):
 dotnet csharpier check .
 ```
 
+## Package update checks (dotnet-outdated)
+
+Install/restore local tools:
+```bash
+dotnet tool restore
+```
+
+Check for outdated NuGet packages:
+```bash
+dotnet tool run dotnet-outdated -f
+```
+
+Upgrade outdated packages in-place:
+```bash
+dotnet tool run dotnet-outdated -f -u
+```
+
 ## IDE setup (CSharpier)
 
 VS Code
