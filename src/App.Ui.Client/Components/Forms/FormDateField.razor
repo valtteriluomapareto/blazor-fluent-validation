@@ -1,0 +1,17 @@
+@using System.Linq.Expressions
+
+<FormField TValue="DateOnly" Id="@Id" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
+    <InputDate TValue="DateOnly" id="@Id" class="@InputClass" @bind-Value="Value" @attributes="InputAttributes" />
+</FormField>
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string? HelpText { get; set; }
+    [Parameter] public DateOnly Value { get; set; }
+    [Parameter] public EventCallback<DateOnly> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<DateOnly>>? ValueExpression { get; set; }
+    [Parameter] public string InputClass { get; set; } =
+        "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200";
+    [Parameter] public Dictionary<string, object>? InputAttributes { get; set; }
+}

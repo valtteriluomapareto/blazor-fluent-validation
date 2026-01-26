@@ -1,0 +1,46 @@
+@using System.Linq.Expressions
+
+<FormField TValue="decimal" Id="@Id" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
+    <InputNumber TValue="decimal" id="@Id" class="@InputClass" @bind-Value="Value" @attributes="MergedInputAttributes" />
+</FormField>
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string? HelpText { get; set; }
+    [Parameter] public decimal Value { get; set; }
+    [Parameter] public EventCallback<decimal> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<decimal>>? ValueExpression { get; set; }
+    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public string? Step { get; set; } = "0.01";
+    [Parameter] public string InputClass { get; set; } =
+        "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200";
+    [Parameter] public Dictionary<string, object>? InputAttributes { get; set; }
+
+    private IReadOnlyDictionary<string, object>? MergedInputAttributes
+    {
+        get
+        {
+            if (InputAttributes is null && string.IsNullOrWhiteSpace(Placeholder) && string.IsNullOrWhiteSpace(Step))
+            {
+                return null;
+            }
+
+            var attributes = InputAttributes is null
+                ? new Dictionary<string, object>()
+                : new Dictionary<string, object>(InputAttributes);
+
+            if (!string.IsNullOrWhiteSpace(Placeholder))
+            {
+                attributes["placeholder"] = Placeholder;
+            }
+
+            if (!string.IsNullOrWhiteSpace(Step))
+            {
+                attributes["step"] = Step;
+            }
+
+            return attributes;
+        }
+    }
+}

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
+builder.Services.AddSingleton<IValidator<CustomerIntakeForm>, CustomerIntakeFormValidator>();
 builder.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
 
 var configuredBaseUrl = builder.Configuration["Api:BaseUrl"];

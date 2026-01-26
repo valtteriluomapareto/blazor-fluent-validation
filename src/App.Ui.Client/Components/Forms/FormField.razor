@@ -1,0 +1,33 @@
+@using System.Linq.Expressions
+@typeparam TValue
+
+<div class="@ContainerClass">
+    @if (!string.IsNullOrWhiteSpace(Label))
+    {
+        <label class="@LabelClass" for="@Id">@Label</label>
+    }
+
+    @ChildContent
+
+    @if (ValueExpression is not null)
+    {
+        <ValidationMessage For="ValueExpression" class="@ValidationClass" />
+    }
+
+    @if (!string.IsNullOrWhiteSpace(HelpText))
+    {
+        <p class="@HelpClass">@HelpText</p>
+    }
+</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string? HelpText { get; set; }
+    [Parameter] public string ContainerClass { get; set; } = "space-y-2";
+    [Parameter] public string LabelClass { get; set; } = "text-sm font-medium text-slate-700";
+    [Parameter] public string ValidationClass { get; set; } = "text-sm text-rose-600";
+    [Parameter] public string HelpClass { get; set; } = "text-xs text-slate-500";
+    [Parameter] public Expression<Func<TValue>>? ValueExpression { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

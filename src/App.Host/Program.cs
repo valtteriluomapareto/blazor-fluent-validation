@@ -1,4 +1,7 @@
 using App.Api;
+using App.Contracts;
+using App.Validation;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +11,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 builder.Services.AddHttpClient("Api");
 builder.Services.AddApiServices();
+builder.Services.AddSingleton<IValidator<CustomerIntakeForm>, CustomerIntakeFormValidator>();
 
 var app = builder.Build();
 

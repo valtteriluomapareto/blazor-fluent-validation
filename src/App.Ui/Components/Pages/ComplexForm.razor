@@ -1,0 +1,148 @@
+@page "/complex-form"
+@rendermode InteractiveServer
+@using global::App.Contracts
+
+<PageTitle>Complex Form</PageTitle>
+
+<div class="space-y-6">
+    <div class="space-y-2">
+        <h1>Complex Form</h1>
+        <p class="text-slate-600">Example form using reusable presentation components for multiple input types.</p>
+    </div>
+
+    <FormCard Class="p-4">
+        <p class="text-sm font-semibold text-slate-700">What this shows</p>
+        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+            <li>Text, numbers, decimals, dates, text areas, and enums.</li>
+            <li>Shared FluentValidation rules with local-only rule sets.</li>
+            <li>A clean, reusable field layout for form-heavy screens.</li>
+        </ul>
+    </FormCard>
+
+    <FormCard Class="p-6">
+        <EditForm EditContext="_editContext" OnSubmit="HandleSubmit" class="space-y-6">
+            <FluentValidator AsyncMode="true" RuleSets="@(new[] { "Local" })" />
+            <ValidationSummary class="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 empty:hidden" />
+
+            <div class="grid gap-5 md:grid-cols-2">
+                <FormTextField
+                    Id="customer-name"
+                    Label="Customer name"
+                    Placeholder="Acme Corp"
+                    @bind-Value="_model.CustomerName"
+                    ValueExpression="() => _model.CustomerName" />
+
+                <FormTextField
+                    Id="contact-email"
+                    Label="Contact email"
+                    InputType="email"
+                    Placeholder="name@company.com"
+                    @bind-Value="_model.ContactEmail"
+                    ValueExpression="() => _model.ContactEmail" />
+
+                <FormSelectEnumField TEnum="IndustryType"
+                    Id="industry"
+                    Label="Industry"
+                    @bind-Value="_model.Industry"
+                    ValueExpression="() => _model.Industry" />
+
+                <FormSelectEnumField TEnum="ContractType"
+                    Id="contract-type"
+                    Label="Contract type"
+                    @bind-Value="_model.ContractType"
+                    ValueExpression="() => _model.ContractType" />
+
+                <FormNumberField
+                    Id="seats"
+                    Label="Seats"
+                    Placeholder="25"
+                    @bind-Value="_model.Seats"
+                    ValueExpression="() => _model.Seats"
+                    InputAttributes="@_seatsInputAttributes" />
+
+                <FormDecimalField
+                    Id="estimated-value"
+                    Label="Estimated annual value"
+                    Placeholder="120000"
+                    Step="0.01"
+                    @bind-Value="_model.EstimatedAnnualValue"
+                    ValueExpression="() => _model.EstimatedAnnualValue"
+                    InputAttributes="@_valueInputAttributes" />
+
+                <FormDateField
+                    Id="start-date"
+                    Label="Expected start date"
+                    @bind-Value="_model.ExpectedStartDate"
+                    ValueExpression="() => _model.ExpectedStartDate" />
+            </div>
+
+            <FormTextAreaField
+                Id="notes"
+                Label="Notes"
+                Rows="4"
+                Placeholder="Include any customer context or CRM details here."
+                @bind-Value="_model.Notes"
+                ValueExpression="() => _model.Notes" />
+
+            <div class="flex items-center gap-3">
+                <button type="submit" class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled="@_isSubmitting">
+                    @(_isSubmitting ? "Saving..." : "Save draft")
+                </button>
+                <span class="text-xs text-slate-500">Local validation only</span>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_submitMessage))
+            {
+                <div class="rounded-md border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800" role="status">
+                    @_submitMessage
+                </div>
+            }
+        </EditForm>
+    </FormCard>
+</div>
+
+@code {
+    private readonly CustomerIntakeForm _model = new();
+    private EditContext _editContext = null!;
+    private string? _submitMessage;
+    private bool _isSubmitting;
+
+    private readonly Dictionary<string, object> _seatsInputAttributes = new()
+    {
+        ["min"] = 1,
+        ["max"] = 5000
+    };
+
+    private readonly Dictionary<string, object> _valueInputAttributes = new()
+    {
+        ["min"] = 0,
+        ["max"] = 10000000
+    };
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _editContext.OnFieldChanged += (_, _) => _submitMessage = null;
+    }
+
+    private async Task HandleSubmit(EditContext editContext)
+    {
+        _submitMessage = null;
+        var isValid = await editContext.ValidateAsync();
+        if (!isValid)
+        {
+            _submitMessage = "Please fix the validation errors.";
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            _submitMessage = "Draft saved. Ready for CRM submission.";
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

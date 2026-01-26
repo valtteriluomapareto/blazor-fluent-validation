@@ -1,0 +1,241 @@
+@page "/tabbed-form"
+@rendermode InteractiveServer
+@using global::App.Contracts
+
+<PageTitle>Tabbed Form</PageTitle>
+
+<div class="space-y-6">
+    <div class="space-y-2">
+        <h1>Tabbed Form</h1>
+        <p class="text-slate-600">Split long forms into steps and submit on the final tab.</p>
+    </div>
+
+    <FormCard Class="p-6">
+        <EditForm EditContext="_editContext" OnSubmit="HandleSubmit" class="space-y-6">
+            <FluentValidator AsyncMode="true" RuleSets="@(new[] { "Local" })" />
+            <ValidationSummary class="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 empty:hidden" />
+
+            <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
+                @for (var index = 0; index < _tabs.Length; index++)
+                {
+                    var isActive = index == _activeTab;
+                    <button type="button"
+                            class="rounded-md px-3 py-1.5 text-sm font-medium transition @(isActive ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100")"
+                            @onclick="() => SetTab(index)">
+                        @(_tabs[index])
+                    </button>
+                }
+                <span class="ml-auto text-xs text-slate-500">Step @(_activeTab + 1) of @_tabs.Length</span>
+            </div>
+
+            <div class="space-y-5">
+                @if (_activeTab == 0)
+                {
+                    <FormTextField
+                        Id="tab-customer-name"
+                        Label="Customer name"
+                        Placeholder="Acme Corp"
+                        @bind-Value="_model.CustomerName"
+                        ValueExpression="() => _model.CustomerName" />
+
+                    <FormTextField
+                        Id="tab-contact-email"
+                        Label="Contact email"
+                        InputType="email"
+                        Placeholder="name@company.com"
+                        @bind-Value="_model.ContactEmail"
+                        ValueExpression="() => _model.ContactEmail" />
+
+                    <FormSelectEnumField TEnum="IndustryType"
+                        Id="tab-industry"
+                        Label="Industry"
+                        @bind-Value="_model.Industry"
+                        ValueExpression="() => _model.Industry" />
+                }
+
+                @if (_activeTab == 1)
+                {
+                    <FormSelectEnumField TEnum="ContractType"
+                        Id="tab-contract-type"
+                        Label="Contract type"
+                        @bind-Value="_model.ContractType"
+                        ValueExpression="() => _model.ContractType" />
+
+                    <FormNumberField
+                        Id="tab-seats"
+                        Label="Seats"
+                        Placeholder="25"
+                        @bind-Value="_model.Seats"
+                        ValueExpression="() => _model.Seats"
+                        InputAttributes="@_seatsInputAttributes" />
+
+                    <FormDecimalField
+                        Id="tab-estimated-value"
+                        Label="Estimated annual value"
+                        Placeholder="120000"
+                        Step="0.01"
+                        @bind-Value="_model.EstimatedAnnualValue"
+                        ValueExpression="() => _model.EstimatedAnnualValue"
+                        InputAttributes="@_valueInputAttributes" />
+
+                    <FormDateField
+                        Id="tab-start-date"
+                        Label="Expected start date"
+                        @bind-Value="_model.ExpectedStartDate"
+                        ValueExpression="() => _model.ExpectedStartDate" />
+                }
+
+                @if (_activeTab == 2)
+                {
+                    <FormTextAreaField
+                        Id="tab-notes"
+                        Label="Notes"
+                        Rows="4"
+                        Placeholder="Include any customer context or CRM details here."
+                        @bind-Value="_model.Notes"
+                        ValueExpression="() => _model.Notes" />
+
+                    <div class="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                        <p class="font-semibold text-slate-800">Review</p>
+                        <dl class="mt-2 grid gap-2 text-xs text-slate-600 md:grid-cols-2">
+                            <div>
+                                <dt class="font-semibold text-slate-500">Customer</dt>
+                                <dd>@DisplayOrDash(_model.CustomerName)</dd>
+                            </div>
+                            <div>
+                                <dt class="font-semibold text-slate-500">Email</dt>
+                                <dd>@DisplayOrDash(_model.ContactEmail)</dd>
+                            </div>
+                            <div>
+                                <dt class="font-semibold text-slate-500">Industry</dt>
+                                <dd>@_model.Industry</dd>
+                            </div>
+                            <div>
+                                <dt class="font-semibold text-slate-500">Contract</dt>
+                                <dd>@_model.ContractType</dd>
+                            </div>
+                            <div>
+                                <dt class="font-semibold text-slate-500">Seats</dt>
+                                <dd>@_model.Seats</dd>
+                            </div>
+                            <div>
+                                <dt class="font-semibold text-slate-500">Annual value</dt>
+                                <dd>@_model.EstimatedAnnualValue</dd>
+                            </div>
+                            <div>
+                                <dt class="font-semibold text-slate-500">Start date</dt>
+                                <dd>@_model.ExpectedStartDate</dd>
+                            </div>
+                        </dl>
+                    </div>
+                }
+            </div>
+
+            <div class="flex items-center justify-between border-t border-slate-200 pt-4">
+                <button type="button" class="inline-flex items-center rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60" disabled="@(_activeTab == 0)" @onclick="PreviousTab">
+                    Back
+                </button>
+
+                <div class="flex items-center gap-3">
+                    @if (_activeTab < _tabs.Length - 1)
+                    {
+                        <button type="button" class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800" @onclick="NextTab">
+                            Next
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled="@_isSubmitting">
+                            @(_isSubmitting ? "Submitting..." : "Submit")
+                        </button>
+                    }
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_submitMessage))
+            {
+                <div class="rounded-md border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800" role="status">
+                    @_submitMessage
+                </div>
+            }
+        </EditForm>
+    </FormCard>
+</div>
+
+@code {
+    private readonly CustomerIntakeForm _model = new();
+    private EditContext _editContext = null!;
+    private int _activeTab;
+    private string? _submitMessage;
+    private bool _isSubmitting;
+
+    private readonly string[] _tabs = ["Customer", "Deal", "Notes"];
+
+    private readonly Dictionary<string, object> _seatsInputAttributes = new()
+    {
+        ["min"] = 1,
+        ["max"] = 5000
+    };
+
+    private readonly Dictionary<string, object> _valueInputAttributes = new()
+    {
+        ["min"] = 0,
+        ["max"] = 10000000
+    };
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _editContext.OnFieldChanged += (_, _) => _submitMessage = null;
+    }
+
+    private void SetTab(int index)
+    {
+        if (index < 0 || index >= _tabs.Length)
+        {
+            return;
+        }
+
+        _activeTab = index;
+    }
+
+    private void NextTab()
+    {
+        if (_activeTab < _tabs.Length - 1)
+        {
+            _activeTab++;
+        }
+    }
+
+    private void PreviousTab()
+    {
+        if (_activeTab > 0)
+        {
+            _activeTab--;
+        }
+    }
+
+    private async Task HandleSubmit(EditContext editContext)
+    {
+        _submitMessage = null;
+        var isValid = await editContext.ValidateAsync();
+        if (!isValid)
+        {
+            _submitMessage = "Please fix the validation errors.";
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            _submitMessage = "Submission ready for CRM.";
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private static string DisplayOrDash(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "-" : value;
+}
