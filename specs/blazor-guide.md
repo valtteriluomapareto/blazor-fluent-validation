@@ -22,6 +22,11 @@ A quick, practical overview of how Blazor works, when to use server vs WebAssemb
 - Larger initial download; slower cold start on low-end devices.
 - Must call APIs for server resources (no direct server-side access).
 
+### Data flow differences (Server vs WASM)
+- Server: UI events go over SignalR, server executes the handler and streams DOM diffs back.
+- WASM: UI events execute in the browser; any server interaction is explicit HTTP calls to APIs.
+- For demos, WASM often feels closer to a “traditional SPA” because you can see network requests in the browser.
+
 ### When to consider switching from Server to WASM
 - You need offline capability or ultra-low latency interactions.
 - You expect huge concurrent users and want to offload server CPU/memory.
