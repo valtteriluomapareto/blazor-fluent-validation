@@ -2,7 +2,6 @@ using App.Abstractions;
 using App.Contracts;
 using App.Validation;
 using FluentValidation;
-using FormValidationTest.Components;
 using FormValidationTest.Services;
 
 var builder = WebApplication.CreateBuilder(args);

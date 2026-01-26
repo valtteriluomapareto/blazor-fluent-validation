@@ -1,6 +1,4 @@
 using App.Api;
-using FormValidationTest.Components;
-using Microsoft.AspNetCore.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 

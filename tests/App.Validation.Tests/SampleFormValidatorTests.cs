@@ -1,6 +1,5 @@
 using App.Abstractions;
 using App.Contracts;
-using App.Validation;
 using FluentValidation.TestHelper;
 
 namespace App.Validation.Tests;
