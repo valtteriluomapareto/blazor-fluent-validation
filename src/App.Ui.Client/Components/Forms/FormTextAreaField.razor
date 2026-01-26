@@ -1,7 +1,7 @@
 @using System.Linq.Expressions
 
 <FormField TValue="string" Id="@Id" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
-    <InputTextArea id="@Id" class="@InputClass" rows="@Rows" @bind-Value="Value" @bind-Value:event="@(UpdateOnInput ? "oninput" : "onchange")" @attributes="MergedInputAttributes" />
+    <InputTextArea id="@Id" class="@InputClass" rows="@Rows" @bind-Value="CurrentValue" @bind-Value:event="@(UpdateOnInput ? "oninput" : "onchange")" @attributes="MergedInputAttributes" />
 </FormField>
 
 @code {
@@ -17,6 +17,21 @@
     [Parameter] public string InputClass { get; set; } =
         "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200";
     [Parameter] public Dictionary<string, object>? InputAttributes { get; set; }
+
+    private string CurrentValue
+    {
+        get => Value;
+        set
+        {
+            if (string.Equals(Value, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            Value = value;
+            _ = ValueChanged.InvokeAsync(value);
+        }
+    }
 
     private IReadOnlyDictionary<string, object>? MergedInputAttributes
     {
