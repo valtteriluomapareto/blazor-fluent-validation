@@ -20,34 +20,38 @@ public static class ApiModule
     public static IEndpointRouteBuilder MapApiEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost(
-            "/api/sample-form",
-            (HttpContext httpContext, SampleForm model) =>
-            {
-                if (string.Equals(model.Name, "ApiOnly", StringComparison.OrdinalIgnoreCase))
+                "/api/sample-form",
+                (HttpContext httpContext, SampleForm model) =>
                 {
-                    var errors = new Dictionary<string, string[]>
+                    if (string.Equals(model.Name, "ApiOnly", StringComparison.OrdinalIgnoreCase))
                     {
-                        ["Name"] = ["Name cannot be 'ApiOnly'. (POST /api/sample-form endpoint)"]
-                    };
+                        var errors = new Dictionary<string, string[]>
+                        {
+                            ["Name"] =
+                            [
+                                "Name cannot be 'ApiOnly'. (POST /api/sample-form endpoint)",
+                            ],
+                        };
 
-                    var errorCodes = new Dictionary<string, string[]>
-                    {
-                        ["Name"] = ["name.api_reserved"]
-                    };
+                        var errorCodes = new Dictionary<string, string[]>
+                        {
+                            ["Name"] = ["name.api_reserved"],
+                        };
 
-                    return Results.BadRequest(
-                        ValidationErrorResponseFactory.Create(
-                            httpContext,
-                            errors,
-                            errorCodes,
-                            detail: "Endpoint-only validation failed."
-                        )
-                    );
+                        return Results.BadRequest(
+                            ValidationErrorResponseFactory.Create(
+                                httpContext,
+                                errors,
+                                errorCodes,
+                                detail: "Endpoint-only validation failed."
+                            )
+                        );
+                    }
+
+                    return Results.Ok(new SampleFormResponse("Form is valid."));
                 }
-
-                return Results.Ok(new SampleFormResponse("Form is valid."));
-            }
-        ).AddEndpointFilter(new ValidationFilter<SampleForm>("Local", "Server"));
+            )
+            .AddEndpointFilter(new ValidationFilter<SampleForm>("Local", "Server"));
 
         return app;
     }

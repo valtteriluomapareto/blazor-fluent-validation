@@ -6,7 +6,8 @@ using FluentValidation;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.UseStaticWebAssets();
-builder.Services.AddRazorComponents()
+builder
+    .Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 builder.Services.AddHttpClient("Api");

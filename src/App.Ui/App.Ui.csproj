@@ -26,19 +26,40 @@
 
   <ItemGroup>
     <PackageReference Include="Blazilla" Version="2.2.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.2" />
+    <PackageReference
+      Include="Microsoft.AspNetCore.Components.WebAssembly.Server"
+      Version="10.0.2"
+    />
   </ItemGroup>
 
-  <Target Name="TailwindInstall" BeforeTargets="TailwindDebug;TailwindRelease"
-          Condition="Exists('package.json') and !Exists('node_modules/.bin/tailwindcss') and !Exists('node_modules\\.bin\\tailwindcss.cmd')">
+  <Target
+    Name="TailwindInstall"
+    BeforeTargets="TailwindDebug;TailwindRelease"
+    Condition="Exists('package.json') and !Exists('node_modules/.bin/tailwindcss') and !Exists('node_modules\\.bin\\tailwindcss.cmd')"
+  >
     <Exec Command="npm install" WorkingDirectory="$(ProjectDir)" />
   </Target>
 
-  <Target Name="TailwindDebug" BeforeTargets="Compile" Condition="'$(Configuration)' == 'Debug' and Exists('package.json')">
-    <Exec Command="npm exec -- tailwindcss -i ./Styles/tailwind.css -o ./wwwroot/styles.css" WorkingDirectory="$(ProjectDir)" />
+  <Target
+    Name="TailwindDebug"
+    BeforeTargets="Compile"
+    Condition="'$(Configuration)' == 'Debug' and Exists('package.json')"
+  >
+    <Exec
+      Command="npm exec -- tailwindcss -i ./Styles/tailwind.css -o ./wwwroot/styles.css"
+      WorkingDirectory="$(ProjectDir)"
+    />
   </Target>
 
-  <Target Name="TailwindRelease" BeforeTargets="Compile" Condition="'$(Configuration)' == 'Release' and Exists('package.json')">
-    <Exec EnvironmentVariables="NODE_ENV=production" Command="npm exec -- tailwindcss -i ./Styles/tailwind.css -o ./wwwroot/styles.css --minify" WorkingDirectory="$(ProjectDir)" />
+  <Target
+    Name="TailwindRelease"
+    BeforeTargets="Compile"
+    Condition="'$(Configuration)' == 'Release' and Exists('package.json')"
+  >
+    <Exec
+      EnvironmentVariables="NODE_ENV=production"
+      Command="npm exec -- tailwindcss -i ./Styles/tailwind.css -o ./wwwroot/styles.css --minify"
+      WorkingDirectory="$(ProjectDir)"
+    />
   </Target>
 </Project>

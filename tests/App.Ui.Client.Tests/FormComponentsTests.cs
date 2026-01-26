@@ -2,12 +2,16 @@ using FormValidationTest.Client.Components.Forms;
 
 namespace App.Ui.Client.Tests;
 
-public sealed class FormComponentsTests : TestContext
+public sealed class FormComponentsTests : IDisposable
 {
+    private readonly BunitContext context = new();
+
+    public void Dispose() => context.Dispose();
+
     [Fact]
     public void FormCard_renders_child_content()
     {
-        var cut = RenderComponent<FormCard>(parameters =>
+        var cut = context.Render<FormCard>(parameters =>
             parameters.AddChildContent("<p>Card content</p>")
         );
 
@@ -18,7 +22,7 @@ public sealed class FormComponentsTests : TestContext
     [Fact]
     public void FormField_renders_label_and_help_text()
     {
-        var cut = RenderComponent<FormField<string>>(parameters =>
+        var cut = context.Render<FormField<string>>(parameters =>
             parameters
                 .Add(p => p.Id, "field")
                 .Add(p => p.Label, "Field label")
@@ -34,11 +38,8 @@ public sealed class FormComponentsTests : TestContext
     [Fact]
     public void FormTextField_renders_text_input()
     {
-        var cut = RenderComponent<FormTextField>(parameters =>
-            parameters
-                .Add(p => p.Id, "name")
-                .Add(p => p.Label, "Name")
-                .Add(p => p.Value, "Acme")
+        var cut = context.Render<FormTextField>(parameters =>
+            parameters.Add(p => p.Id, "name").Add(p => p.Label, "Name").Add(p => p.Value, "Acme")
         );
 
         var input = cut.Find("input#name");
@@ -49,11 +50,8 @@ public sealed class FormComponentsTests : TestContext
     [Fact]
     public void FormNumberField_renders_number_input()
     {
-        var cut = RenderComponent<FormNumberField>(parameters =>
-            parameters
-                .Add(p => p.Id, "seats")
-                .Add(p => p.Label, "Seats")
-                .Add(p => p.Value, 12)
+        var cut = context.Render<FormNumberField>(parameters =>
+            parameters.Add(p => p.Id, "seats").Add(p => p.Label, "Seats").Add(p => p.Value, 12)
         );
 
         var input = cut.Find("input#seats");
@@ -64,11 +62,8 @@ public sealed class FormComponentsTests : TestContext
     [Fact]
     public void FormDecimalField_renders_decimal_input()
     {
-        var cut = RenderComponent<FormDecimalField>(parameters =>
-            parameters
-                .Add(p => p.Id, "value")
-                .Add(p => p.Label, "Value")
-                .Add(p => p.Value, 42.5m)
+        var cut = context.Render<FormDecimalField>(parameters =>
+            parameters.Add(p => p.Id, "value").Add(p => p.Label, "Value").Add(p => p.Value, 42.5m)
         );
 
         var input = cut.Find("input#value");
@@ -79,7 +74,7 @@ public sealed class FormComponentsTests : TestContext
     [Fact]
     public void FormDateField_renders_date_input()
     {
-        var cut = RenderComponent<FormDateField>(parameters =>
+        var cut = context.Render<FormDateField>(parameters =>
             parameters
                 .Add(p => p.Id, "start")
                 .Add(p => p.Label, "Start")
@@ -94,7 +89,7 @@ public sealed class FormComponentsTests : TestContext
     [Fact]
     public void FormTextAreaField_renders_textarea()
     {
-        var cut = RenderComponent<FormTextAreaField>(parameters =>
+        var cut = context.Render<FormTextAreaField>(parameters =>
             parameters
                 .Add(p => p.Id, "notes")
                 .Add(p => p.Label, "Notes")
@@ -109,7 +104,7 @@ public sealed class FormComponentsTests : TestContext
     [Fact]
     public void FormSelectEnumField_renders_all_enum_options()
     {
-        var cut = RenderComponent<FormSelectEnumField<TestOption>>(parameters =>
+        var cut = context.Render<FormSelectEnumField<TestOption>>(parameters =>
             parameters
                 .Add(p => p.Id, "option")
                 .Add(p => p.Label, "Option")
@@ -127,6 +122,6 @@ public sealed class FormComponentsTests : TestContext
     {
         Unknown = 0,
         Alpha = 1,
-        Beta = 2
+        Beta = 2,
     }
 }

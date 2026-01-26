@@ -45,15 +45,15 @@ public sealed class ValidationFilter<T> : IEndpointFilter
             return await next(context);
         }
 
-        var errors = result.Errors
-            .GroupBy(error => error.PropertyName)
+        var errors = result
+            .Errors.GroupBy(error => error.PropertyName)
             .ToDictionary(
                 group => group.Key,
                 group => group.Select(error => error.ErrorMessage).ToArray()
             );
 
-        var errorCodes = result.Errors
-            .GroupBy(error => error.PropertyName)
+        var errorCodes = result
+            .Errors.GroupBy(error => error.PropertyName)
             .ToDictionary(
                 group => group.Key,
                 group => group.Select(error => error.ErrorCode).ToArray()

@@ -8,5 +8,5 @@ public enum IndustryType
     Healthcare = 3,
     Retail = 4,
     Manufacturing = 5,
-    Education = 6
+    Education = 6,
 }
