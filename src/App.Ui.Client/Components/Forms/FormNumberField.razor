@@ -1,7 +1,7 @@
 @using System.Linq.Expressions
 
 <FormField TValue="int" Id="@Id" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
-    <InputNumber TValue="int" id="@Id" class="@InputClass" @bind-Value="Value" @attributes="MergedInputAttributes" />
+    <InputNumber TValue="int" id="@Id" class="@InputClass" @bind-Value="Value" @bind-Value:event="@(UpdateOnInput ? "oninput" : "onchange")" @attributes="MergedInputAttributes" />
 </FormField>
 
 @code {
@@ -13,6 +13,7 @@
     [Parameter] public Expression<Func<int>>? ValueExpression { get; set; }
     [Parameter] public string? Placeholder { get; set; }
     [Parameter] public string? Step { get; set; }
+    [Parameter] public bool UpdateOnInput { get; set; }
     [Parameter] public string InputClass { get; set; } =
         "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200";
     [Parameter] public Dictionary<string, object>? InputAttributes { get; set; }

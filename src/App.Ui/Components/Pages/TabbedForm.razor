@@ -18,11 +18,12 @@
             <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
                 @for (var index = 0; index < _tabs.Length; index++)
                 {
-                    var isActive = index == _activeTab;
+                    var tabIndex = index;
+                    var isActive = tabIndex == _activeTab;
                     <button type="button"
                             class="rounded-md px-3 py-1.5 text-sm font-medium transition @(isActive ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100")"
-                            @onclick="() => SetTab(index)">
-                        @(_tabs[index])
+                            @onclick="() => SetTab(tabIndex)">
+                        @(_tabs[tabIndex])
                     </button>
                 }
                 <span class="ml-auto text-xs text-slate-500">Step @(_activeTab + 1) of @_tabs.Length</span>
@@ -35,6 +36,7 @@
                         Id="tab-customer-name"
                         Label="Customer name"
                         Placeholder="Acme Corp"
+                        UpdateOnInput="true"
                         @bind-Value="_model.CustomerName" />
 
                     <FormTextField
@@ -42,6 +44,7 @@
                         Label="Contact email"
                         InputType="email"
                         Placeholder="name@company.com"
+                        UpdateOnInput="true"
                         @bind-Value="_model.ContactEmail" />
 
                     <FormSelectEnumField TEnum="IndustryType"
@@ -61,6 +64,7 @@
                         Id="tab-seats"
                         Label="Seats"
                         Placeholder="25"
+                        UpdateOnInput="true"
                         @bind-Value="_model.Seats"
                         InputAttributes="@_seatsInputAttributes" />
 
@@ -69,12 +73,14 @@
                         Label="Estimated annual value"
                         Placeholder="120000"
                         Step="0.01"
+                        UpdateOnInput="true"
                         @bind-Value="_model.EstimatedAnnualValue"
                         InputAttributes="@_valueInputAttributes" />
 
                     <FormDateField
                         Id="tab-start-date"
                         Label="Expected start date"
+                        UpdateOnInput="true"
                         @bind-Value="_model.ExpectedStartDate" />
                 }
 
@@ -85,6 +91,7 @@
                         Label="Notes"
                         Rows="4"
                         Placeholder="Include any customer context or CRM details here."
+                        UpdateOnInput="true"
                         @bind-Value="_model.Notes" />
 
                     <div class="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
