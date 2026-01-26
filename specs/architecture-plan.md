@@ -6,6 +6,34 @@
 - High confidence in changes through layered testing (validation unit tests, API integration tests, minimal E2E).
 - No internal database; orchestration of external APIs with robust validation and error handling.
 
+## Status (High Level)
+Done
+- Solution structure and project boundaries implemented.
+- Validation-first flow: local rule sets in UI, full rule sets in API.
+- Dual-mode UI (Server + WASM) for demo purposes.
+- Mock integration in `App.Integrations` for async validation.
+
+In progress / remaining
+- Formalize validation error response shape and tests.
+- Localization strategy for validation messages.
+- Resilience defaults for external API calls.
+- E2E test suite (Playwright) to cover key flows.
+
+## Remaining Work: Task List
+Use these as concrete work items with suggested priority and owner placeholders.
+
+P0 (Next)
+- Define validation error response contract (ProblemDetails + errors + errorCodes). Owner: TBD.
+- Add API tests to lock the error contract. Owner: TBD.
+- Wire response contract into API endpoints / filters. Owner: TBD.
+
+P1 (Soon)
+- Decide localization strategy for validation messages (error codes -> UI mapping). Owner: TBD.
+- Add resilience defaults (timeouts + limited retries) for integrations. Owner: TBD.
+
+P2 (Later)
+- Add Playwright E2E suite for key flows (happy path + invalid inputs). Owner: TBD.
+
 ## Key Principles
 - Separation by responsibility: contracts, validation, integrations, API, UI.
 - Explicit dependency direction; no cycles.
@@ -22,6 +50,9 @@
 **Rules**
 - References `App.Ui` and `App.Api`.
 
+**Status**
+- Implemented.
+
 ### `App.Contracts`
 **Purpose**
 - Shared request/response DTOs.
@@ -32,6 +63,9 @@
 - No dependency on UI/API/Integration projects.
 - No vendor DTOs.
 
+**Status**
+- Implemented.
+
 ### `App.Abstractions` (recommended)
 **Purpose**
 - Small interfaces required by validation or API orchestration (e.g., lookup interfaces).
@@ -39,6 +73,9 @@
 
 **Rules**
 - No references to integrations or infrastructure.
+
+**Status**
+- Implemented.
 
 ### `App.Validation`
 **Purpose**
@@ -52,6 +89,9 @@
 - Depends on `App.Contracts` and `App.Abstractions`.
 - No references to `App.Api` or `App.Ui`.
 
+**Status**
+- Implemented.
+
 ### `App.Integrations` (or `App.Infrastructure`)
 **Purpose**
 - HTTP clients and adapters for external APIs.
@@ -62,6 +102,9 @@
 - Implements interfaces from `App.Abstractions`.
 - Vendor DTOs never escape this project.
 
+**Status**
+- Implemented with mock lookup; resilience policies pending.
+
 ### `App.Api`
 **Purpose**
 - Minimal API endpoints.
@@ -70,6 +113,9 @@
 
 **Rules**
 - Depends on `App.Contracts`, `App.Validation`, `App.Abstractions`, and `App.Integrations`.
+
+**Status**
+- Implemented.
 
 ### `App.Ui`
 **Purpose**
@@ -80,6 +126,9 @@
 **Rules**
 - Depends on `App.Contracts`, `App.Validation`.
 - Should not depend on `App.Integrations`.
+
+**Status**
+- Implemented (dual-mode host + client).
 
 ## Validation Architecture
 
@@ -93,9 +142,15 @@ Split rules into two modes to avoid UI dependency on remote services:
 - UI runs `RuleSets="Local"` with Blazilla `AsyncMode="true"` to support a single validator.
 - API uses both rule sets by default.
 
+**Status**
+- Implemented.
+
 ### Error Codes and Property Paths
 - Every rule must emit a stable error code.
 - Property paths must align with DTO property names used in the UI.
+
+**Status**
+- Partially implemented; error response shape + tests still needed.
 
 ## API Validation Integration
 - Use a route-group filter or endpoint filter to:
@@ -109,10 +164,16 @@ Split rules into two modes to avoid UI dependency on remote services:
   - `errors`: dictionary of property path to messages
   - `errorCodes`: dictionary of property path to codes
 
+**Status**
+- Pending: formalize contract + add API tests to lock it down.
+
 ## UI Validation Integration
 - Use a FluentValidation adapter for Blazor forms.
 - Use local rules for immediate feedback.
 - On submit, call API and map server validation errors back to the form.
+
+**Status**
+- Implemented.
 
 ## External Integrations Strategy
 - Treat all external APIs as unstable.
@@ -121,6 +182,9 @@ Split rules into two modes to avoid UI dependency on remote services:
 - Enforce timeouts by default; retries only for safe/idempotent calls.
 - Current demo uses a mock lookup integration for "used names."
 
+**Status**
+- Mock integration implemented; resilience policies pending.
+
 ## Testing Strategy
 
 ### `App.Validation.Tests`
@@ -128,10 +192,16 @@ Split rules into two modes to avoid UI dependency on remote services:
 - Assert error property paths and error codes.
 - Mock `App.Abstractions` interfaces for async rules.
 
+**Status**
+- Implemented for current validators.
+
 ### `App.Api.Tests`
 - In-memory hosting via `WebApplicationFactory`.
 - Override integration interfaces with fakes.
 - Validate error contract shape and codes for invalid inputs.
+
+**Status**
+- Partially implemented; error contract tests pending.
 
 ### `App.E2E.Tests`
 - Small Playwright suite:
@@ -139,11 +209,17 @@ Split rules into two modes to avoid UI dependency on remote services:
   - Key invalid input flows.
 - Prefer role-based selectors for stability.
 
+**Status**
+- Not implemented yet.
+
 ## Formatting and CI
 
 ### Formatting
 - Use CSharpier with a dotnet tool manifest.
 - CI gate uses `dotnet csharpier --check .`.
+
+**Status**
+- Implemented.
 
 ### CI Pipeline (Azure DevOps)
 1. Format
@@ -151,6 +227,9 @@ Split rules into two modes to avoid UI dependency on remote services:
 3. Validation unit tests
 4. API integration tests
 5. E2E tests (required or scheduled based on runtime)
+
+**Status**
+- Pipeline steps documented; E2E pending.
 
 ## Maintainability and Governance
 - Enforce dependency direction via conventions or architecture tests.
@@ -161,6 +240,7 @@ Split rules into two modes to avoid UI dependency on remote services:
 
 1. **Should UI and API be in a single host or separate deployments?**
    - Implemented: `App.Host` runs UI + API in one process for demos. Separate deployments can be added later if needed.
+   - Status: settled.
 
 2. **How to handle remote validation rules in the UI?**
    - Implemented: UI runs `RuleSets="Local"` with Blazilla `AsyncMode="true"`, API runs all rules, and API errors are mapped back into the form.
