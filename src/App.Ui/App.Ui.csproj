@@ -20,11 +20,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\App.Contracts\App.Contracts.csproj" />
+    <ProjectReference Include="..\App.Ui.Client\App.Ui.Client.csproj" />
     <ProjectReference Include="..\App.Validation\App.Validation.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Blazilla" Version="2.2.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.2" />
   </ItemGroup>
 
   <Target Name="TailwindInstall" BeforeTargets="TailwindDebug;TailwindRelease"

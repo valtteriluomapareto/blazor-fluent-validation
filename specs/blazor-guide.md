@@ -34,6 +34,12 @@ A quick, practical overview of how Blazor works, when to use server vs WebAssemb
 - You expect enterprise networks with strict client security policies.
 - You prefer simpler deployment and smaller client footprint.
 
+### Dual-mode (Server + WASM)
+- A Blazor Web App can host both modes side-by-side.
+- Pages/components opt into a render mode with `@rendermode`.
+- Use `InteractiveServer` for server, `InteractiveWebAssembly` for WASM, or `InteractiveAuto` to let the runtime choose.
+- The host must reference the client project and enable WebAssembly render mode plus `AddAdditionalAssemblies(...)` for routing.
+
 ## How components look and behave
 ### Basic component
 ```razor
@@ -119,7 +125,7 @@ Guidance:
 ## Forms and validation
 - Blazor uses `EditForm` + `EditContext`.
 - Validation can be built-in (DataAnnotations) or custom (FluentValidation).
-- In this repo, FluentValidation is used; see `specs/blazilla-usage.md` and `src/App.Ui/Components/Pages/SampleFormValidation.razor`.
+- In this repo, FluentValidation is used; see `specs/blazilla-usage.md`, `src/App.Ui/Components/Pages/SampleFormValidation.razor`, and `src/App.Ui.Client/Pages/SampleFormValidationWasm.razor`.
 
 ## DI and services
 - Use constructor injection for services in `.razor.cs` (code-behind) or `@inject` in `.razor`.
@@ -167,10 +173,12 @@ Guidance:
 ```
 
 ## Repo-specific notes
-- UI is in `src/App.Ui/`.
-- Pages are in `src/App.Ui/Components/Pages/`.
+- UI host is in `src/App.Ui/` (and `src/App.Host/` for combined UI + API).
+- Server pages live in `src/App.Ui/Components/Pages/`.
+- WASM pages live in `src/App.Ui.Client/Pages/`.
 - Layouts live in `src/App.Ui/Components/Layout/`.
-- This app uses interactive server render mode (see `src/App.Ui/Program.cs`).
+- This repo is set up for dual-mode; see `src/App.Ui/Program.cs` and `src/App.Host/Program.cs`.
+- Demo routes: `/sample-form` (server) and `/sample-form-wasm` (WASM).
 
 ## Open questions / clarifications
 - Do you want guidance on testing Blazor components (bUnit, integration tests)?

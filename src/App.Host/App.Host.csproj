@@ -7,6 +7,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\App.Api\App.Api.csproj" />
+    <ProjectReference Include="..\App.Ui.Client\App.Ui.Client.csproj" />
     <ProjectReference Include="..\App.Ui\App.Ui.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.2" />
   </ItemGroup>
 </Project>

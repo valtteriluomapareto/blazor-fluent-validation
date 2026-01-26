@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+    <StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <RootNamespace>FormValidationTest.Client</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazilla" Version="2.2.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\App.Abstractions\App.Abstractions.csproj" />
+    <ProjectReference Include="..\App.Contracts\App.Contracts.csproj" />
+    <ProjectReference Include="..\App.Validation\App.Validation.csproj" />
+  </ItemGroup>
+</Project>
