@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CSharpier: Check",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["csharpier", "check", "."],
+      "problemMatcher": [],
+      "group": "test"
+    }
+  ]
+}

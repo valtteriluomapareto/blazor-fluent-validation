@@ -51,6 +51,15 @@ Check formatting (CI):
 dotnet csharpier check .
 ```
 
+## IDE setup (CSharpier)
+
+VS Code
+- Install the recommended extension (see `.vscode/extensions.json`).
+- Run the `CSharpier: Check` task to verify formatting.
+
+Rider / Visual Studio
+- Install the CSharpier plugin/extension and enable format-on-save or run `dotnet csharpier check .`.
+
 Run UI + API in a single host (recommended):
 ```bash
 dotnet run --project src/App.Host
