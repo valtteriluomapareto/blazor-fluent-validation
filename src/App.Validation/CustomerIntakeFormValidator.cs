@@ -23,6 +23,21 @@ public sealed class CustomerIntakeFormValidator : AbstractValidator<CustomerInta
                     .EmailAddress()
                     .WithErrorCode("contact_email.invalid");
 
+                RuleFor(x => x.SocialSecurityNumber)
+                    .Must(FinnishSsn.Validate)
+                    .WithErrorCode("ssn.invalid")
+                    .When(x => !string.IsNullOrWhiteSpace(x.SocialSecurityNumber));
+
+                RuleFor(x => x.BusinessId)
+                    .Must(FinnishBusinessIds.IsValidBusinessId)
+                    .WithErrorCode("business_id.invalid")
+                    .When(x => !string.IsNullOrWhiteSpace(x.BusinessId));
+
+                RuleFor(x => x.VatNumber)
+                    .Must(FinnishBusinessIds.IsValidVatNumber)
+                    .WithErrorCode("vat_number.invalid")
+                    .When(x => !string.IsNullOrWhiteSpace(x.VatNumber));
+
                 RuleFor(x => x.Seats).InclusiveBetween(1, 5000).WithErrorCode("seats.range");
 
                 RuleFor(x => x.EstimatedAnnualValue)

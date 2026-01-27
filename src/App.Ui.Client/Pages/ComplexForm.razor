@@ -38,6 +38,24 @@
                     Placeholder="name@company.com"
                     @bind-Value="_model.ContactEmail" />
 
+                <FormTextField
+                    Id="social-security-number"
+                    Label="Social security number"
+                    Placeholder="010199-8148"
+                    @bind-Value="_model.SocialSecurityNumber" />
+
+                <FormTextField
+                    Id="business-id"
+                    Label="Business ID"
+                    Placeholder="2617416-4"
+                    @bind-Value="_model.BusinessId" />
+
+                <FormTextField
+                    Id="vat-number"
+                    Label="VAT number"
+                    Placeholder="FI26174164"
+                    @bind-Value="_model.VatNumber" />
+
                 <FormSelectEnumField TEnum="IndustryType"
                     Id="industry"
                     Label="Industry"

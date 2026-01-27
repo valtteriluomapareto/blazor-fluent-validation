@@ -35,6 +35,27 @@
                         UpdateOnInput="true"
                         @bind-Value="_model.ContactEmail" />
 
+                    <FormTextField
+                        Id="tab-social-security-number"
+                        Label="Social security number"
+                        Placeholder="010199-8148"
+                        UpdateOnInput="true"
+                        @bind-Value="_model.SocialSecurityNumber" />
+
+                    <FormTextField
+                        Id="tab-business-id"
+                        Label="Business ID"
+                        Placeholder="2617416-4"
+                        UpdateOnInput="true"
+                        @bind-Value="_model.BusinessId" />
+
+                    <FormTextField
+                        Id="tab-vat-number"
+                        Label="VAT number"
+                        Placeholder="FI26174164"
+                        UpdateOnInput="true"
+                        @bind-Value="_model.VatNumber" />
+
                     <FormSelectEnumField TEnum="IndustryType"
                         Id="tab-industry"
                         Label="Industry"
@@ -96,6 +117,18 @@
                             <div>
                                 <dt class="font-semibold text-slate-500">Industry</dt>
                                 <dd>@_model.Industry</dd>
+                            </div>
+                            <div>
+                                <dt class="font-semibold text-slate-500">SSN</dt>
+                                <dd>@DisplayOrDash(_model.SocialSecurityNumber)</dd>
+                            </div>
+                            <div>
+                                <dt class="font-semibold text-slate-500">Business ID</dt>
+                                <dd>@DisplayOrDash(_model.BusinessId)</dd>
+                            </div>
+                            <div>
+                                <dt class="font-semibold text-slate-500">VAT</dt>
+                                <dd>@DisplayOrDash(_model.VatNumber)</dd>
                             </div>
                             <div>
                                 <dt class="font-semibold text-slate-500">Contract</dt>
