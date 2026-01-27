@@ -53,6 +53,26 @@ Run E2E tests separately:
 dotnet test --project tests/App.E2E.Tests/App.E2E.Tests.csproj -c Release
 ```
 
+## Code Coverage (xUnit v3 + MTP)
+
+Run coverage for the fast test projects and generate both HTML and Cobertura XML:
+```bash
+./scripts/coverage.sh -c Release
+```
+
+Key outputs:
+- HTML report: `TestResults/coverage/report/index.html`
+- Merged Cobertura XML: `TestResults/coverage/coverage.cobertura.xml`
+- Raw per-project Cobertura XML: `TestResults/coverage/raw/coverage.*.cobertura.xml`
+
+Common options:
+- XML only (LLM/CI-friendly): `./scripts/coverage.sh --xml-only`
+- HTML only (human-friendly): `./scripts/coverage.sh --html-only`
+- Include Playwright E2E tests: `./scripts/coverage.sh --include-e2e`
+- Custom output directory: `./scripts/coverage.sh -o TestResults/coverage-local`
+
+Coverage outputs under `TestResults/` are ignored by `.gitignore`.
+
 ## Playwright E2E setup and usage
 
 Official docs: `https://playwright.dev/dotnet/docs/intro`

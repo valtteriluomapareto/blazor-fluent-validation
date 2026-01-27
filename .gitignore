@@ -6,3 +6,9 @@ riderModule.iml
 node_modules/
 src/App.Ui/wwwroot/styles.css
 src/App.Ui/wwwroot/styles.css.map
+
+# Test and coverage outputs
+TestResults/
+coverage/
+*.coverage
+*.cobertura.xml
