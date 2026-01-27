@@ -36,9 +36,8 @@
                     Label="Name"
                     HelpText="Used to look up existing data from the integration."
                     Placeholder="@PrefillIntegrationDemoDefaults.MatchingName"
-                    Value="@_model.Name"
-                    ValueChanged="HandleNameChanged"
-                    ValueExpression="() => _model.Name" />
+                    @bind-Value="_model.Name"
+                    @bind-Value:after="HandleNameChangedAfterBind" />
 
                 @if (_isLookingUp)
                 {
@@ -151,14 +150,13 @@
         };
     }
 
-    private async Task HandleNameChanged(string value)
+    private Task HandleNameChangedAfterBind()
     {
-        if (string.Equals(_model.Name, value, StringComparison.Ordinal))
-        {
-            return;
-        }
+        return HandleNameChangedAsync(_model.Name);
+    }
 
-        _model.Name = value;
+    private async Task HandleNameChangedAsync(string value)
+    {
         _lookupMessage = null;
         _submitMessage = null;
 
