@@ -20,6 +20,7 @@ public sealed class ValidationExamplesFormValidator : AbstractValidator<Validati
                 AddDecimalRules();
                 AddCurrencyRules();
                 AddPercentageRules();
+                AddEnumSelectRules();
                 AddChoiceRules();
             }
         );
@@ -180,6 +181,15 @@ public sealed class ValidationExamplesFormValidator : AbstractValidator<Validati
                 !string.IsNullOrWhiteSpace(x.RequiredPercentage)
                 && FinnishNumberParsing.TryParsePercentage(x.RequiredPercentage, out _)
             );
+    }
+
+    private void AddEnumSelectRules()
+    {
+        RuleFor(x => x.SentinelIndustry)
+            .NotEqual(IndustryType.Unknown)
+            .WithErrorCode("sentinel_industry.required");
+
+        RuleFor(x => x.NullableIndustry).NotNull().WithErrorCode("nullable_industry.required");
     }
 
     private void AddChoiceRules()

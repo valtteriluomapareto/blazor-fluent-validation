@@ -176,6 +176,28 @@
             </section>
 
             <section class="space-y-4">
+                <h2 class="text-base font-semibold text-slate-800">Enum selects</h2>
+                <div class="grid gap-5 md:grid-cols-2">
+                    <FormSelectEnumField TEnum="IndustryType"
+                        Id="sentinel-industry"
+                        Label="Industry (sentinel)"
+                        HelpText="Uses Unknown as a sentinel value plus a placeholder."
+                        IncludePlaceholder="true"
+                        PlaceholderLabel="Select an industry"
+                        PlaceholderValue="IndustryType.Unknown"
+                        @bind-Value="_model.SentinelIndustry" />
+
+                    <FormSelectEnumNullableField TEnum="IndustryType"
+                        Id="nullable-industry"
+                        Label="Industry (nullable)"
+                        HelpText="Uses a null placeholder; selection is required."
+                        PlaceholderLabel="Select an industry"
+                        PlaceholderDisabled="false"
+                        @bind-Value="_model.NullableIndustry" />
+                </div>
+            </section>
+
+            <section class="space-y-4">
                 <h2 class="text-base font-semibold text-slate-800">Multiple choice</h2>
                 <div class="grid gap-5 lg:grid-cols-2">
                     <div class="space-y-5">

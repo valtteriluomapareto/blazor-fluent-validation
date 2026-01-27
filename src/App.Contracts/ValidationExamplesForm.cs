@@ -26,6 +26,9 @@ public sealed class ValidationExamplesForm
     public string OptionalPercentage { get; set; } = string.Empty;
     public string RequiredPercentage { get; set; } = string.Empty;
 
+    public IndustryType SentinelIndustry { get; set; } = IndustryType.Unknown;
+    public IndustryType? NullableIndustry { get; set; }
+
     public SingleChoiceOption OptionalSingleChoice { get; set; } = SingleChoiceOption.None;
     public SingleChoiceOption RequiredSingleChoice { get; set; } = SingleChoiceOption.None;
     public string OptionalSingleChoiceOther { get; set; } = string.Empty;

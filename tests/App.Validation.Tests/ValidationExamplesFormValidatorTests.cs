@@ -20,6 +20,8 @@ public sealed class ValidationExamplesFormValidatorTests
             RequiredDecimalFi = "1 234,56",
             RequiredEurAmount = "1 234,56 €",
             RequiredPercentage = "12,5%",
+            SentinelIndustry = IndustryType.SaaS,
+            NullableIndustry = IndustryType.Finance,
             RequiredSingleChoice = SingleChoiceOption.Alpha,
             RequiredMultiChoice = [MultiChoiceOption.Alpha],
         };
@@ -36,6 +38,8 @@ public sealed class ValidationExamplesFormValidatorTests
         model.RequiredDecimalFi = string.Empty;
         model.RequiredEurAmount = string.Empty;
         model.RequiredPercentage = string.Empty;
+        model.SentinelIndustry = IndustryType.Unknown;
+        model.NullableIndustry = null;
         model.RequiredSingleChoice = SingleChoiceOption.None;
         model.RequiredMultiChoice = [];
 
@@ -68,6 +72,12 @@ public sealed class ValidationExamplesFormValidatorTests
             .ShouldHaveValidationErrorFor(x => x.RequiredPercentage)
             .WithErrorCode("required_percentage.required");
         result
+            .ShouldHaveValidationErrorFor(x => x.SentinelIndustry)
+            .WithErrorCode("sentinel_industry.required");
+        result
+            .ShouldHaveValidationErrorFor(x => x.NullableIndustry)
+            .WithErrorCode("nullable_industry.required");
+        result
             .ShouldHaveValidationErrorFor(x => x.RequiredSingleChoice)
             .WithErrorCode("required_single_choice.required");
         result
@@ -94,6 +104,8 @@ public sealed class ValidationExamplesFormValidatorTests
         result.ShouldNotHaveValidationErrorFor(x => x.OptionalDecimalFi);
         result.ShouldNotHaveValidationErrorFor(x => x.OptionalEurAmount);
         result.ShouldNotHaveValidationErrorFor(x => x.OptionalPercentage);
+        result.ShouldNotHaveValidationErrorFor(x => x.SentinelIndustry);
+        result.ShouldNotHaveValidationErrorFor(x => x.NullableIndustry);
         result.ShouldNotHaveValidationErrorFor(x => x.OptionalSingleChoice);
         result.ShouldNotHaveValidationErrorFor(x => x.OptionalMultiChoice);
         result.ShouldNotHaveValidationErrorFor(x => x.OptionalSingleChoiceOther);
@@ -163,6 +175,8 @@ public sealed class ValidationExamplesFormValidatorTests
         result.ShouldNotHaveValidationErrorFor(x => x.RequiredDecimalFi);
         result.ShouldNotHaveValidationErrorFor(x => x.RequiredEurAmount);
         result.ShouldNotHaveValidationErrorFor(x => x.RequiredPercentage);
+        result.ShouldNotHaveValidationErrorFor(x => x.SentinelIndustry);
+        result.ShouldNotHaveValidationErrorFor(x => x.NullableIndustry);
         result.ShouldNotHaveValidationErrorFor(x => x.RequiredSingleChoice);
         result.ShouldNotHaveValidationErrorFor(x => x.RequiredMultiChoice);
     }

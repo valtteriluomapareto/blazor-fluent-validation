@@ -46,6 +46,12 @@ public sealed class ValidationExamplesPageTests : IDisposable
         Assert.NotNull(cut.Find("input#optional-percentage"));
         Assert.NotNull(cut.Find("input#required-percentage"));
 
+        Assert.NotNull(cut.Find("select#sentinel-industry"));
+        Assert.NotNull(cut.Find("select#nullable-industry"));
+
+        var sentinelOptions = cut.FindAll("select#sentinel-industry option");
+        Assert.Equal("Select an industry", sentinelOptions[0].TextContent);
+
         Assert.NotNull(
             cut.Find("input[id^='optional-single-choice-opt-'][data-option-value='Alpha']")
         );
