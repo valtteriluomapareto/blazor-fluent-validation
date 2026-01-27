@@ -31,6 +31,12 @@
             var otherOptionId = $"{Id}-{OtherOption.Value}";
             var otherSelected = IsSelected(OtherOption.Value);
 
+            @* 
+               "Other" is rendered as a first-class checkbox option, but it also
+               conditionally reveals a text input. The text input is bound via
+               @bind-OtherValue (OtherValue/OtherValueChanged) so parent models
+               can capture the free-form value separately from the enum/list selection.
+            *@
             <div class="space-y-2">
                 <label class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:border-slate-300" for="@otherOptionId">
                     <input
@@ -50,6 +56,11 @@
 
                 @if (otherSelected)
                 {
+                    @* 
+                       We only show the free-form input when "Other" is selected.
+                       This keeps the UI uncluttered and matches how validation rules
+                       typically require the text only when the option is chosen.
+                    *@
                     <div class="pl-6">
                         <input
                             id="@OtherInputId"
@@ -87,11 +98,16 @@
     [Parameter] public string? OtherPlaceholder { get; set; }
     [Parameter] public bool ClearOtherOnDeselect { get; set; } = true;
 
+    // FieldIdentifier lets us manually notify the EditContext that a value changed.
+    // This is important because the component manages state internally and doesn't
+    // always use the built-in InputBase pipeline for every interaction.
     private FieldIdentifier? fieldIdentifier;
     private FieldIdentifier? otherFieldIdentifier;
 
     protected override void OnParametersSet()
     {
+        // Cache the identifiers so we can call EditContext.NotifyFieldChanged(...)
+        // after we update Value/OtherValue. This keeps validation messages in sync.
         if (EditContext is not null && ValueExpression is not null)
         {
             fieldIdentifier = FieldIdentifier.Create(ValueExpression);
@@ -105,6 +121,8 @@
 
     private bool IsSelected(TOption option)
     {
+        // Use the default equality comparer so this works for enums, records,
+        // and other value types without requiring custom comparison logic.
         var comparer = EqualityComparer<TOption>.Default;
         return Value.Any(value => comparer.Equals(value, option));
     }
@@ -132,7 +150,14 @@
         await ValueChanged.InvokeAsync(next);
         NotifyFieldChanged(fieldIdentifier);
 
-        if (!isChecked && isOtherOption && ClearOtherOnDeselect && !string.IsNullOrWhiteSpace(OtherValue))
+        // If the user deselects "Other", we can optionally clear its text value.
+        // Clearing prevents stale "Other" text from being submitted later.
+        if (
+            !isChecked
+            && isOtherOption
+            && ClearOtherOnDeselect
+            && !string.IsNullOrWhiteSpace(OtherValue)
+        )
         {
             OtherValue = string.Empty;
             await OtherValueChanged.InvokeAsync(OtherValue);
@@ -144,6 +169,7 @@
 
     private bool IsOtherOption(TOption option)
     {
+        // Treat "Other" as just another option value, but guard for null.
         return OtherOption is not null
             && EqualityComparer<TOption>.Default.Equals(option, OtherOption.Value);
     }
@@ -156,6 +182,8 @@
             return;
         }
 
+        // Update the free-form value and notify both the parent and EditContext
+        // so any validators watching the "Other" text run immediately.
         OtherValue = nextOtherValue;
         await OtherValueChanged.InvokeAsync(nextOtherValue);
         NotifyFieldChanged(otherFieldIdentifier);
@@ -163,6 +191,7 @@
 
     private void NotifyFieldChanged(FieldIdentifier? identifier)
     {
+        // The identifier may be absent in unit tests or if ValueExpression is not provided.
         if (EditContext is not null && identifier.HasValue)
         {
             EditContext.NotifyFieldChanged(identifier.Value);
