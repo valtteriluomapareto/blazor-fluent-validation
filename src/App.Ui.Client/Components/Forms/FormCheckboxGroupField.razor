@@ -1,17 +1,21 @@
+@using System.Globalization
 @using System.Linq.Expressions
 @using Microsoft.AspNetCore.Components.Forms
 @typeparam TOption
 
-<FormField TValue="List<TOption>" Id="@Id" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
+<FormField TValue="List<TOption>" Id="@ResolvedId" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
     <div class="space-y-2">
-        @foreach (var option in Options)
+        @for (var index = 0; index < Options.Count; index++)
         {
-            var optionId = $"{Id}-{option.Value}";
+            var option = Options[index];
+            var optionId = GetOptionId(index);
+            var optionValue = GetOptionValue(option.Value);
             var isChecked = IsSelected(option.Value);
 
             <label class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:border-slate-300" for="@optionId">
                 <input
                     id="@optionId"
+                    data-option-value="@optionValue"
                     class="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-300"
                     type="checkbox"
                     checked="@isChecked"
@@ -28,7 +32,9 @@
 
         @if (OtherOption is not null)
         {
-            var otherOptionId = $"{Id}-{OtherOption.Value}";
+            var otherOptionIndex = Options.Count;
+            var otherOptionId = GetOptionId(otherOptionIndex);
+            var otherOptionValue = GetOptionValue(OtherOption.Value);
             var otherSelected = IsSelected(OtherOption.Value);
 
             @* 
@@ -41,6 +47,7 @@
                 <label class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:border-slate-300" for="@otherOptionId">
                     <input
                         id="@otherOptionId"
+                        data-option-value="@otherOptionValue"
                         class="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-300"
                         type="checkbox"
                         checked="@otherSelected"
@@ -103,6 +110,9 @@
     // always use the built-in InputBase pipeline for every interaction.
     private FieldIdentifier? fieldIdentifier;
     private FieldIdentifier? otherFieldIdentifier;
+    private readonly string componentId = Guid.NewGuid().ToString("N")[..8];
+
+    private string ResolvedId => FormFieldIdResolver.Resolve(Id, ValueExpression, componentId, "group");
 
     protected override void OnParametersSet()
     {
@@ -165,7 +175,12 @@
         }
     }
 
-    private string OtherInputId => $"{Id}-other-value";
+    private string OtherInputId => $"{ResolvedId}-other-value";
+
+    private string GetOptionId(int index) => $"{ResolvedId}-opt-{index}";
+
+    private static string GetOptionValue(TOption value) =>
+        Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
 
     private bool IsOtherOption(TOption option)
     {

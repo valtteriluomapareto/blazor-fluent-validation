@@ -46,15 +46,31 @@ public sealed class ValidationExamplesPageTests : IDisposable
         Assert.NotNull(cut.Find("input#optional-percentage"));
         Assert.NotNull(cut.Find("input#required-percentage"));
 
-        Assert.NotNull(cut.Find("input#optional-single-choice-Alpha"));
-        Assert.NotNull(cut.Find("input#required-single-choice-Alpha"));
-        Assert.NotNull(cut.Find("input#optional-single-choice-Other"));
-        Assert.NotNull(cut.Find("input#required-single-choice-Other"));
+        Assert.NotNull(
+            cut.Find("input[id^='optional-single-choice-opt-'][data-option-value='Alpha']")
+        );
+        Assert.NotNull(
+            cut.Find("input[id^='required-single-choice-opt-'][data-option-value='Alpha']")
+        );
+        Assert.NotNull(
+            cut.Find("input[id^='optional-single-choice-opt-'][data-option-value='Other']")
+        );
+        Assert.NotNull(
+            cut.Find("input[id^='required-single-choice-opt-'][data-option-value='Other']")
+        );
 
-        Assert.NotNull(cut.Find("input#optional-multi-choice-Alpha"));
-        Assert.NotNull(cut.Find("input#required-multi-choice-Alpha"));
-        Assert.NotNull(cut.Find("input#optional-multi-choice-Other"));
-        Assert.NotNull(cut.Find("input#required-multi-choice-Other"));
+        Assert.NotNull(
+            cut.Find("input[id^='optional-multi-choice-opt-'][data-option-value='Alpha']")
+        );
+        Assert.NotNull(
+            cut.Find("input[id^='required-multi-choice-opt-'][data-option-value='Alpha']")
+        );
+        Assert.NotNull(
+            cut.Find("input[id^='optional-multi-choice-opt-'][data-option-value='Other']")
+        );
+        Assert.NotNull(
+            cut.Find("input[id^='required-multi-choice-opt-'][data-option-value='Other']")
+        );
 
         Assert.Empty(cut.FindAll("input#optional-single-choice-other-value"));
         Assert.Empty(cut.FindAll("input#required-single-choice-other-value"));

@@ -1,9 +1,9 @@
 @using System.Linq.Expressions
 
-<FormField TValue="int" Id="@Id" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
+<FormField TValue="int" Id="@ResolvedId" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
     <InputNumber
         TValue="int"
-        id="@Id"
+        id="@ResolvedId"
         class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
         @bind-Value="CurrentValue"
         @bind-Value:event="@(UpdateOnInput ? "oninput" : "onchange")"
@@ -21,6 +21,10 @@
     [Parameter] public string? Step { get; set; }
     [Parameter] public bool UpdateOnInput { get; set; }
     [Parameter] public Dictionary<string, object>? InputAttributes { get; set; }
+
+    private readonly string componentId = Guid.NewGuid().ToString("N")[..8];
+
+    private string ResolvedId => FormFieldIdResolver.Resolve(Id, ValueExpression, componentId);
 
     private int CurrentValue
     {

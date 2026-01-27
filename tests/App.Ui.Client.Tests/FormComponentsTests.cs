@@ -1,6 +1,8 @@
+using System.Linq.Expressions;
 using App.Contracts;
 using FormValidationTest.Client.Components.Forms;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace App.Ui.Client.Tests;
 
@@ -166,7 +168,8 @@ public sealed class FormComponentsTests : IDisposable
                 )
         );
 
-        cut.Find("input#choice-Beta").Change(SingleChoiceOption.Beta);
+        var betaInput = cut.Find("input[id^='choice-opt-'][data-option-value='Beta']");
+        betaInput.Change(SingleChoiceOption.Beta);
 
         Assert.Equal(SingleChoiceOption.Beta, selected);
     }
@@ -196,10 +199,12 @@ public sealed class FormComponentsTests : IDisposable
                 )
         );
 
-        cut.Find("input#multi-Alpha").Change(true);
+        var alphaInput = cut.Find("input[id^='multi-opt-'][data-option-value='Alpha']");
+        alphaInput.Change(true);
         Assert.Contains(MultiChoiceOption.Alpha, selected);
 
-        cut.Find("input#multi-Alpha").Change(false);
+        alphaInput = cut.Find("input[id^='multi-opt-'][data-option-value='Alpha']");
+        alphaInput.Change(false);
         Assert.DoesNotContain(MultiChoiceOption.Alpha, selected);
     }
 
@@ -225,7 +230,8 @@ public sealed class FormComponentsTests : IDisposable
 
         Assert.Empty(cut.FindAll("input#choice-other-value"));
 
-        cut.Find("input#choice-Other").Change(SingleChoiceOption.Other);
+        var otherRadio = cut.Find("input[id^='choice-opt-'][data-option-value='Other']");
+        otherRadio.Change(SingleChoiceOption.Other);
         cut = RenderRadioWithOther(
             options,
             otherOption,
@@ -246,7 +252,8 @@ public sealed class FormComponentsTests : IDisposable
 
         Assert.Equal("Delta", otherValue);
 
-        cut.Find("input#choice-Alpha").Change(SingleChoiceOption.Alpha);
+        var alphaRadio = cut.Find("input[id^='choice-opt-'][data-option-value='Alpha']");
+        alphaRadio.Change(SingleChoiceOption.Alpha);
         cut = RenderRadioWithOther(
             options,
             otherOption,
@@ -310,7 +317,8 @@ public sealed class FormComponentsTests : IDisposable
 
         Assert.Empty(cut.FindAll("input#multi-other-value"));
 
-        cut.Find("input#multi-Other").Change(true);
+        var otherCheckbox = cut.Find("input[id^='multi-opt-'][data-option-value='Other']");
+        otherCheckbox.Change(true);
         cut = RenderCheckboxWithOther(
             options,
             otherOption,
@@ -332,7 +340,8 @@ public sealed class FormComponentsTests : IDisposable
         Assert.Equal("Delta", otherValue);
         Assert.Contains(MultiChoiceOption.Other, selected);
 
-        cut.Find("input#multi-Other").Change(false);
+        otherCheckbox = cut.Find("input[id^='multi-opt-'][data-option-value='Other']");
+        otherCheckbox.Change(false);
         cut = RenderCheckboxWithOther(
             options,
             otherOption,
@@ -376,10 +385,43 @@ public sealed class FormComponentsTests : IDisposable
         }
     }
 
+    [Fact]
+    public void FormTextField_generates_fallback_id_from_value_expression()
+    {
+        var model = new FallbackIdModel();
+        Expression<Func<string>> valueExpression = () => model.Name;
+        RenderFragment<EditContext> childContent = _ =>
+            builder =>
+            {
+                builder.OpenComponent<FormTextField>(0);
+                builder.AddAttribute(1, nameof(FormTextField.Label), "Name");
+                builder.AddAttribute(2, nameof(FormTextField.Value), model.Name);
+                builder.AddAttribute(3, nameof(FormTextField.ValueExpression), valueExpression);
+                builder.CloseComponent();
+            };
+
+        var cut = context.Render<EditForm>(parameters =>
+            parameters.Add(p => p.Model, model).Add(p => p.ChildContent, childContent)
+        );
+
+        var input = cut.Find("input");
+        var label = cut.Find("label");
+        var resolvedId = input.Id;
+
+        Assert.False(string.IsNullOrWhiteSpace(resolvedId));
+        Assert.Equal(resolvedId, label.GetAttribute("for"));
+        Assert.Contains("name-field-", resolvedId, StringComparison.Ordinal);
+    }
+
     private enum TestOption
     {
         Unknown = 0,
         Alpha = 1,
         Beta = 2,
+    }
+
+    private sealed class FallbackIdModel
+    {
+        public string Name { get; set; } = string.Empty;
     }
 }

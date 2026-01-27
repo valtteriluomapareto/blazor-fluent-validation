@@ -1,14 +1,19 @@
+@using System.Globalization
 @using System.Linq.Expressions
 @using Microsoft.AspNetCore.Components.Forms
 @typeparam TValue
 
-<FormField TValue="TValue" Id="@Id" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
+<FormField TValue="TValue" Id="@ResolvedId" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
     <InputRadioGroup TValue="TValue" Name="@GroupName" class="space-y-2" @bind-Value="CurrentValue">
-        @foreach (var option in Options)
+        @for (var index = 0; index < Options.Count; index++)
         {
-            var optionId = $"{Id}-{option.Value}";
+            var option = Options[index];
+            var optionId = GetOptionId(index);
             <label class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:border-slate-300" for="@optionId">
-                <InputRadio TValue="TValue" id="@optionId" Value="@option.Value" class="mt-0.5" />
+                <InputRadio
+                    TValue="TValue"
+                    Value="@option.Value"
+                    AdditionalAttributes="GetOptionAttributes(optionId, option.Value)" />
                 <span class="space-y-0.5">
                     <span class="block font-medium text-slate-800">@option.Label</span>
                     @if (!string.IsNullOrWhiteSpace(option.HelpText))
@@ -21,7 +26,8 @@
 
         @if (OtherOption is not null)
         {
-            var otherOptionId = $"{Id}-{OtherOption.Value}";
+            var otherOptionIndex = Options.Count;
+            var otherOptionId = GetOptionId(otherOptionIndex);
 
             @*
               "Other" is treated as an additional radio option. When it is selected,
@@ -30,7 +36,10 @@
             *@
             <div class="space-y-2">
                 <label class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:border-slate-300" for="@otherOptionId">
-                    <InputRadio TValue="TValue" id="@otherOptionId" Value="@OtherOption.Value" class="mt-0.5" />
+                    <InputRadio
+                        TValue="TValue"
+                        Value="@OtherOption.Value"
+                        AdditionalAttributes="GetOptionAttributes(otherOptionId, OtherOption.Value)" />
                     <span class="space-y-0.5">
                         <span class="block font-medium text-slate-800">@OtherOption.Label</span>
                         @if (!string.IsNullOrWhiteSpace(OtherOption.HelpText))
@@ -89,6 +98,9 @@
     // when the selected value or the "Other" text changes.
     private FieldIdentifier? fieldIdentifier;
     private FieldIdentifier? otherFieldIdentifier;
+    private readonly string componentId = Guid.NewGuid().ToString("N")[..8];
+
+    private string ResolvedId => FormFieldIdResolver.Resolve(Id, ValueExpression, componentId, "group");
 
     protected override void OnParametersSet()
     {
@@ -131,12 +143,25 @@
         }
     }
 
-    private string GroupName => string.IsNullOrWhiteSpace(Name) ? Id : Name;
+    private string GroupName => string.IsNullOrWhiteSpace(Name) ? ResolvedId : Name;
 
     private bool IsOtherSelected =>
         OtherOption is not null && IsOtherValue(Value);
 
-    private string OtherInputId => $"{Id}-other-value";
+    private string OtherInputId => $"{ResolvedId}-other-value";
+
+    private string GetOptionId(int index) => $"{ResolvedId}-opt-{index}";
+
+    private static IReadOnlyDictionary<string, object> GetOptionAttributes(string optionId, TValue value)
+    {
+        var optionValue = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
+        return new Dictionary<string, object>
+        {
+            ["id"] = optionId,
+            ["class"] = "mt-0.5",
+            ["data-option-value"] = optionValue,
+        };
+    }
 
     private bool IsOtherValue(TValue value)
     {
