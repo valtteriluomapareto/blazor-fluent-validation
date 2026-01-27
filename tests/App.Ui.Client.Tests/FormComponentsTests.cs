@@ -215,28 +215,44 @@ public sealed class FormComponentsTests : IDisposable
         };
         var otherOption = new ChoiceOption<SingleChoiceOption>(SingleChoiceOption.Other, "Other");
 
-        var cut = RenderRadioWithOther(options, otherOption, selected, otherValue, value =>
-            selected = value
+        var cut = RenderRadioWithOther(
+            options,
+            otherOption,
+            selected,
+            otherValue,
+            value => selected = value
         );
 
         Assert.Empty(cut.FindAll("input#choice-other-value"));
 
         cut.Find("input#choice-Other").Change(SingleChoiceOption.Other);
-        cut = RenderRadioWithOther(options, otherOption, selected, otherValue, value =>
-            selected = value
+        cut = RenderRadioWithOther(
+            options,
+            otherOption,
+            selected,
+            otherValue,
+            value => selected = value
         );
 
         var otherInput = cut.Find("input#choice-other-value");
         otherInput.Input("Delta");
-        cut = RenderRadioWithOther(options, otherOption, selected, otherValue, value =>
-            selected = value
+        cut = RenderRadioWithOther(
+            options,
+            otherOption,
+            selected,
+            otherValue,
+            value => selected = value
         );
 
         Assert.Equal("Delta", otherValue);
 
         cut.Find("input#choice-Alpha").Change(SingleChoiceOption.Alpha);
-        cut = RenderRadioWithOther(options, otherOption, selected, otherValue, value =>
-            selected = value
+        cut = RenderRadioWithOther(
+            options,
+            otherOption,
+            selected,
+            otherValue,
+            value => selected = value
         );
 
         Assert.Equal(string.Empty, otherValue);
@@ -284,29 +300,45 @@ public sealed class FormComponentsTests : IDisposable
         };
         var otherOption = new ChoiceOption<MultiChoiceOption>(MultiChoiceOption.Other, "Other");
 
-        var cut = RenderCheckboxWithOther(options, otherOption, selected, otherValue, value =>
-            selected = value
+        var cut = RenderCheckboxWithOther(
+            options,
+            otherOption,
+            selected,
+            otherValue,
+            value => selected = value
         );
 
         Assert.Empty(cut.FindAll("input#multi-other-value"));
 
         cut.Find("input#multi-Other").Change(true);
-        cut = RenderCheckboxWithOther(options, otherOption, selected, otherValue, value =>
-            selected = value
+        cut = RenderCheckboxWithOther(
+            options,
+            otherOption,
+            selected,
+            otherValue,
+            value => selected = value
         );
 
         var otherInput = cut.Find("input#multi-other-value");
         otherInput.Input("Delta");
-        cut = RenderCheckboxWithOther(options, otherOption, selected, otherValue, value =>
-            selected = value
+        cut = RenderCheckboxWithOther(
+            options,
+            otherOption,
+            selected,
+            otherValue,
+            value => selected = value
         );
 
         Assert.Equal("Delta", otherValue);
         Assert.Contains(MultiChoiceOption.Other, selected);
 
         cut.Find("input#multi-Other").Change(false);
-        cut = RenderCheckboxWithOther(options, otherOption, selected, otherValue, value =>
-            selected = value
+        cut = RenderCheckboxWithOther(
+            options,
+            otherOption,
+            selected,
+            otherValue,
+            value => selected = value
         );
 
         Assert.Equal(string.Empty, otherValue);
@@ -331,10 +363,7 @@ public sealed class FormComponentsTests : IDisposable
                     .Add(p => p.OtherValue, currentOtherValue)
                     .Add(
                         p => p.ValueChanged,
-                        EventCallback.Factory.Create<List<MultiChoiceOption>>(
-                            this,
-                            valueChanged
-                        )
+                        EventCallback.Factory.Create<List<MultiChoiceOption>>(this, valueChanged)
                     )
                     .Add(
                         p => p.OtherValueChanged,
