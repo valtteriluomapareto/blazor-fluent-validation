@@ -6,24 +6,24 @@ This summary is based on the latest coverage run from:
 - Date: 2026-01-27
 
 ## Executive Summary
-- Overall line coverage: **89.8%**
-- Overall branch coverage: **77.8%**
+- Overall line coverage: **90.4%**
+- Overall branch coverage: **77.7%**
 - Strongest areas: `App.Contracts` (100%), `App.Validation` (95.5%), `App.Api` (91.9%)
-- Main remaining opportunities: `App.Ui.Client` (85%) still has a few concentrated gaps
+- Main remaining opportunities: `App.Ui.Client` (86.3%) still has a few concentrated gaps
 
 ## Coverage By Assembly (Line Coverage)
 - `App.Contracts`: **100%**
 - `App.Validation`: **95.5%**
 - `App.Api`: **91.9%**
 - `App.Integrations`: **91.5%**
-- `App.Ui.Client`: **85%**
+- `App.Ui.Client`: **86.3%**
 
 ## Notable Gaps And Risks
 The most important gaps are concentrated in the UI client, especially in user-critical pages and input components.
 
 High-risk coverage gaps:
 - `FormValidationTest.Client.Program`: **0%**
-- `FormValidationTest.Client.Services.LocalUsedNameLookup`: **0%**
+- `FormValidationTest.Client.ClientProgram`: **63.3%**
 
 Low-to-medium coverage gaps:
 - `FormDateField`: **68.7%**
@@ -36,8 +36,9 @@ Low-to-medium coverage gaps:
 Tabbed flows improved substantially:
 - `FormValidationTest.Client.Pages.TabbedForm`: **100%**
 - `FormValidationTest.Client.Pages.ComplexForm`: **100%**
+- `FormValidationTest.Client.Services.LocalUsedNameLookup`: **100%**
 
-The remaining gaps are mostly around DI/bootstrap (`Program`), local services, and a few input/validation plumbing components.
+The remaining gaps are mostly around DI/bootstrap (`Program` / `ClientProgram`) and a few input/validation plumbing components.
 
 ## Proposed Improvements (Prioritized)
 The goal is to raise UI confidence while keeping tests stable and fast.
@@ -46,8 +47,11 @@ The goal is to raise UI confidence while keeping tests stable and fast.
 Focus first on the remaining 0% coverage areas.
 
 Suggested additions:
-- Add a small DI smoke test around `FormValidationTest.Client.Program`.
-- Add a trivial unit test for `LocalUsedNameLookup` that asserts it returns an empty result.
+- Consider excluding `FormValidationTest.Client.Program` from coverage reports.
+
+Notes:
+- `WebAssemblyHostBuilder.CreateDefault(...)` throws `PlatformNotSupportedException` in the unit test runner (it requires the WebAssembly JS runtime).
+- As a mitigation, we extracted testable helpers in `ClientProgram` and added tests for culture, service registration, and base URL resolution.
 
 ### P1: Increase Coverage In Core Form Inputs And Plumbing
 Form input components are the “engine room” of validation UX. Incrementally hardening them pays off.
@@ -83,7 +87,7 @@ Suggested additions:
 ## Suggested Coverage Targets
 Pragmatic targets that match the current architecture and test style:
 - Keep `App.Validation`, `App.Api`, and `App.Contracts` above **90%** line coverage.
-- Raise `App.Ui.Client` from **85%** to at least **90%** line coverage.
+- Raise `App.Ui.Client` from **86.3%** to at least **90%** line coverage.
 - Aim for overall branch coverage above **80%**.
 
 ## How To Reproduce And Inspect
