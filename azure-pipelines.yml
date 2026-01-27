@@ -17,10 +17,13 @@ steps:
   - script: dotnet tool restore
     displayName: 'Restore dotnet tools'
 
-  - script: dotnet csharpier check .
-    displayName: 'CSharpier check'
+  - script: dotnet restore FormValidationTest.sln
+    displayName: 'Restore'
 
-  - script: dotnet build FormValidationTest.sln -c $(buildConfiguration)
+  - script: bash scripts/lint-check.sh
+    displayName: 'Lint check (CSharpier + analyzers)'
+
+  - script: dotnet build FormValidationTest.sln -c $(buildConfiguration) --no-restore
     displayName: 'Build'
 
   - script: bash scripts/test-fast.sh -c $(buildConfiguration) --no-build
