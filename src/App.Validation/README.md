@@ -6,6 +6,7 @@ Shared FluentValidation rules and validation utilities for the solution.
 
 - `SampleFormValidator` and `CustomerIntakeFormValidator` contain form-specific rules.
 - `FinnishSsn` provides parsing and validation for Finnish personal identity codes (HETU).
+- `FinnishBusinessIds` provides validation and checksum-based generation for Finnish Business IDs and VAT numbers.
 
 ## Finnish SSN Origin & Attribution
 
@@ -21,3 +22,11 @@ Notable adaptations:
 - The SSN **generation** helpers were intentionally omitted.
 - `DateOnly` is used for deterministic age and date-of-birth handling in tests.
 
+## Finnish Business ID Origin & Attribution
+
+The `FinnishBusinessIds` implementation and its unit tests were ported from a
+TypeScript validator and tests in the following project:
+
+```text
+https://github.com/vkomulai/finnish-business-ids
+```
