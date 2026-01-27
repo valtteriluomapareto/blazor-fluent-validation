@@ -28,9 +28,13 @@ public sealed class ValidationExamplesForm
 
     public SingleChoiceOption OptionalSingleChoice { get; set; } = SingleChoiceOption.None;
     public SingleChoiceOption RequiredSingleChoice { get; set; } = SingleChoiceOption.None;
+    public string OptionalSingleChoiceOther { get; set; } = string.Empty;
+    public string RequiredSingleChoiceOther { get; set; } = string.Empty;
 
     public List<MultiChoiceOption> OptionalMultiChoice { get; set; } = [];
     public List<MultiChoiceOption> RequiredMultiChoice { get; set; } = [];
+    public string OptionalMultiChoiceOther { get; set; } = string.Empty;
+    public string RequiredMultiChoiceOther { get; set; } = string.Empty;
 }
 
 public enum SingleChoiceOption
@@ -39,6 +43,7 @@ public enum SingleChoiceOption
     Alpha = 1,
     Beta = 2,
     Gamma = 3,
+    Other = 4,
 }
 
 public enum MultiChoiceOption
@@ -46,4 +51,5 @@ public enum MultiChoiceOption
     Alpha = 1,
     Beta = 2,
     Gamma = 3,
+    Other = 4,
 }

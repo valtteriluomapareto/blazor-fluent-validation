@@ -96,6 +96,10 @@ public sealed class ValidationExamplesFormValidatorTests
         result.ShouldNotHaveValidationErrorFor(x => x.OptionalPercentage);
         result.ShouldNotHaveValidationErrorFor(x => x.OptionalSingleChoice);
         result.ShouldNotHaveValidationErrorFor(x => x.OptionalMultiChoice);
+        result.ShouldNotHaveValidationErrorFor(x => x.OptionalSingleChoiceOther);
+        result.ShouldNotHaveValidationErrorFor(x => x.RequiredSingleChoiceOther);
+        result.ShouldNotHaveValidationErrorFor(x => x.OptionalMultiChoiceOther);
+        result.ShouldNotHaveValidationErrorFor(x => x.RequiredMultiChoiceOther);
     }
 
     [Fact]
@@ -159,6 +163,64 @@ public sealed class ValidationExamplesFormValidatorTests
         result.ShouldNotHaveValidationErrorFor(x => x.RequiredDecimalFi);
         result.ShouldNotHaveValidationErrorFor(x => x.RequiredEurAmount);
         result.ShouldNotHaveValidationErrorFor(x => x.RequiredPercentage);
+        result.ShouldNotHaveValidationErrorFor(x => x.RequiredSingleChoice);
+        result.ShouldNotHaveValidationErrorFor(x => x.RequiredMultiChoice);
+    }
+
+    [Fact]
+    public async Task Other_values_should_be_required_when_other_selected()
+    {
+        var model = CreateValidModel();
+        model.OptionalSingleChoice = SingleChoiceOption.Other;
+        model.RequiredSingleChoice = SingleChoiceOption.Other;
+        model.OptionalMultiChoice = [MultiChoiceOption.Other];
+        model.RequiredMultiChoice = [MultiChoiceOption.Other];
+
+        var result = await CreateValidator()
+            .TestValidateAsync(
+                model,
+                options => options.IncludeRuleSets("Local"),
+                cancellationToken: CancellationToken
+            );
+
+        result
+            .ShouldHaveValidationErrorFor(x => x.OptionalSingleChoiceOther)
+            .WithErrorCode("optional_single_choice.other_required");
+        result
+            .ShouldHaveValidationErrorFor(x => x.RequiredSingleChoiceOther)
+            .WithErrorCode("required_single_choice.other_required");
+        result
+            .ShouldHaveValidationErrorFor(x => x.OptionalMultiChoiceOther)
+            .WithErrorCode("optional_multi_choice.other_required");
+        result
+            .ShouldHaveValidationErrorFor(x => x.RequiredMultiChoiceOther)
+            .WithErrorCode("required_multi_choice.other_required");
+    }
+
+    [Fact]
+    public async Task Other_values_should_pass_when_other_selected_and_text_provided()
+    {
+        var model = CreateValidModel();
+        model.OptionalSingleChoice = SingleChoiceOption.Other;
+        model.OptionalSingleChoiceOther = "Delta";
+        model.RequiredSingleChoice = SingleChoiceOption.Other;
+        model.RequiredSingleChoiceOther = "Epsilon";
+        model.OptionalMultiChoice = [MultiChoiceOption.Other];
+        model.OptionalMultiChoiceOther = "Zeta";
+        model.RequiredMultiChoice = [MultiChoiceOption.Other];
+        model.RequiredMultiChoiceOther = "Eta";
+
+        var result = await CreateValidator()
+            .TestValidateAsync(
+                model,
+                options => options.IncludeRuleSets("Local"),
+                cancellationToken: CancellationToken
+            );
+
+        result.ShouldNotHaveValidationErrorFor(x => x.OptionalSingleChoiceOther);
+        result.ShouldNotHaveValidationErrorFor(x => x.RequiredSingleChoiceOther);
+        result.ShouldNotHaveValidationErrorFor(x => x.OptionalMultiChoiceOther);
+        result.ShouldNotHaveValidationErrorFor(x => x.RequiredMultiChoiceOther);
         result.ShouldNotHaveValidationErrorFor(x => x.RequiredSingleChoice);
         result.ShouldNotHaveValidationErrorFor(x => x.RequiredMultiChoice);
     }

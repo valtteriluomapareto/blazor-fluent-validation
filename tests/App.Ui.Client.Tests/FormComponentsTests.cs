@@ -203,6 +203,150 @@ public sealed class FormComponentsTests : IDisposable
         Assert.DoesNotContain(MultiChoiceOption.Alpha, selected);
     }
 
+    [Fact]
+    public void FormRadioGroupField_supports_other_option_with_text_value()
+    {
+        var selected = SingleChoiceOption.None;
+        var otherValue = string.Empty;
+        var options = new[]
+        {
+            new ChoiceOption<SingleChoiceOption>(SingleChoiceOption.None, "None"),
+            new ChoiceOption<SingleChoiceOption>(SingleChoiceOption.Alpha, "Alpha"),
+        };
+        var otherOption = new ChoiceOption<SingleChoiceOption>(SingleChoiceOption.Other, "Other");
+
+        var cut = RenderRadioWithOther(options, otherOption, selected, otherValue, value =>
+            selected = value
+        );
+
+        Assert.Empty(cut.FindAll("input#choice-other-value"));
+
+        cut.Find("input#choice-Other").Change(SingleChoiceOption.Other);
+        cut = RenderRadioWithOther(options, otherOption, selected, otherValue, value =>
+            selected = value
+        );
+
+        var otherInput = cut.Find("input#choice-other-value");
+        otherInput.Input("Delta");
+        cut = RenderRadioWithOther(options, otherOption, selected, otherValue, value =>
+            selected = value
+        );
+
+        Assert.Equal("Delta", otherValue);
+
+        cut.Find("input#choice-Alpha").Change(SingleChoiceOption.Alpha);
+        cut = RenderRadioWithOther(options, otherOption, selected, otherValue, value =>
+            selected = value
+        );
+
+        Assert.Equal(string.Empty, otherValue);
+        Assert.Empty(cut.FindAll("input#choice-other-value"));
+
+        IRenderedComponent<FormRadioGroupField<SingleChoiceOption>> RenderRadioWithOther(
+            IReadOnlyList<ChoiceOption<SingleChoiceOption>> radioOptions,
+            ChoiceOption<SingleChoiceOption> radioOtherOption,
+            SingleChoiceOption currentValue,
+            string currentOtherValue,
+            Action<SingleChoiceOption> valueChanged
+        )
+        {
+            return context.Render<FormRadioGroupField<SingleChoiceOption>>(parameters =>
+                parameters
+                    .Add(p => p.Id, "choice")
+                    .Add(p => p.Label, "Choice")
+                    .Add(p => p.Value, currentValue)
+                    .Add(p => p.Options, radioOptions)
+                    .Add(p => p.OtherOption, radioOtherOption)
+                    .Add(p => p.OtherValue, currentOtherValue)
+                    .Add(
+                        p => p.ValueChanged,
+                        EventCallback.Factory.Create<SingleChoiceOption>(this, valueChanged)
+                    )
+                    .Add(
+                        p => p.OtherValueChanged,
+                        EventCallback.Factory.Create<string?>(
+                            this,
+                            value => otherValue = value ?? string.Empty
+                        )
+                    )
+            );
+        }
+    }
+
+    [Fact]
+    public void FormCheckboxGroupField_supports_other_option_with_text_value()
+    {
+        var selected = new List<MultiChoiceOption>();
+        var otherValue = string.Empty;
+        var options = new[]
+        {
+            new ChoiceOption<MultiChoiceOption>(MultiChoiceOption.Alpha, "Alpha"),
+        };
+        var otherOption = new ChoiceOption<MultiChoiceOption>(MultiChoiceOption.Other, "Other");
+
+        var cut = RenderCheckboxWithOther(options, otherOption, selected, otherValue, value =>
+            selected = value
+        );
+
+        Assert.Empty(cut.FindAll("input#multi-other-value"));
+
+        cut.Find("input#multi-Other").Change(true);
+        cut = RenderCheckboxWithOther(options, otherOption, selected, otherValue, value =>
+            selected = value
+        );
+
+        var otherInput = cut.Find("input#multi-other-value");
+        otherInput.Input("Delta");
+        cut = RenderCheckboxWithOther(options, otherOption, selected, otherValue, value =>
+            selected = value
+        );
+
+        Assert.Equal("Delta", otherValue);
+        Assert.Contains(MultiChoiceOption.Other, selected);
+
+        cut.Find("input#multi-Other").Change(false);
+        cut = RenderCheckboxWithOther(options, otherOption, selected, otherValue, value =>
+            selected = value
+        );
+
+        Assert.Equal(string.Empty, otherValue);
+        Assert.DoesNotContain(MultiChoiceOption.Other, selected);
+        Assert.Empty(cut.FindAll("input#multi-other-value"));
+
+        IRenderedComponent<FormCheckboxGroupField<MultiChoiceOption>> RenderCheckboxWithOther(
+            IReadOnlyList<ChoiceOption<MultiChoiceOption>> checkboxOptions,
+            ChoiceOption<MultiChoiceOption> checkboxOtherOption,
+            List<MultiChoiceOption> currentValue,
+            string currentOtherValue,
+            Action<List<MultiChoiceOption>> valueChanged
+        )
+        {
+            return context.Render<FormCheckboxGroupField<MultiChoiceOption>>(parameters =>
+                parameters
+                    .Add(p => p.Id, "multi")
+                    .Add(p => p.Label, "Multi")
+                    .Add(p => p.Value, currentValue)
+                    .Add(p => p.Options, checkboxOptions)
+                    .Add(p => p.OtherOption, checkboxOtherOption)
+                    .Add(p => p.OtherValue, currentOtherValue)
+                    .Add(
+                        p => p.ValueChanged,
+                        EventCallback.Factory.Create<List<MultiChoiceOption>>(
+                            this,
+                            valueChanged
+                        )
+                    )
+                    .Add(
+                        p => p.OtherValueChanged,
+                        EventCallback.Factory.Create<string?>(
+                            this,
+                            value => otherValue = value ?? string.Empty
+                        )
+                    )
+            );
+        }
+    }
+
     private enum TestOption
     {
         Unknown = 0,

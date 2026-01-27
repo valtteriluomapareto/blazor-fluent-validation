@@ -25,6 +25,48 @@
                 </span>
             </label>
         }
+
+        @if (OtherOption is not null)
+        {
+            var otherOptionId = $"{Id}-{OtherOption.Value}";
+            var otherSelected = IsSelected(OtherOption.Value);
+
+            <div class="space-y-2">
+                <label class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:border-slate-300" for="@otherOptionId">
+                    <input
+                        id="@otherOptionId"
+                        class="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-300"
+                        type="checkbox"
+                        checked="@otherSelected"
+                        @onchange="@(args => OnChangedAsync(OtherOption.Value, args))" />
+                    <span class="space-y-0.5">
+                        <span class="block font-medium text-slate-800">@OtherOption.Label</span>
+                        @if (!string.IsNullOrWhiteSpace(OtherOption.HelpText))
+                        {
+                            <span class="block text-xs text-slate-500">@OtherOption.HelpText</span>
+                        }
+                    </span>
+                </label>
+
+                @if (otherSelected)
+                {
+                    <div class="pl-6">
+                        <input
+                            id="@OtherInputId"
+                            class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                            type="text"
+                            placeholder="@OtherPlaceholder"
+                            value="@OtherValue"
+                            @oninput="OnOtherValueChangedAsync" />
+
+                        @if (OtherValueExpression is not null)
+                        {
+                            <ValidationMessage For="OtherValueExpression" class="mt-1 text-sm text-rose-600" />
+                        }
+                    </div>
+                }
+            </div>
+        }
     </div>
 </FormField>
 
@@ -38,14 +80,26 @@
     [Parameter] public EventCallback<List<TOption>> ValueChanged { get; set; }
     [Parameter] public Expression<Func<List<TOption>>>? ValueExpression { get; set; }
     [Parameter] public IReadOnlyList<ChoiceOption<TOption>> Options { get; set; } = [];
+    [Parameter] public ChoiceOption<TOption>? OtherOption { get; set; }
+    [Parameter] public string? OtherValue { get; set; }
+    [Parameter] public EventCallback<string?> OtherValueChanged { get; set; }
+    [Parameter] public Expression<Func<string?>>? OtherValueExpression { get; set; }
+    [Parameter] public string? OtherPlaceholder { get; set; }
+    [Parameter] public bool ClearOtherOnDeselect { get; set; } = true;
 
     private FieldIdentifier? fieldIdentifier;
+    private FieldIdentifier? otherFieldIdentifier;
 
     protected override void OnParametersSet()
     {
         if (EditContext is not null && ValueExpression is not null)
         {
             fieldIdentifier = FieldIdentifier.Create(ValueExpression);
+        }
+
+        if (EditContext is not null && OtherValueExpression is not null)
+        {
+            otherFieldIdentifier = FieldIdentifier.Create(OtherValueExpression);
         }
     }
 
@@ -60,6 +114,7 @@
         var isChecked = args.Value is bool b && b;
         var comparer = EqualityComparer<TOption>.Default;
         var next = new List<TOption>(Value);
+        var isOtherOption = IsOtherOption(option);
 
         if (isChecked)
         {
@@ -75,10 +130,42 @@
 
         Value = next;
         await ValueChanged.InvokeAsync(next);
+        NotifyFieldChanged(fieldIdentifier);
 
-        if (EditContext is not null && fieldIdentifier.HasValue)
+        if (!isChecked && isOtherOption && ClearOtherOnDeselect && !string.IsNullOrWhiteSpace(OtherValue))
         {
-            EditContext.NotifyFieldChanged(fieldIdentifier.Value);
+            OtherValue = string.Empty;
+            await OtherValueChanged.InvokeAsync(OtherValue);
+            NotifyFieldChanged(otherFieldIdentifier);
+        }
+    }
+
+    private string OtherInputId => $"{Id}-other-value";
+
+    private bool IsOtherOption(TOption option)
+    {
+        return OtherOption is not null
+            && EqualityComparer<TOption>.Default.Equals(option, OtherOption.Value);
+    }
+
+    private async Task OnOtherValueChangedAsync(ChangeEventArgs args)
+    {
+        var nextOtherValue = args.Value?.ToString() ?? string.Empty;
+        if (string.Equals(OtherValue, nextOtherValue, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        OtherValue = nextOtherValue;
+        await OtherValueChanged.InvokeAsync(nextOtherValue);
+        NotifyFieldChanged(otherFieldIdentifier);
+    }
+
+    private void NotifyFieldChanged(FieldIdentifier? identifier)
+    {
+        if (EditContext is not null && identifier.HasValue)
+        {
+            EditContext.NotifyFieldChanged(identifier.Value);
         }
     }
 }

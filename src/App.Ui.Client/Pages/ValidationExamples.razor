@@ -183,14 +183,20 @@
                             Label="Single choice (optional)"
                             HelpText="Optional: leaving &quot;None&quot; selected is allowed."
                             Options="_singleChoiceOptions"
-                            @bind-Value="_model.OptionalSingleChoice" />
+                            OtherOption="_singleChoiceOtherOption"
+                            OtherPlaceholder="Describe your choice"
+                            @bind-Value="_model.OptionalSingleChoice"
+                            @bind-OtherValue="_model.OptionalSingleChoiceOther" />
 
                         <FormRadioGroupField TValue="SingleChoiceOption"
                             Id="required-single-choice"
                             Label="Single choice (required)"
-                            HelpText="Required: choose Alpha, Beta, or Gamma."
+                            HelpText="Required: choose Alpha, Beta, Gamma, or specify Other."
                             Options="_singleChoiceOptions"
-                            @bind-Value="_model.RequiredSingleChoice" />
+                            OtherOption="_singleChoiceOtherOption"
+                            OtherPlaceholder="Describe your choice"
+                            @bind-Value="_model.RequiredSingleChoice"
+                            @bind-OtherValue="_model.RequiredSingleChoiceOther" />
                     </div>
 
                     <div class="space-y-5">
@@ -199,14 +205,20 @@
                             Label="Multiple choice (optional)"
                             HelpText="Optional: zero selections is allowed."
                             Options="_multiChoiceOptions"
-                            @bind-Value="_model.OptionalMultiChoice" />
+                            OtherOption="_multiChoiceOtherOption"
+                            OtherPlaceholder="Add another option"
+                            @bind-Value="_model.OptionalMultiChoice"
+                            @bind-OtherValue="_model.OptionalMultiChoiceOther" />
 
                         <FormCheckboxGroupField TOption="MultiChoiceOption"
                             Id="required-multi-choice"
                             Label="Multiple choice (required)"
-                            HelpText="Required: select at least one option."
+                            HelpText="Required: select at least one option (Other requires text)."
                             Options="_multiChoiceOptions"
-                            @bind-Value="_model.RequiredMultiChoice" />
+                            OtherOption="_multiChoiceOtherOption"
+                            OtherPlaceholder="Add another option"
+                            @bind-Value="_model.RequiredMultiChoice"
+                            @bind-OtherValue="_model.RequiredMultiChoiceOther" />
                     </div>
                 </div>
             </section>
@@ -248,6 +260,12 @@
         new(MultiChoiceOption.Beta, "Beta"),
         new(MultiChoiceOption.Gamma, "Gamma"),
     ];
+
+    private readonly ChoiceOption<SingleChoiceOption> _singleChoiceOtherOption =
+        new(SingleChoiceOption.Other, "Other");
+
+    private readonly ChoiceOption<MultiChoiceOption> _multiChoiceOtherOption =
+        new(MultiChoiceOption.Other, "Other");
 
     protected override void OnInitialized()
     {

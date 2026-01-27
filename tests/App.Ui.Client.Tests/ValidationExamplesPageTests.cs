@@ -48,8 +48,17 @@ public sealed class ValidationExamplesPageTests : IDisposable
 
         Assert.NotNull(cut.Find("input#optional-single-choice-Alpha"));
         Assert.NotNull(cut.Find("input#required-single-choice-Alpha"));
+        Assert.NotNull(cut.Find("input#optional-single-choice-Other"));
+        Assert.NotNull(cut.Find("input#required-single-choice-Other"));
 
         Assert.NotNull(cut.Find("input#optional-multi-choice-Alpha"));
         Assert.NotNull(cut.Find("input#required-multi-choice-Alpha"));
+        Assert.NotNull(cut.Find("input#optional-multi-choice-Other"));
+        Assert.NotNull(cut.Find("input#required-multi-choice-Other"));
+
+        Assert.Empty(cut.FindAll("input#optional-single-choice-other-value"));
+        Assert.Empty(cut.FindAll("input#required-single-choice-other-value"));
+        Assert.Empty(cut.FindAll("input#optional-multi-choice-other-value"));
+        Assert.Empty(cut.FindAll("input#required-multi-choice-other-value"));
     }
 }

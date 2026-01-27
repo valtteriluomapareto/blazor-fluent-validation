@@ -1,4 +1,5 @@
 @using System.Linq.Expressions
+@using Microsoft.AspNetCore.Components.Forms
 @typeparam TValue
 
 <FormField TValue="TValue" Id="@Id" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
@@ -17,10 +18,48 @@
                 </span>
             </label>
         }
+
+        @if (OtherOption is not null)
+        {
+            var otherOptionId = $"{Id}-{OtherOption.Value}";
+
+            <div class="space-y-2">
+                <label class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:border-slate-300" for="@otherOptionId">
+                    <InputRadio TValue="TValue" id="@otherOptionId" Value="@OtherOption.Value" class="mt-0.5" />
+                    <span class="space-y-0.5">
+                        <span class="block font-medium text-slate-800">@OtherOption.Label</span>
+                        @if (!string.IsNullOrWhiteSpace(OtherOption.HelpText))
+                        {
+                            <span class="block text-xs text-slate-500">@OtherOption.HelpText</span>
+                        }
+                    </span>
+                </label>
+
+                @if (IsOtherSelected)
+                {
+                    <div class="pl-6">
+                        <input
+                            id="@OtherInputId"
+                            class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                            type="text"
+                            placeholder="@OtherPlaceholder"
+                            value="@OtherValue"
+                            @oninput="OnOtherValueChangedAsync" />
+
+                        @if (OtherValueExpression is not null)
+                        {
+                            <ValidationMessage For="OtherValueExpression" class="mt-1 text-sm text-rose-600" />
+                        }
+                    </div>
+                }
+            </div>
+        }
     </InputRadioGroup>
 </FormField>
 
 @code {
+    [CascadingParameter] private EditContext? EditContext { get; set; }
+
     [Parameter] public string Id { get; set; } = string.Empty;
     [Parameter] public string Label { get; set; } = string.Empty;
     [Parameter] public string? HelpText { get; set; }
@@ -29,6 +68,28 @@
     [Parameter] public Expression<Func<TValue>>? ValueExpression { get; set; }
     [Parameter] public string? Name { get; set; }
     [Parameter] public IReadOnlyList<ChoiceOption<TValue>> Options { get; set; } = [];
+    [Parameter] public ChoiceOption<TValue>? OtherOption { get; set; }
+    [Parameter] public string? OtherValue { get; set; }
+    [Parameter] public EventCallback<string?> OtherValueChanged { get; set; }
+    [Parameter] public Expression<Func<string?>>? OtherValueExpression { get; set; }
+    [Parameter] public string? OtherPlaceholder { get; set; }
+    [Parameter] public bool ClearOtherOnDeselect { get; set; } = true;
+
+    private FieldIdentifier? fieldIdentifier;
+    private FieldIdentifier? otherFieldIdentifier;
+
+    protected override void OnParametersSet()
+    {
+        if (EditContext is not null && ValueExpression is not null)
+        {
+            fieldIdentifier = FieldIdentifier.Create(ValueExpression);
+        }
+
+        if (EditContext is not null && OtherValueExpression is not null)
+        {
+            otherFieldIdentifier = FieldIdentifier.Create(OtherValueExpression);
+        }
+    }
 
     private TValue CurrentValue
     {
@@ -42,8 +103,48 @@
 
             Value = value;
             _ = ValueChanged.InvokeAsync(value);
+            NotifyFieldChanged(fieldIdentifier);
+
+            if (!IsOtherValue(value) && ClearOtherOnDeselect && !string.IsNullOrWhiteSpace(OtherValue))
+            {
+                OtherValue = string.Empty;
+                _ = OtherValueChanged.InvokeAsync(OtherValue);
+                NotifyFieldChanged(otherFieldIdentifier);
+            }
         }
     }
 
     private string GroupName => string.IsNullOrWhiteSpace(Name) ? Id : Name;
+
+    private bool IsOtherSelected =>
+        OtherOption is not null && IsOtherValue(Value);
+
+    private string OtherInputId => $"{Id}-other-value";
+
+    private bool IsOtherValue(TValue value)
+    {
+        return OtherOption is not null
+            && EqualityComparer<TValue>.Default.Equals(value, OtherOption.Value);
+    }
+
+    private async Task OnOtherValueChangedAsync(ChangeEventArgs args)
+    {
+        var nextOtherValue = args.Value?.ToString() ?? string.Empty;
+        if (string.Equals(OtherValue, nextOtherValue, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        OtherValue = nextOtherValue;
+        await OtherValueChanged.InvokeAsync(nextOtherValue);
+        NotifyFieldChanged(otherFieldIdentifier);
+    }
+
+    private void NotifyFieldChanged(FieldIdentifier? identifier)
+    {
+        if (EditContext is not null && identifier.HasValue)
+        {
+            EditContext.NotifyFieldChanged(identifier.Value);
+        }
+    }
 }

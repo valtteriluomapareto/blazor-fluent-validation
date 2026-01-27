@@ -191,5 +191,25 @@ public sealed class ValidationExamplesFormValidator : AbstractValidator<Validati
         RuleFor(x => x.RequiredMultiChoice)
             .Must(choices => choices.Count > 0)
             .WithErrorCode("required_multi_choice.required");
+
+        RuleFor(x => x.OptionalSingleChoiceOther)
+            .NotEmpty()
+            .WithErrorCode("optional_single_choice.other_required")
+            .When(x => x.OptionalSingleChoice == SingleChoiceOption.Other);
+
+        RuleFor(x => x.RequiredSingleChoiceOther)
+            .NotEmpty()
+            .WithErrorCode("required_single_choice.other_required")
+            .When(x => x.RequiredSingleChoice == SingleChoiceOption.Other);
+
+        RuleFor(x => x.OptionalMultiChoiceOther)
+            .NotEmpty()
+            .WithErrorCode("optional_multi_choice.other_required")
+            .When(x => x.OptionalMultiChoice.Contains(MultiChoiceOption.Other));
+
+        RuleFor(x => x.RequiredMultiChoiceOther)
+            .NotEmpty()
+            .WithErrorCode("required_multi_choice.other_required")
+            .When(x => x.RequiredMultiChoice.Contains(MultiChoiceOption.Other));
     }
 }
