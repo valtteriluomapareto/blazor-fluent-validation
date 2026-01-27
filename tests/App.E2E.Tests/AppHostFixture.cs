@@ -12,7 +12,7 @@ public sealed class AppHostFixture : IAsyncLifetime
     public Uri BaseUri { get; private set; } = null!;
     public string BaseUrl => BaseUri.ToString().TrimEnd('/');
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         var baseUrl = Environment.GetEnvironmentVariable("E2E_BASE_URL");
         if (string.IsNullOrWhiteSpace(baseUrl))
@@ -29,7 +29,7 @@ public sealed class AppHostFixture : IAsyncLifetime
         await WaitForHealthyAsync();
     }
 
-    public Task DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         if (hostProcess is not null)
         {
@@ -50,7 +50,7 @@ public sealed class AppHostFixture : IAsyncLifetime
             }
         }
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     private void StartHostProcess(Uri baseUri)
@@ -90,9 +90,7 @@ public sealed class AppHostFixture : IAsyncLifetime
         }
 
         outputLines.Enqueue(data);
-        while (outputLines.Count > 30 && outputLines.TryDequeue(out _))
-        {
-        }
+        while (outputLines.Count > 30 && outputLines.TryDequeue(out _)) { }
     }
 
     private async Task WaitForHealthyAsync()

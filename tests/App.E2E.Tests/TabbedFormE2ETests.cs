@@ -1,7 +1,7 @@
 using System.Globalization;
 using Microsoft.Playwright;
+using Xunit;
 using Assertions = Microsoft.Playwright.Assertions;
-using Xunit.Abstractions;
 
 namespace App.E2E.Tests;
 
@@ -34,7 +34,8 @@ public sealed class TabbedFormE2ETests
         TestReporter.Step(output, $"navigate {host.BaseUrl}/tabbed-form");
         await NavigateAndWaitForWasmAsync(page, "/tabbed-form");
 
-        await Assertions.Expect(
+        await Assertions
+            .Expect(
                 page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Tabbed Form" })
             )
             .ToBeVisibleAsync();
@@ -54,7 +55,9 @@ public sealed class TabbedFormE2ETests
         await FillAndCommitAsync(page.GetByLabel("Seats"), "25");
         await FillAndCommitAsync(page.GetByLabel("Estimated annual value"), "120000");
 
-        var startDate = DateTime.Today.AddDays(7).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var startDate = DateTime
+            .Today.AddDays(7)
+            .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         await FillAndCommitAsync(page.GetByLabel("Expected start date"), startDate);
 
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Next" })
@@ -67,21 +70,22 @@ public sealed class TabbedFormE2ETests
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
             .ClickAsync();
 
-        await Assertions.Expect(page.GetByRole(AriaRole.Status)).ToHaveTextAsync(
-            "Submission ready for CRM.",
-            new() { Timeout = 15000 }
-        );
+        await Assertions
+            .Expect(page.GetByRole(AriaRole.Status))
+            .ToHaveTextAsync("Submission ready for CRM.", new() { Timeout = 15000 });
     }
 
     private static async Task NavigateAndWaitForWasmAsync(IPage page, string path)
     {
-        var wasmResponse = page.WaitForResponseAsync(
-            response =>
-                response.Url.Contains("/_framework/dotnet", StringComparison.OrdinalIgnoreCase)
-                && response.Status == 200
+        var wasmResponse = page.WaitForResponseAsync(response =>
+            response.Url.Contains("/_framework/dotnet", StringComparison.OrdinalIgnoreCase)
+            && response.Status == 200
         );
 
-        await page.GotoAsync(path, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await page.GotoAsync(
+            path,
+            new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded }
+        );
         await wasmResponse;
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
     }
@@ -89,12 +93,16 @@ public sealed class TabbedFormE2ETests
     private static async Task FillAndCommitAsync(ILocator locator, string value)
     {
         await locator.FillAsync(value);
-        await locator.EvaluateAsync("el => el.dispatchEvent(new Event('change', { bubbles: true }))");
+        await locator.EvaluateAsync(
+            "el => el.dispatchEvent(new Event('change', { bubbles: true }))"
+        );
     }
 
     private static async Task SelectByLabelAndCommitAsync(ILocator locator, string label)
     {
         await locator.SelectOptionAsync(new[] { new SelectOptionValue { Label = label } });
-        await locator.EvaluateAsync("el => el.dispatchEvent(new Event('change', { bubbles: true }))");
+        await locator.EvaluateAsync(
+            "el => el.dispatchEvent(new Event('change', { bubbles: true }))"
+        );
     }
 }
