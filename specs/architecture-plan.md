@@ -20,7 +20,7 @@ Done
 - CI runs formatting/linting, non-E2E tests, and E2E tests.
 
 In progress / remaining
-- Localization strategy for validation messages.
+- Implement validation message localization using error codes in the UI.
 - Resilience defaults for external API calls.
 - Expand E2E coverage beyond the current key flows.
 
@@ -28,7 +28,8 @@ In progress / remaining
 Use these as concrete work items with suggested priority and owner placeholders.
 
 P0 (Next)
-- Decide and document localization strategy for validation messages (error codes -> UI mapping). Owner: TBD.
+- Implement validation message localization in UI via error code -> localized string mapping. Owner: TBD.
+- Update UI server-error mapping to prefer `errorCodes` with fallback to `errors`. Owner: TBD.
 - Add resilience defaults (timeouts + limited retries) for integrations and typed HTTP clients. Owner: TBD.
 
 P1 (Soon)
@@ -167,6 +168,17 @@ Split rules into two modes to avoid UI dependency on remote services:
 **Status**
 - Implemented and covered by validation + API tests.
 
+### Localization Strategy (Error Codes -> Messages)
+- Treat error codes as the contract; localized messages are a presentation concern.
+- Keep the API response shape as-is (`errors` + `errorCodes`), but the UI should prefer `errorCodes`.
+- Store localized validation messages in UI resources keyed by error code (for example, `Resources/ValidationMessages.<culture>.resx`).
+- Add a small UI service (for example, `IValidationMessageLocalizer`) that maps `(errorCode, fallbackMessage)` to a localized string with safe fallbacks.
+- For server validation errors, map `errorCodes` to localized messages and fall back to `errors` when the code is missing or unknown.
+- For local validation errors, ensure the UI can access error codes (either via a custom Blazilla adapter/interceptor or a rule helper that sets the error message to the error code).
+
+**Status**
+- Proposed; implementation pending.
+
 ## API Validation Integration
 - Use a route-group filter or endpoint filter to:
   - Resolve `IValidator<T>` from DI.
@@ -276,7 +288,8 @@ Split rules into two modes to avoid UI dependency on remote services:
    - Status: contract implemented and covered by `App.Api.Tests`.
 
 5. **Localization strategy for validation messages?**
-   - Proposed solution: keep stable error codes now; defer localization to a later phase by mapping codes to localized strings in UI.
+   - Proposed solution: use error codes as the stable contract and localize in the UI by mapping codes to resource strings, with fallback to server messages.
+   - Status: proposed; tracked as P0 work items above.
 
 6. **Resilience policy defaults for external APIs?**
    - Proposed solution: standard timeouts and limited retries for idempotent calls, with circuit breaker for unstable providers.
