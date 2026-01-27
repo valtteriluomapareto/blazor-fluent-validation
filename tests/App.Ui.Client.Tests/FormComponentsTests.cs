@@ -1,3 +1,4 @@
+using App.Contracts;
 using FormValidationTest.Client.Components.Forms;
 using Microsoft.AspNetCore.Components;
 
@@ -137,6 +138,69 @@ public sealed class FormComponentsTests : IDisposable
         cut.FindAll("button")[1].Click();
 
         Assert.Equal(1, activeTab);
+    }
+
+    [Fact]
+    public void FormRadioGroupField_updates_selected_value()
+    {
+        var selected = SingleChoiceOption.None;
+        var options = new[]
+        {
+            new ChoiceOption<SingleChoiceOption>(SingleChoiceOption.None, "None"),
+            new ChoiceOption<SingleChoiceOption>(SingleChoiceOption.Alpha, "Alpha"),
+            new ChoiceOption<SingleChoiceOption>(SingleChoiceOption.Beta, "Beta"),
+        };
+
+        var cut = context.Render<FormRadioGroupField<SingleChoiceOption>>(parameters =>
+            parameters
+                .Add(p => p.Id, "choice")
+                .Add(p => p.Label, "Choice")
+                .Add(p => p.Value, selected)
+                .Add(p => p.Options, options)
+                .Add(
+                    p => p.ValueChanged,
+                    EventCallback.Factory.Create<SingleChoiceOption>(
+                        this,
+                        value => selected = value
+                    )
+                )
+        );
+
+        cut.Find("input#choice-Beta").Change(SingleChoiceOption.Beta);
+
+        Assert.Equal(SingleChoiceOption.Beta, selected);
+    }
+
+    [Fact]
+    public void FormCheckboxGroupField_toggles_selection()
+    {
+        var selected = new List<MultiChoiceOption>();
+        var options = new[]
+        {
+            new ChoiceOption<MultiChoiceOption>(MultiChoiceOption.Alpha, "Alpha"),
+            new ChoiceOption<MultiChoiceOption>(MultiChoiceOption.Beta, "Beta"),
+        };
+
+        var cut = context.Render<FormCheckboxGroupField<MultiChoiceOption>>(parameters =>
+            parameters
+                .Add(p => p.Id, "multi")
+                .Add(p => p.Label, "Multi")
+                .Add(p => p.Value, selected)
+                .Add(p => p.Options, options)
+                .Add(
+                    p => p.ValueChanged,
+                    EventCallback.Factory.Create<List<MultiChoiceOption>>(
+                        this,
+                        value => selected = value
+                    )
+                )
+        );
+
+        cut.Find("input#multi-Alpha").Change(true);
+        Assert.Contains(MultiChoiceOption.Alpha, selected);
+
+        cut.Find("input#multi-Alpha").Change(false);
+        Assert.DoesNotContain(MultiChoiceOption.Alpha, selected);
     }
 
     private enum TestOption

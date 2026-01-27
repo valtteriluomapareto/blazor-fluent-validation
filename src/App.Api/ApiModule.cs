@@ -12,6 +12,10 @@ public static class ApiModule
     public static IServiceCollection AddApiServices(this IServiceCollection services)
     {
         services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
+        services.AddSingleton<
+            IValidator<ValidationExamplesForm>,
+            ValidationExamplesFormValidator
+        >();
         services.AddSingleton<IUsedNameLookup, MockUsedNameLookup>();
 
         return services;

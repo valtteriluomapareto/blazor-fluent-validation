@@ -9,6 +9,10 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
 builder.Services.AddSingleton<IValidator<CustomerIntakeForm>, CustomerIntakeFormValidator>();
+builder.Services.AddSingleton<
+    IValidator<ValidationExamplesForm>,
+    ValidationExamplesFormValidator
+>();
 builder.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
 
 var configuredBaseUrl = builder.Configuration["Api:BaseUrl"];

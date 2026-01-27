@@ -1,0 +1,278 @@
+@page "/validation-examples"
+@rendermode InteractiveWebAssembly
+@using global::App.Contracts
+@using FormValidationTest.Client.Components.Forms
+
+<PageTitle>Validation Examples</PageTitle>
+
+<div class="space-y-6">
+    <div class="space-y-2">
+        <h1>Validation Examples</h1>
+        <p class="text-slate-600">Examples for Finnish identifiers, IBAN, locale-aware numbers, currency, percentages, and multiple-choice fields.</p>
+    </div>
+
+    <FormCard>
+        <p class="text-sm font-semibold text-slate-700">What to try</p>
+        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+            <li>Leave required fields empty to see required errors.</li>
+            <li>Use the placeholders for known-valid examples.</li>
+            <li>Try Finnish-style numbers like <code>1 234,56</code>, <code>1 234,56 €</code>, and <code>12,5%</code>.</li>
+        </ul>
+    </FormCard>
+
+    <FormCard>
+        <EditForm EditContext="_editContext" OnSubmit="HandleSubmit" class="space-y-8">
+            <FluentValidator AsyncMode="true" RuleSets="@(new[] { "Local" })" />
+            <ValidationSummary class="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 empty:hidden" />
+
+            <section class="space-y-4">
+                <h2 class="text-base font-semibold text-slate-800">Finnish SSN (HETU)</h2>
+                <div class="grid gap-5 md:grid-cols-2">
+                    <FormTextField
+                        Id="optional-ssn"
+                        Label="Optional SSN"
+                        Placeholder="010199-8148"
+                        HelpText="Validated only when provided."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.OptionalFinnishSsn" />
+
+                    <FormTextField
+                        Id="required-ssn"
+                        Label="Required SSN"
+                        Placeholder="010199-8148"
+                        HelpText="Must be present and valid."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.RequiredFinnishSsn" />
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-base font-semibold text-slate-800">Finnish Business ID</h2>
+                <div class="grid gap-5 md:grid-cols-2">
+                    <FormTextField
+                        Id="optional-business-id"
+                        Label="Optional business ID"
+                        Placeholder="2617416-4"
+                        HelpText="Validated only when provided."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.OptionalBusinessId" />
+
+                    <FormTextField
+                        Id="required-business-id"
+                        Label="Required business ID"
+                        Placeholder="2617416-4"
+                        HelpText="Must be present and valid."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.RequiredBusinessId" />
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-base font-semibold text-slate-800">IBAN</h2>
+                <div class="grid gap-5 md:grid-cols-2">
+                    <FormTextField
+                        Id="optional-iban"
+                        Label="Optional IBAN"
+                        Placeholder="NL91 ABNA 0417 1643 00"
+                        HelpText="Whitespace is allowed."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.OptionalIban" />
+
+                    <FormTextField
+                        Id="required-iban"
+                        Label="Required IBAN"
+                        Placeholder="NL91 ABNA 0417 1643 00"
+                        HelpText="Must be present and valid."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.RequiredIban" />
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-base font-semibold text-slate-800">Email</h2>
+                <div class="grid gap-5 md:grid-cols-2">
+                    <FormTextField
+                        Id="optional-email"
+                        Label="Optional email"
+                        InputType="email"
+                        Placeholder="name@example.com"
+                        HelpText="Validated only when provided."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.OptionalEmail" />
+
+                    <FormTextField
+                        Id="required-email"
+                        Label="Required email"
+                        InputType="email"
+                        Placeholder="name@example.com"
+                        HelpText="Must be present and valid."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.RequiredEmail" />
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-base font-semibold text-slate-800">Decimals (Finnish locale)</h2>
+                <div class="grid gap-5 md:grid-cols-2">
+                    <FormTextField
+                        Id="optional-decimal-fi"
+                        Label="Optional decimal (fi-FI)"
+                        Placeholder="1 234,56"
+                        HelpText="Accepts comma decimals and spaces as thousands separators."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.OptionalDecimalFi" />
+
+                    <FormTextField
+                        Id="required-decimal-fi"
+                        Label="Required decimal (fi-FI)"
+                        Placeholder="1 234,56"
+                        HelpText="Must be present and valid in Finnish format."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.RequiredDecimalFi" />
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-base font-semibold text-slate-800">EUR amounts</h2>
+                <div class="grid gap-5 md:grid-cols-2">
+                    <FormTextField
+                        Id="optional-eur"
+                        Label="Optional EUR amount"
+                        Placeholder="1 234,56 €"
+                        HelpText="Accepts €, EUR, and Finnish number formatting."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.OptionalEurAmount" />
+
+                    <FormTextField
+                        Id="required-eur"
+                        Label="Required EUR amount"
+                        Placeholder="1 234,56 €"
+                        HelpText="Must be present, valid, and within range."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.RequiredEurAmount" />
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-base font-semibold text-slate-800">Percentages</h2>
+                <div class="grid gap-5 md:grid-cols-2">
+                    <FormTextField
+                        Id="optional-percentage"
+                        Label="Optional percentage"
+                        Placeholder="12,5%"
+                        HelpText="Accepts optional % suffix and Finnish number formatting."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.OptionalPercentage" />
+
+                    <FormTextField
+                        Id="required-percentage"
+                        Label="Required percentage"
+                        Placeholder="12,5%"
+                        HelpText="Must be present and between 0 and 100."
+                        UpdateOnInput="true"
+                        @bind-Value="_model.RequiredPercentage" />
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-base font-semibold text-slate-800">Multiple choice</h2>
+                <div class="grid gap-5 lg:grid-cols-2">
+                    <div class="space-y-5">
+                        <FormRadioGroupField TValue="SingleChoiceOption"
+                            Id="optional-single-choice"
+                            Label="Single choice (optional)"
+                            HelpText="Optional: leaving &quot;None&quot; selected is allowed."
+                            Options="_singleChoiceOptions"
+                            @bind-Value="_model.OptionalSingleChoice" />
+
+                        <FormRadioGroupField TValue="SingleChoiceOption"
+                            Id="required-single-choice"
+                            Label="Single choice (required)"
+                            HelpText="Required: choose Alpha, Beta, or Gamma."
+                            Options="_singleChoiceOptions"
+                            @bind-Value="_model.RequiredSingleChoice" />
+                    </div>
+
+                    <div class="space-y-5">
+                        <FormCheckboxGroupField TOption="MultiChoiceOption"
+                            Id="optional-multi-choice"
+                            Label="Multiple choice (optional)"
+                            HelpText="Optional: zero selections is allowed."
+                            Options="_multiChoiceOptions"
+                            @bind-Value="_model.OptionalMultiChoice" />
+
+                        <FormCheckboxGroupField TOption="MultiChoiceOption"
+                            Id="required-multi-choice"
+                            Label="Multiple choice (required)"
+                            HelpText="Required: select at least one option."
+                            Options="_multiChoiceOptions"
+                            @bind-Value="_model.RequiredMultiChoice" />
+                    </div>
+                </div>
+            </section>
+
+            <div class="flex items-center gap-3 border-t border-slate-200 pt-6">
+                <button type="submit" class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled="@_isSubmitting">
+                    @(_isSubmitting ? "Validating..." : "Validate form")
+                </button>
+                <span class="text-xs text-slate-500">Local validation only</span>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_submitMessage))
+            {
+                <div class="rounded-md border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800" role="status">
+                    @_submitMessage
+                </div>
+            }
+        </EditForm>
+    </FormCard>
+</div>
+
+@code {
+    private readonly ValidationExamplesForm _model = new();
+    private EditContext _editContext = null!;
+    private string? _submitMessage;
+    private bool _isSubmitting;
+
+    private readonly ChoiceOption<SingleChoiceOption>[] _singleChoiceOptions =
+    [
+        new(SingleChoiceOption.None, "None", "No selection"),
+        new(SingleChoiceOption.Alpha, "Alpha"),
+        new(SingleChoiceOption.Beta, "Beta"),
+        new(SingleChoiceOption.Gamma, "Gamma"),
+    ];
+
+    private readonly ChoiceOption<MultiChoiceOption>[] _multiChoiceOptions =
+    [
+        new(MultiChoiceOption.Alpha, "Alpha"),
+        new(MultiChoiceOption.Beta, "Beta"),
+        new(MultiChoiceOption.Gamma, "Gamma"),
+    ];
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _editContext.OnFieldChanged += (_, _) => _submitMessage = null;
+    }
+
+    private async Task HandleSubmit(EditContext editContext)
+    {
+        _submitMessage = null;
+        var isValid = await editContext.ValidateAsync();
+        if (!isValid)
+        {
+            _submitMessage = "Please fix the validation errors.";
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            _submitMessage = "All validation rules passed.";
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

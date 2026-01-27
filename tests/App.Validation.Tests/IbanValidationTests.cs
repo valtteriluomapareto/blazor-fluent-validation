@@ -28,4 +28,3 @@ public sealed class IbanValidationTests
         Assert.False(IbanValidation.IsValid("NL91ABNA0417164301"));
     }
 }
-

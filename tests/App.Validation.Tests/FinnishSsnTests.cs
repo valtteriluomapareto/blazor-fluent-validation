@@ -246,8 +246,8 @@ public sealed class FinnishSsnTests
     [Fact]
     public void Parse_should_reject_lowercase_checksum()
     {
-        var exception = Assert.Throws<ArgumentException>(
-            () => FinnishSsn.Parse("311210A540n", new DateOnly(2015, 2, 2))
+        var exception = Assert.Throws<ArgumentException>(() =>
+            FinnishSsn.Parse("311210A540n", new DateOnly(2015, 2, 2))
         );
 
         Assert.Contains("Not valid SSN format", exception.Message);
@@ -338,8 +338,8 @@ public sealed class FinnishSsnTests
     [Fact]
     public void Parse_should_reject_lowercase_checksum_with_new_identity_code()
     {
-        var exception = Assert.Throws<ArgumentException>(
-            () => FinnishSsn.Parse("311210E540n", new DateOnly(2015, 2, 2))
+        var exception = Assert.Throws<ArgumentException>(() =>
+            FinnishSsn.Parse("311210E540n", new DateOnly(2015, 2, 2))
         );
 
         Assert.Contains("Not valid SSN format", exception.Message);
@@ -367,4 +367,3 @@ public sealed class FinnishSsnTests
         Assert.Contains("Not valid SSN", exception.Message);
     }
 }
-

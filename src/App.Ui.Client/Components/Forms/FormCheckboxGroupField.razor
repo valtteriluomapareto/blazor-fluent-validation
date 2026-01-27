@@ -1,0 +1,84 @@
+@using System.Linq.Expressions
+@using Microsoft.AspNetCore.Components.Forms
+@typeparam TOption
+
+<FormField TValue="List<TOption>" Id="@Id" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
+    <div class="space-y-2">
+        @foreach (var option in Options)
+        {
+            var optionId = $"{Id}-{option.Value}";
+            var isChecked = IsSelected(option.Value);
+
+            <label class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:border-slate-300" for="@optionId">
+                <input
+                    id="@optionId"
+                    class="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-300"
+                    type="checkbox"
+                    checked="@isChecked"
+                    @onchange="@(args => OnChangedAsync(option.Value, args))" />
+                <span class="space-y-0.5">
+                    <span class="block font-medium text-slate-800">@option.Label</span>
+                    @if (!string.IsNullOrWhiteSpace(option.HelpText))
+                    {
+                        <span class="block text-xs text-slate-500">@option.HelpText</span>
+                    }
+                </span>
+            </label>
+        }
+    </div>
+</FormField>
+
+@code {
+    [CascadingParameter] private EditContext? EditContext { get; set; }
+
+    [Parameter] public string Id { get; set; } = string.Empty;
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string? HelpText { get; set; }
+    [Parameter] public List<TOption> Value { get; set; } = [];
+    [Parameter] public EventCallback<List<TOption>> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<List<TOption>>>? ValueExpression { get; set; }
+    [Parameter] public IReadOnlyList<ChoiceOption<TOption>> Options { get; set; } = [];
+
+    private FieldIdentifier? fieldIdentifier;
+
+    protected override void OnParametersSet()
+    {
+        if (EditContext is not null && ValueExpression is not null)
+        {
+            fieldIdentifier = FieldIdentifier.Create(ValueExpression);
+        }
+    }
+
+    private bool IsSelected(TOption option)
+    {
+        var comparer = EqualityComparer<TOption>.Default;
+        return Value.Any(value => comparer.Equals(value, option));
+    }
+
+    private async Task OnChangedAsync(TOption option, ChangeEventArgs args)
+    {
+        var isChecked = args.Value is bool b && b;
+        var comparer = EqualityComparer<TOption>.Default;
+        var next = new List<TOption>(Value);
+
+        if (isChecked)
+        {
+            if (!next.Any(value => comparer.Equals(value, option)))
+            {
+                next.Add(option);
+            }
+        }
+        else
+        {
+            next.RemoveAll(value => comparer.Equals(value, option));
+        }
+
+        Value = next;
+        await ValueChanged.InvokeAsync(next);
+
+        if (EditContext is not null && fieldIdentifier.HasValue)
+        {
+            EditContext.NotifyFieldChanged(fieldIdentifier.Value);
+        }
+    }
+}

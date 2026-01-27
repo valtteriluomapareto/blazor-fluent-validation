@@ -145,4 +145,3 @@ public sealed class CustomerIntakeFormValidatorTests
         result.ShouldNotHaveValidationErrorFor(x => x.VatNumber);
     }
 }
-

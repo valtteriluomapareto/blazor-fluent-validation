@@ -88,4 +88,3 @@ public static partial class FinnishBusinessIds
     [GeneratedRegex("^FI\\d{8}$", RegexOptions.CultureInvariant)]
     private static partial Regex VatNumberRegex();
 }
-

@@ -34,4 +34,3 @@ public static class IbanValidation
         return new string(buffer, 0, index);
     }
 }
-

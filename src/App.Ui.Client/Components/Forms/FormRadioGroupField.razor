@@ -1,0 +1,49 @@
+@using System.Linq.Expressions
+@typeparam TValue
+
+<FormField TValue="TValue" Id="@Id" Label="@Label" HelpText="@HelpText" ValueExpression="ValueExpression">
+    <InputRadioGroup TValue="TValue" Name="@GroupName" class="space-y-2" @bind-Value="CurrentValue">
+        @foreach (var option in Options)
+        {
+            var optionId = $"{Id}-{option.Value}";
+            <label class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:border-slate-300" for="@optionId">
+                <InputRadio TValue="TValue" id="@optionId" Value="@option.Value" class="mt-0.5" />
+                <span class="space-y-0.5">
+                    <span class="block font-medium text-slate-800">@option.Label</span>
+                    @if (!string.IsNullOrWhiteSpace(option.HelpText))
+                    {
+                        <span class="block text-xs text-slate-500">@option.HelpText</span>
+                    }
+                </span>
+            </label>
+        }
+    </InputRadioGroup>
+</FormField>
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string? HelpText { get; set; }
+    [Parameter] public TValue Value { get; set; } = default!;
+    [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<TValue>>? ValueExpression { get; set; }
+    [Parameter] public string? Name { get; set; }
+    [Parameter] public IReadOnlyList<ChoiceOption<TValue>> Options { get; set; } = [];
+
+    private TValue CurrentValue
+    {
+        get => Value;
+        set
+        {
+            if (EqualityComparer<TValue>.Default.Equals(Value, value))
+            {
+                return;
+            }
+
+            Value = value;
+            _ = ValueChanged.InvokeAsync(value);
+        }
+    }
+
+    private string GroupName => string.IsNullOrWhiteSpace(Name) ? Id : Name;
+}

@@ -116,4 +116,3 @@ public sealed class FinnishBusinessIdsTests
         Assert.Equal(5, FinnishBusinessIds.CalculateChecksum("1629284"));
     }
 }
-

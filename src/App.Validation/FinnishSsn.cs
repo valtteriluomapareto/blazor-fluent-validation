@@ -24,21 +24,7 @@ public static partial class FinnishSsn
         ['+'] = 1800,
     };
 
-    private static readonly int[] DaysInMonth =
-    [
-        31,
-        28,
-        31,
-        30,
-        31,
-        30,
-        31,
-        31,
-        30,
-        31,
-        30,
-        31,
-    ];
+    private static readonly int[] DaysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
     private static readonly char[] ChecksumTable = "0123456789ABCDEFHJKLMNPRSTUVWXY".ToCharArray();
 
@@ -122,8 +108,7 @@ public static partial class FinnishSsn
 
     private static bool BirthDayPassed(DateOnly dateOfBirth, DateOnly today)
     {
-        return
-            dateOfBirth.Month < today.Month
+        return dateOfBirth.Month < today.Month
             || (dateOfBirth.Month == today.Month && dateOfBirth.Day <= today.Day);
     }
 
@@ -140,4 +125,3 @@ public sealed record FinnishSsnParseResult(
     int AgeInYears,
     DateOnly DateOfBirth
 );
-
