@@ -1,9 +1,15 @@
+using System.Globalization;
 using App.Api;
 using App.Contracts;
 using App.Validation;
 using FluentValidation;
+using FormValidationTest.Client.Services.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var fiCulture = CultureInfo.GetCultureInfo("fi-FI");
+CultureInfo.DefaultThreadCurrentCulture = fiCulture;
+CultureInfo.DefaultThreadCurrentUICulture = fiCulture;
 
 builder.WebHost.UseStaticWebAssets();
 builder
@@ -13,6 +19,7 @@ builder
 builder.Services.AddHttpClient("Api");
 builder.Services.AddApiServices();
 builder.Services.AddSingleton<IValidator<CustomerIntakeForm>, CustomerIntakeFormValidator>();
+builder.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
 
 var app = builder.Build();
 

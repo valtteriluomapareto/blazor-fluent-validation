@@ -2,9 +2,11 @@
 @page "/sample-form-wasm"
 @rendermode InteractiveWebAssembly
 @using global::App.Contracts
+@using FormValidationTest.Client.Services.Validation
 @inject IConfiguration Configuration
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
+@inject IValidationMessageLocalizer ValidationMessageLocalizer
 @implements IDisposable
 
 <PageTitle>Sample Form</PageTitle>
@@ -104,13 +106,8 @@
             if (response.StatusCode == HttpStatusCode.BadRequest)
             {
                 var errorResponse = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>();
-                if (errorResponse?.Errors is { Count: > 0 })
+                if (errorResponse is not null && AddServerValidationErrors(errorResponse))
                 {
-                    foreach (var (field, messages) in errorResponse.Errors)
-                    {
-                        _messageStore?.Add(new FieldIdentifier(_model, field), messages);
-                    }
-
                     _editContext.NotifyValidationStateChanged();
                     _submitMessage = "Please fix the validation errors.";
                     return;
@@ -140,6 +137,45 @@
             : configuredBaseUrl;
 
         return new Uri(baseUrl, UriKind.Absolute);
+    }
+
+    private bool AddServerValidationErrors(ValidationErrorResponse errorResponse)
+    {
+        var addedAny = false;
+        var handledFields = new HashSet<string>(StringComparer.Ordinal);
+
+        if (errorResponse.ErrorCodes is { Count: > 0 })
+        {
+            foreach (var (field, codes) in errorResponse.ErrorCodes)
+            {
+                errorResponse.Errors.TryGetValue(field, out var fallbackMessages);
+                var localizedMessages = ValidationMessageLocalizer.LocalizeMany(codes, fallbackMessages);
+                if (localizedMessages.Count == 0)
+                {
+                    continue;
+                }
+
+                _messageStore?.Add(new FieldIdentifier(_model, field), localizedMessages);
+                handledFields.Add(field);
+                addedAny = true;
+            }
+        }
+
+        if (errorResponse.Errors is { Count: > 0 })
+        {
+            foreach (var (field, messages) in errorResponse.Errors)
+            {
+                if (handledFields.Contains(field))
+                {
+                    continue;
+                }
+
+                _messageStore?.Add(new FieldIdentifier(_model, field), messages);
+                addedAny = true;
+            }
+        }
+
+        return addedAny;
     }
 
     public void Dispose()

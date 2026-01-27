@@ -1,10 +1,16 @@
+using System.Globalization;
 using App.Abstractions;
 using App.Contracts;
 using App.Validation;
 using FluentValidation;
+using FormValidationTest.Client.Services.Validation;
 using FormValidationTest.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var fiCulture = CultureInfo.GetCultureInfo("fi-FI");
+CultureInfo.DefaultThreadCurrentCulture = fiCulture;
+CultureInfo.DefaultThreadCurrentUICulture = fiCulture;
 
 // Add services to the container.
 builder
@@ -18,6 +24,7 @@ builder.Services.AddSingleton<
     PrefillIntegrationDemoFormValidator
 >();
 builder.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
+builder.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
 builder.Services.AddHttpClient(
     "Api",
     client =>
