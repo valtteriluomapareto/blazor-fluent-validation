@@ -1,9 +1,11 @@
 using System.Linq.Expressions;
+using App.Abstractions;
 using App.Contracts;
 using App.Validation;
 using Blazilla;
 using FluentValidation;
 using FormValidationTest.Client.Components.Forms;
+using FormValidationTest.Client.Services;
 using FormValidationTest.Client.Services.Validation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -21,6 +23,8 @@ public sealed class FormComponentsTests : IDisposable
             IValidator<ValidationExamplesForm>,
             ValidationExamplesFormValidator
         >();
+        context.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
+        context.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
         context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
     }
 
@@ -51,6 +55,57 @@ public sealed class FormComponentsTests : IDisposable
         Assert.Equal("Field label", cut.Find("label").TextContent);
         Assert.Contains("Helpful hint", cut.Markup);
         Assert.NotNull(cut.Find("input#field"));
+    }
+
+    [Fact]
+    public async Task LocalizedFluentValidator_localizes_local_rules()
+    {
+        var model = new SampleForm { Name = string.Empty, Age = 10 };
+        var editContext = new EditContext(model);
+
+        RenderFragment<EditContext> childContent = _ =>
+            builder =>
+            {
+                builder.OpenComponent<LocalizedFluentValidator>(0);
+                builder.AddAttribute(1, nameof(LocalizedFluentValidator.AsyncMode), true);
+                builder.AddAttribute(2, nameof(LocalizedFluentValidator.RuleSets), new[] { "Local" });
+                builder.CloseComponent();
+
+                builder.OpenComponent<FormTextField>(10);
+                builder.AddAttribute(11, nameof(FormTextField.Id), "name");
+                builder.AddAttribute(12, nameof(FormTextField.Label), "Name");
+                builder.AddAttribute(13, nameof(FormTextField.Value), model.Name);
+                builder.AddAttribute(
+                    14,
+                    nameof(FormTextField.ValueExpression),
+                    (Expression<Func<string>>)(() => model.Name)
+                );
+                builder.CloseComponent();
+
+                builder.OpenComponent<FormNumberField>(20);
+                builder.AddAttribute(21, nameof(FormNumberField.Id), "age");
+                builder.AddAttribute(22, nameof(FormNumberField.Label), "Age");
+                builder.AddAttribute(23, nameof(FormNumberField.Value), model.Age);
+                builder.AddAttribute(
+                    24,
+                    nameof(FormNumberField.ValueExpression),
+                    (Expression<Func<int>>)(() => model.Age)
+                );
+                builder.CloseComponent();
+            };
+
+        context.Render<EditForm>(parameters =>
+            parameters.Add(p => p.EditContext, editContext).Add(p => p.ChildContent, childContent)
+        );
+
+        var isValid = await editContext.ValidateAsync();
+        Assert.False(isValid);
+
+        var nameField = new FieldIdentifier(model, nameof(SampleForm.Name));
+        var ageField = new FieldIdentifier(model, nameof(SampleForm.Age));
+
+        Assert.Contains("Nimi on pakollinen.", editContext.GetValidationMessages(nameField));
+        Assert.Contains("Iän tulee olla välillä 18–120.", editContext.GetValidationMessages(ageField));
     }
 
     [Fact]
