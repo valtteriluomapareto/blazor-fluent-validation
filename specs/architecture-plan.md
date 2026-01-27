@@ -10,28 +10,32 @@
 Done
 - Solution structure and project boundaries implemented.
 - Validation-first flow: local rule sets in UI, full rule sets in API.
-- Dual-mode UI (Server + WASM) for demo purposes.
+- Dual-mode UI (Server + WASM) for demo purposes via `App.Ui` + `App.Ui.Client`.
+- `App.Host` runs UI + API together for demos and E2E tests.
 - Mock integration in `App.Integrations` for async validation.
 - ProblemDetails-style validation error contract wired into API.
+- API tests lock the validation error contract and key rule sets.
+- Playwright E2E suite is in place for key flows.
+- UI component tests (`App.Ui.Client.Tests`) cover shared form components and pages.
+- CI runs formatting/linting, non-E2E tests, and E2E tests.
 
 In progress / remaining
-- Add API tests to lock the validation error response shape.
 - Localization strategy for validation messages.
 - Resilience defaults for external API calls.
-- E2E test suite (Playwright) to cover key flows.
+- Expand E2E coverage beyond the current key flows.
 
 ## Remaining Work: Task List
 Use these as concrete work items with suggested priority and owner placeholders.
 
 P0 (Next)
-- Add API tests to lock the error contract. Owner: TBD.
+- Decide and document localization strategy for validation messages (error codes -> UI mapping). Owner: TBD.
+- Add resilience defaults (timeouts + limited retries) for integrations and typed HTTP clients. Owner: TBD.
 
 P1 (Soon)
-- Decide localization strategy for validation messages (error codes -> UI mapping). Owner: TBD.
-- Add resilience defaults (timeouts + limited retries) for integrations. Owner: TBD.
+- Expand E2E scenarios around server-returned validation errors and multi-step flows. Owner: TBD.
 
 P2 (Later)
-- Add Playwright E2E suite for key flows (happy path + invalid inputs). Owner: TBD.
+- Enforce dependency direction via architecture tests or conventions in CI. Owner: TBD.
 
 ## Key Principles
 - Separation by responsibility: contracts, validation, integrations, API, UI.
@@ -47,7 +51,7 @@ P2 (Later)
 - Wires services and endpoints via `App.Api` extension methods.
 
 **Rules**
-- References `App.Ui` and `App.Api`.
+- References `App.Ui`, `App.Ui.Client`, and `App.Api`.
 
 **Status**
 - Implemented.
@@ -118,16 +122,28 @@ P2 (Later)
 
 ### `App.Ui`
 **Purpose**
-- Blazor Web App UI.
-- Uses DTOs from `App.Contracts`.
-- Runs local validation for immediate feedback (Blazilla `AsyncMode` + `RuleSets`).
+- Blazor Web App host (server-rendered shell + static assets).
+- References `App.Ui.Client` for shared interactive pages and components.
+- Wires validators and HTTP clients for interactive server rendering.
 
 **Rules**
-- Depends on `App.Contracts`, `App.Validation`.
+- Depends on `App.Contracts`, `App.Validation`, and `App.Ui.Client`.
 - Should not depend on `App.Integrations`.
 
 **Status**
-- Implemented (dual-mode host + client).
+- Implemented as the server host for dual-mode rendering.
+
+### `App.Ui.Client`
+**Purpose**
+- Blazor WebAssembly client assembly containing shared pages, form components, and client-only services.
+- Houses the reusable form field components and most validation demos.
+
+**Rules**
+- Depends on `App.Contracts`, `App.Validation`, and `App.Abstractions`.
+- Should not depend on `App.Integrations`.
+
+**Status**
+- Implemented and covered by `App.Ui.Client.Tests`.
 
 ## Validation Architecture
 
@@ -149,7 +165,7 @@ Split rules into two modes to avoid UI dependency on remote services:
 - Property paths must align with DTO property names used in the UI.
 
 **Status**
-- Partially implemented; error response tests still needed.
+- Implemented and covered by validation + API tests.
 
 ## API Validation Integration
 - Use a route-group filter or endpoint filter to:
@@ -164,15 +180,15 @@ Split rules into two modes to avoid UI dependency on remote services:
   - `errorCodes`: dictionary of property path to codes
 
 **Status**
-- Contract implemented; add API tests to lock it down.
+- Contract implemented and locked down with `App.Api.Tests`.
 
 ## UI Validation Integration
 - Use a FluentValidation adapter for Blazor forms.
-- Use local rules for immediate feedback.
+- Use local rules for immediate feedback in `App.Ui.Client` pages.
 - On submit, call API and map server validation errors back to the form.
 
 **Status**
-- Implemented.
+- Implemented and reinforced with `App.Ui.Client.Tests` and E2E coverage.
 
 ## External Integrations Strategy
 - Treat all external APIs as unstable.
@@ -200,7 +216,14 @@ Split rules into two modes to avoid UI dependency on remote services:
 - Validate error contract shape and codes for invalid inputs.
 
 **Status**
-- Partially implemented; error contract tests pending.
+- Implemented for validation error contracts and key endpoints.
+
+### `App.Ui.Client.Tests`
+- bUnit tests for shared form components and key validation pages.
+- Focus on client-side validation UX and error surfacing behavior.
+
+**Status**
+- Implemented.
 
 ### `App.E2E.Tests`
 - Small Playwright suite:
@@ -209,7 +232,7 @@ Split rules into two modes to avoid UI dependency on remote services:
 - Prefer role-based selectors for stability.
 
 **Status**
-- Not implemented yet.
+- Implemented with `App.Host` fixture; expand coverage over time.
 
 ## Formatting and CI
 
@@ -222,13 +245,13 @@ Split rules into two modes to avoid UI dependency on remote services:
 
 ### CI Pipeline (Azure DevOps)
 1. Format
-2. Build (Release)
-3. Validation unit tests
-4. API integration tests
-5. E2E tests (required or scheduled based on runtime)
+2. Restore + lint check script
+3. Build (Release)
+4. Non-E2E tests via `scripts/test-fast.sh`
+5. E2E tests via `tests/App.E2E.Tests`
 
 **Status**
-- Pipeline steps documented; E2E pending.
+- Implemented, including E2E execution.
 
 ## Maintainability and Governance
 - Enforce dependency direction via conventions or architecture tests.
@@ -245,11 +268,12 @@ Split rules into two modes to avoid UI dependency on remote services:
    - Implemented: UI runs `RuleSets="Local"` with Blazilla `AsyncMode="true"`, API runs all rules, and API errors are mapped back into the form.
 
 3. **Where should async validation interfaces live?**
-   - Proposed solution: place them in `App.Abstractions` so `App.Validation` can depend on them without dragging in integrations.
+   - Implemented: async validation interfaces live in `App.Abstractions` so `App.Validation` can depend on them without dragging in integrations.
+   - Status: settled.
 
 4. **What should the validation error response shape be?**
-   - Proposed solution: ProblemDetails + `errors` + `errorCodes`, with stable property paths. Add API tests to lock the contract.
-   - Status: contract implemented in API; tests pending.
+   - Implemented: ProblemDetails-style response + `errors` + `errorCodes`, with stable property paths.
+   - Status: contract implemented and covered by `App.Api.Tests`.
 
 5. **Localization strategy for validation messages?**
    - Proposed solution: keep stable error codes now; defer localization to a later phase by mapping codes to localized strings in UI.

@@ -8,7 +8,8 @@ Blazor Web App + Minimal API + FluentValidation solution organized for a validat
 
 ## Solution Layout
 - Host: `src/App.Host` — Single entry point that runs UI + API together (recommended for demos).
-- UI: `src/App.Ui` — Blazor Web App frontend. Uses contracts + validators for local form feedback and submits to the API.
+- UI host: `src/App.Ui` — Blazor Web App host and server-rendered shell. References the client assembly for interactive pages.
+- UI client: `src/App.Ui.Client` — Blazor WebAssembly client assembly containing shared pages, form components, and client services.
 - API: `src/App.Api` — Minimal API backend. Runs full validation (local + server rules), returns standardized error contracts.
 - Shared:
   - `src/App.Contracts` — DTOs and shared response/error contracts used by UI and API.
@@ -132,6 +133,11 @@ Run UI + API in a single host (recommended):
 dotnet run --project src/App.Host
 ```
 When running the host from Rider with Hot Reload enabled, changes under `src/App.Ui` and `src/App.Ui.Client` are watched by the host project for live updates.
+
+Watch the host with hot reload:
+```bash
+dotnet watch --project src/App.Host
+```
 
 Run the UI only (requires API running at `Api:BaseUrl`):
 ```bash
