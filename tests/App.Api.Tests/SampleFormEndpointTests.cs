@@ -3,12 +3,14 @@ using System.Net.Http.Json;
 using App.Contracts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Xunit;
 
 namespace App.Api.Tests;
 
 public sealed class SampleFormEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient client;
+    private static CancellationToken CancellationToken => TestContext.Current.CancellationToken;
 
     public SampleFormEndpointTests(WebApplicationFactory<Program> factory)
     {
@@ -20,11 +22,18 @@ public sealed class SampleFormEndpointTests : IClassFixture<WebApplicationFactor
     {
         var model = new SampleForm { Name = "", Age = 10 };
 
-        var response = await client.PostAsJsonAsync("/api/sample-form", model);
+        var response = await client.PostAsJsonAsync(
+            "/api/sample-form",
+            model,
+            options: null,
+            cancellationToken: CancellationToken
+        );
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var errors = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>();
+        var errors = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>(
+            cancellationToken: CancellationToken
+        );
 
         Assert.NotNull(errors);
         Assert.Equal("Validation failed.", errors!.Title);
@@ -38,11 +47,18 @@ public sealed class SampleFormEndpointTests : IClassFixture<WebApplicationFactor
     {
         var model = new SampleForm { Name = "Server", Age = 30 };
 
-        var response = await client.PostAsJsonAsync("/api/sample-form", model);
+        var response = await client.PostAsJsonAsync(
+            "/api/sample-form",
+            model,
+            options: null,
+            cancellationToken: CancellationToken
+        );
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var errors = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>();
+        var errors = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>(
+            cancellationToken: CancellationToken
+        );
 
         Assert.NotNull(errors);
         Assert.Contains("Name", errors!.Errors.Keys);
@@ -54,11 +70,18 @@ public sealed class SampleFormEndpointTests : IClassFixture<WebApplicationFactor
     {
         var model = new SampleForm { Name = "Taken", Age = 30 };
 
-        var response = await client.PostAsJsonAsync("/api/sample-form", model);
+        var response = await client.PostAsJsonAsync(
+            "/api/sample-form",
+            model,
+            options: null,
+            cancellationToken: CancellationToken
+        );
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var errors = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>();
+        var errors = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>(
+            cancellationToken: CancellationToken
+        );
 
         Assert.NotNull(errors);
         Assert.Contains("Name", errors!.Errors.Keys);
@@ -70,11 +93,18 @@ public sealed class SampleFormEndpointTests : IClassFixture<WebApplicationFactor
     {
         var model = new SampleForm { Name = "ApiOnly", Age = 30 };
 
-        var response = await client.PostAsJsonAsync("/api/sample-form", model);
+        var response = await client.PostAsJsonAsync(
+            "/api/sample-form",
+            model,
+            options: null,
+            cancellationToken: CancellationToken
+        );
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var errors = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>();
+        var errors = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>(
+            cancellationToken: CancellationToken
+        );
 
         Assert.NotNull(errors);
         Assert.Contains("Name", errors!.Errors.Keys);
@@ -86,11 +116,18 @@ public sealed class SampleFormEndpointTests : IClassFixture<WebApplicationFactor
     {
         var model = new SampleForm { Name = "Jane", Age = 30 };
 
-        var response = await client.PostAsJsonAsync("/api/sample-form", model);
+        var response = await client.PostAsJsonAsync(
+            "/api/sample-form",
+            model,
+            options: null,
+            cancellationToken: CancellationToken
+        );
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var payload = await response.Content.ReadFromJsonAsync<SampleFormResponse>();
+        var payload = await response.Content.ReadFromJsonAsync<SampleFormResponse>(
+            cancellationToken: CancellationToken
+        );
 
         Assert.NotNull(payload);
         Assert.Equal("Form is valid.", payload!.Message);

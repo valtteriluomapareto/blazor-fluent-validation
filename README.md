@@ -91,6 +91,16 @@ Check formatting (CI):
 dotnet csharpier check .
 ```
 
+Lint check (formatting + analyzers):
+```bash
+./scripts/lint-check.sh
+```
+
+Lint fix (formatting + analyzers where possible):
+```bash
+./scripts/lint-fix.sh
+```
+
 ## Package update checks (dotnet-outdated)
 
 Install/restore local tools:

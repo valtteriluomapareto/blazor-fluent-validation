@@ -1,11 +1,14 @@
 using App.Abstractions;
 using App.Contracts;
 using FluentValidation.TestHelper;
+using Xunit;
 
 namespace App.Validation.Tests;
 
 public sealed class SampleFormValidatorTests
 {
+    private static CancellationToken CancellationToken => TestContext.Current.CancellationToken;
+
     private static SampleFormValidator CreateValidator(params string[] usedNames)
     {
         return new SampleFormValidator(new TestUsedNameLookup(usedNames));
@@ -17,7 +20,11 @@ public sealed class SampleFormValidatorTests
         var model = new SampleForm { Name = "", Age = 25 };
 
         var result = await CreateValidator()
-            .TestValidateAsync(model, options => options.IncludeRuleSets("Local"));
+            .TestValidateAsync(
+                model,
+                options => options.IncludeRuleSets("Local"),
+                CancellationToken
+            );
 
         result.ShouldHaveValidationErrorFor(x => x.Name).WithErrorCode("name.required");
     }
@@ -28,7 +35,11 @@ public sealed class SampleFormValidatorTests
         var model = new SampleForm { Name = "Jane", Age = 10 };
 
         var result = await CreateValidator()
-            .TestValidateAsync(model, options => options.IncludeRuleSets("Local"));
+            .TestValidateAsync(
+                model,
+                options => options.IncludeRuleSets("Local"),
+                CancellationToken
+            );
 
         result.ShouldHaveValidationErrorFor(x => x.Age).WithErrorCode("age.range");
     }
@@ -39,7 +50,11 @@ public sealed class SampleFormValidatorTests
         var model = new SampleForm { Name = "Jane", Age = 30 };
 
         var result = await CreateValidator()
-            .TestValidateAsync(model, options => options.IncludeRuleSets("Local"));
+            .TestValidateAsync(
+                model,
+                options => options.IncludeRuleSets("Local"),
+                CancellationToken
+            );
 
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -50,7 +65,11 @@ public sealed class SampleFormValidatorTests
         var model = new SampleForm { Name = "Server", Age = 30 };
 
         var result = await CreateValidator("Taken")
-            .TestValidateAsync(model, options => options.IncludeRuleSets("Server"));
+            .TestValidateAsync(
+                model,
+                options => options.IncludeRuleSets("Server"),
+                CancellationToken
+            );
 
         result.ShouldHaveValidationErrorFor(x => x.Name).WithErrorCode("name.server_reserved");
     }
@@ -61,7 +80,11 @@ public sealed class SampleFormValidatorTests
         var model = new SampleForm { Name = "Taken", Age = 30 };
 
         var result = await CreateValidator("Taken")
-            .TestValidateAsync(model, options => options.IncludeRuleSets("Server"));
+            .TestValidateAsync(
+                model,
+                options => options.IncludeRuleSets("Server"),
+                CancellationToken
+            );
 
         result.ShouldHaveValidationErrorFor(x => x.Name).WithErrorCode("name.already_used");
     }
