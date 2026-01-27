@@ -128,16 +128,23 @@
                 return;
             }
 
+            var wasOtherSelected = IsOtherValue(Value);
             Value = value;
             _ = ValueChanged.InvokeAsync(value);
             NotifyFieldChanged(fieldIdentifier);
 
             // If the user moves away from "Other", optionally clear its text so
             // we do not carry a stale free-form value forward.
-            if (!IsOtherValue(value) && ClearOtherOnDeselect && !string.IsNullOrWhiteSpace(OtherValue))
+            if (wasOtherSelected && !IsOtherValue(value))
             {
-                OtherValue = string.Empty;
-                _ = OtherValueChanged.InvokeAsync(OtherValue);
+                if (ClearOtherOnDeselect && !string.IsNullOrWhiteSpace(OtherValue))
+                {
+                    OtherValue = string.Empty;
+                    _ = OtherValueChanged.InvokeAsync(OtherValue);
+                }
+
+                // Always notify the "Other" field when it becomes inactive so
+                // conditional validation messages can clear correctly.
                 NotifyFieldChanged(otherFieldIdentifier);
             }
         }

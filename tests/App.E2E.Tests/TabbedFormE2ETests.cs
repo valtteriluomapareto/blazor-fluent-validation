@@ -75,6 +75,80 @@ public sealed class TabbedFormE2ETests
             .ToHaveTextAsync("Submission ready for CRM.", new() { Timeout = 15000 });
     }
 
+    [Fact]
+    public async Task Tabbed_form_submit_empty_shows_validation_errors()
+    {
+        await using var context = await playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        );
+        var page = await context.NewPageAsync();
+
+        TestReporter.Step(output, $"navigate {host.BaseUrl}/tabbed-form");
+        await NavigateAndWaitForWasmAsync(page, "/tabbed-form");
+
+        await Assertions
+            .Expect(
+                page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Tabbed Form" })
+            )
+            .ToBeVisibleAsync();
+
+        TestReporter.Step(output, "go to final tab without filling");
+        await GoToFinalTabAsync(page);
+
+        TestReporter.Step(output, "submit empty form");
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
+            .ClickAsync();
+
+        await Assertions
+            .Expect(page.GetByRole(AriaRole.Status))
+            .ToHaveTextAsync("Please fix the validation errors.", new() { Timeout = 15000 });
+
+        var summaryText = await page.Locator(".border-rose-200").InnerTextAsync();
+        Assert.Contains("Customer Name", summaryText, StringComparison.Ordinal);
+        Assert.Contains("Contact Email", summaryText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Tabbed_form_errors_persist_when_navigating_tabs_after_failed_submit()
+    {
+        await using var context = await playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        );
+        var page = await context.NewPageAsync();
+
+        TestReporter.Step(output, $"navigate {host.BaseUrl}/tabbed-form");
+        await NavigateAndWaitForWasmAsync(page, "/tabbed-form");
+
+        await Assertions
+            .Expect(
+                page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Tabbed Form" })
+            )
+            .ToBeVisibleAsync();
+
+        await GoToFinalTabAsync(page);
+
+        TestReporter.Step(output, "submit empty form to generate errors");
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
+            .ClickAsync();
+
+        await Assertions
+            .Expect(page.GetByRole(AriaRole.Status))
+            .ToHaveTextAsync("Please fix the validation errors.", new() { Timeout = 15000 });
+
+        TestReporter.Step(output, "navigate back across tabs");
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Back" })
+            .ClickAsync();
+        await Assertions.Expect(page.GetByLabel("Contract type")).ToBeVisibleAsync();
+
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Back" })
+            .ClickAsync();
+        await Assertions.Expect(page.GetByLabel("Customer name")).ToBeVisibleAsync();
+
+        var summaryText = await page.Locator(".border-rose-200").InnerTextAsync();
+        Assert.Contains("Customer Name", summaryText, StringComparison.Ordinal);
+        Assert.Contains("Contact Email", summaryText, StringComparison.Ordinal);
+    }
+
     private static async Task NavigateAndWaitForWasmAsync(IPage page, string path)
     {
         var wasmResponse = page.WaitForResponseAsync(response =>
@@ -104,5 +178,16 @@ public sealed class TabbedFormE2ETests
         await locator.EvaluateAsync(
             "el => el.dispatchEvent(new Event('change', { bubbles: true }))"
         );
+    }
+
+    private static async Task GoToFinalTabAsync(IPage page)
+    {
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Next" })
+            .ClickAsync();
+        await Assertions.Expect(page.GetByLabel("Contract type")).ToBeVisibleAsync();
+
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Next" })
+            .ClickAsync();
+        await Assertions.Expect(page.GetByLabel("Notes")).ToBeVisibleAsync();
     }
 }

@@ -66,6 +66,48 @@ public sealed class PrefillIntegrationDemoE2ETests
             .ToBeVisibleAsync(new() { Timeout = 15000 });
     }
 
+    [Fact]
+    public async Task Newer_name_wins_over_late_stale_response()
+    {
+        await using var context = await playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        );
+        var page = await context.NewPageAsync();
+
+        TestReporter.Step(output, $"navigate {host.BaseUrl}/prefill-integration-demo");
+        await NavigateAndWaitForWasmAsync(page, "/prefill-integration-demo");
+
+        await Assertions
+            .Expect(
+                page.GetByRole(
+                    AriaRole.Heading,
+                    new PageGetByRoleOptions { Name = "Prefill From Integration" }
+                )
+            )
+            .ToBeVisibleAsync();
+
+        var nameInput = page.GetByLabel("Name");
+
+        TestReporter.Step(output, "trigger slow lookup then fast lookup");
+        await FillAndCommitAsync(nameInput, PrefillIntegrationDemoDefaults.SlowRaceName);
+        await FillAndCommitAsync(nameInput, PrefillIntegrationDemoDefaults.FastRaceName);
+
+        await Assertions
+            .Expect(page.GetByLabel("Address line 1"))
+            .ToHaveValueAsync("456 Rapid Ave", new() { Timeout = 15000 });
+
+        // Wait long enough for the slow stale response to arrive and confirm it is ignored.
+        await page.WaitForTimeoutAsync(1200);
+
+        await Assertions
+            .Expect(page.GetByLabel("Address line 1"))
+            .ToHaveValueAsync("456 Rapid Ave", new() { Timeout = 15000 });
+
+        await Assertions
+            .Expect(page.GetByLabel("Email"))
+            .ToHaveValueAsync("fast@example.com", new() { Timeout = 15000 });
+    }
+
     private static async Task NavigateAndWaitForWasmAsync(IPage page, string path)
     {
         var wasmResponse = page.WaitForResponseAsync(response =>

@@ -1,14 +1,26 @@
 using System.Linq.Expressions;
 using App.Contracts;
+using App.Validation;
+using Blazilla;
+using FluentValidation;
 using FormValidationTest.Client.Components.Forms;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace App.Ui.Client.Tests;
 
 public sealed class FormComponentsTests : IDisposable
 {
     private readonly BunitContext context = new();
+
+    public FormComponentsTests()
+    {
+        context.Services.AddSingleton<
+            IValidator<ValidationExamplesForm>,
+            ValidationExamplesFormValidator
+        >();
+    }
 
     public void Dispose() => context.Dispose();
 
@@ -411,6 +423,283 @@ public sealed class FormComponentsTests : IDisposable
         Assert.False(string.IsNullOrWhiteSpace(resolvedId));
         Assert.Equal(resolvedId, label.GetAttribute("for"));
         Assert.Contains("name-field-", resolvedId, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task FormRadioGroupField_notifies_edit_context_and_updates_validation_state()
+    {
+        var model = new ValidationExamplesForm();
+        var editContext = new EditContext(model);
+        var radioOptions = new[]
+        {
+            new ChoiceOption<SingleChoiceOption>(SingleChoiceOption.None, "None"),
+            new ChoiceOption<SingleChoiceOption>(SingleChoiceOption.Alpha, "Alpha"),
+        };
+        var otherOption = new ChoiceOption<SingleChoiceOption>(SingleChoiceOption.Other, "Other");
+        Expression<Func<SingleChoiceOption>> valueExpression = () => model.RequiredSingleChoice;
+        Expression<Func<string?>> otherExpression = () => model.RequiredSingleChoiceOther;
+        var singleChoiceField = new FieldIdentifier(model, nameof(model.RequiredSingleChoice));
+        var otherField = new FieldIdentifier(model, nameof(model.RequiredSingleChoiceOther));
+
+        var cut = RenderRadioHarness();
+
+        await editContext.ValidateAsync();
+        Assert.NotEmpty(editContext.GetValidationMessages(singleChoiceField));
+
+        cut.Find("input[data-option-value='Alpha']").Change(SingleChoiceOption.Alpha);
+        cut = RenderRadioHarness();
+        cut.WaitForAssertion(() =>
+            Assert.Empty(editContext.GetValidationMessages(singleChoiceField))
+        );
+
+        cut.Find("input[data-option-value='Other']").Change(SingleChoiceOption.Other);
+        cut = RenderRadioHarness();
+
+        var otherInput = cut.Find("input#required-single-choice-other-value");
+        otherInput.Input("Temp");
+        cut = RenderRadioHarness();
+        cut.WaitForAssertion(() => Assert.Empty(editContext.GetValidationMessages(otherField)));
+
+        otherInput = cut.Find("input#required-single-choice-other-value");
+        otherInput.Input(string.Empty);
+        cut = RenderRadioHarness();
+        cut.WaitForAssertion(() => Assert.NotEmpty(editContext.GetValidationMessages(otherField)));
+
+        otherInput = cut.Find("input#required-single-choice-other-value");
+        otherInput.Input("Delta");
+        cut = RenderRadioHarness();
+        cut.WaitForAssertion(() => Assert.Empty(editContext.GetValidationMessages(otherField)));
+
+        IRenderedComponent<EditForm> RenderRadioHarness()
+        {
+            RenderFragment<EditContext> childContent = _ =>
+                builder =>
+                {
+                    builder.OpenComponent<FluentValidator>(0);
+                    builder.AddAttribute(1, nameof(FluentValidator.AsyncMode), true);
+                    builder.AddAttribute(2, nameof(FluentValidator.RuleSets), new[] { "Local" });
+                    builder.CloseComponent();
+
+                    builder.OpenComponent<FormRadioGroupField<SingleChoiceOption>>(10);
+                    builder.AddAttribute(
+                        11,
+                        nameof(FormRadioGroupField<SingleChoiceOption>.Id),
+                        "required-single-choice"
+                    );
+                    builder.AddAttribute(
+                        12,
+                        nameof(FormRadioGroupField<SingleChoiceOption>.Label),
+                        "Required choice"
+                    );
+                    builder.AddAttribute(
+                        13,
+                        nameof(FormRadioGroupField<SingleChoiceOption>.Value),
+                        model.RequiredSingleChoice
+                    );
+                    builder.AddAttribute(
+                        14,
+                        nameof(FormRadioGroupField<SingleChoiceOption>.ValueChanged),
+                        EventCallback.Factory.Create<SingleChoiceOption>(
+                            this,
+                            value => model.RequiredSingleChoice = value
+                        )
+                    );
+                    builder.AddAttribute(
+                        15,
+                        nameof(FormRadioGroupField<SingleChoiceOption>.ValueExpression),
+                        valueExpression
+                    );
+                    builder.AddAttribute(
+                        16,
+                        nameof(FormRadioGroupField<SingleChoiceOption>.Options),
+                        radioOptions
+                    );
+                    builder.AddAttribute(
+                        17,
+                        nameof(FormRadioGroupField<SingleChoiceOption>.OtherOption),
+                        otherOption
+                    );
+                    builder.AddAttribute(
+                        18,
+                        nameof(FormRadioGroupField<SingleChoiceOption>.OtherValue),
+                        model.RequiredSingleChoiceOther
+                    );
+                    builder.AddAttribute(
+                        19,
+                        nameof(FormRadioGroupField<SingleChoiceOption>.OtherValueChanged),
+                        EventCallback.Factory.Create<string?>(
+                            this,
+                            value => model.RequiredSingleChoiceOther = value ?? string.Empty
+                        )
+                    );
+                    builder.AddAttribute(
+                        20,
+                        nameof(FormRadioGroupField<SingleChoiceOption>.OtherValueExpression),
+                        otherExpression
+                    );
+                    builder.CloseComponent();
+
+                    builder.OpenComponent<ValidationMessage<SingleChoiceOption>>(30);
+                    builder.AddAttribute(
+                        31,
+                        nameof(ValidationMessage<SingleChoiceOption>.For),
+                        valueExpression
+                    );
+                    builder.CloseComponent();
+
+                    builder.OpenComponent<ValidationMessage<string?>>(40);
+                    builder.AddAttribute(
+                        41,
+                        nameof(ValidationMessage<string?>.For),
+                        otherExpression
+                    );
+                    builder.CloseComponent();
+                };
+
+            return context.Render<EditForm>(parameters =>
+                parameters
+                    .Add(p => p.EditContext, editContext)
+                    .Add(p => p.ChildContent, childContent)
+            );
+        }
+    }
+
+    [Fact]
+    public async Task FormCheckboxGroupField_notifies_edit_context_and_updates_validation_state()
+    {
+        var model = new ValidationExamplesForm();
+        var editContext = new EditContext(model);
+        var checkboxOptions = new[]
+        {
+            new ChoiceOption<MultiChoiceOption>(MultiChoiceOption.Alpha, "Alpha"),
+            new ChoiceOption<MultiChoiceOption>(MultiChoiceOption.Beta, "Beta"),
+        };
+        var otherOption = new ChoiceOption<MultiChoiceOption>(MultiChoiceOption.Other, "Other");
+        Expression<Func<List<MultiChoiceOption>>> valueExpression = () => model.RequiredMultiChoice;
+        Expression<Func<string?>> otherExpression = () => model.RequiredMultiChoiceOther;
+        var multiChoiceField = new FieldIdentifier(model, nameof(model.RequiredMultiChoice));
+        var otherField = new FieldIdentifier(model, nameof(model.RequiredMultiChoiceOther));
+
+        var cut = RenderCheckboxHarness();
+
+        await editContext.ValidateAsync();
+        Assert.NotEmpty(editContext.GetValidationMessages(multiChoiceField));
+
+        cut.Find("input[data-option-value='Alpha']").Change(true);
+        cut = RenderCheckboxHarness();
+        cut.WaitForAssertion(() =>
+            Assert.Empty(editContext.GetValidationMessages(multiChoiceField))
+        );
+
+        cut.Find("input[data-option-value='Other']").Change(true);
+        cut = RenderCheckboxHarness();
+
+        var otherInput = cut.Find("input#required-multi-choice-other-value");
+        otherInput.Input("Temp");
+        cut = RenderCheckboxHarness();
+        cut.WaitForAssertion(() => Assert.Empty(editContext.GetValidationMessages(otherField)));
+
+        otherInput = cut.Find("input#required-multi-choice-other-value");
+        otherInput.Input(string.Empty);
+        cut = RenderCheckboxHarness();
+        cut.WaitForAssertion(() => Assert.NotEmpty(editContext.GetValidationMessages(otherField)));
+
+        cut.Find("input[data-option-value='Other']").Change(false);
+        cut = RenderCheckboxHarness();
+        cut.WaitForAssertion(() => Assert.Empty(editContext.GetValidationMessages(otherField)));
+
+        IRenderedComponent<EditForm> RenderCheckboxHarness()
+        {
+            RenderFragment<EditContext> childContent = _ =>
+                builder =>
+                {
+                    builder.OpenComponent<FluentValidator>(0);
+                    builder.AddAttribute(1, nameof(FluentValidator.AsyncMode), true);
+                    builder.AddAttribute(2, nameof(FluentValidator.RuleSets), new[] { "Local" });
+                    builder.CloseComponent();
+
+                    builder.OpenComponent<FormCheckboxGroupField<MultiChoiceOption>>(10);
+                    builder.AddAttribute(
+                        11,
+                        nameof(FormCheckboxGroupField<MultiChoiceOption>.Id),
+                        "required-multi-choice"
+                    );
+                    builder.AddAttribute(
+                        12,
+                        nameof(FormCheckboxGroupField<MultiChoiceOption>.Label),
+                        "Required multi choice"
+                    );
+                    builder.AddAttribute(
+                        13,
+                        nameof(FormCheckboxGroupField<MultiChoiceOption>.Value),
+                        model.RequiredMultiChoice
+                    );
+                    builder.AddAttribute(
+                        14,
+                        nameof(FormCheckboxGroupField<MultiChoiceOption>.ValueChanged),
+                        EventCallback.Factory.Create<List<MultiChoiceOption>>(
+                            this,
+                            value => model.RequiredMultiChoice = value
+                        )
+                    );
+                    builder.AddAttribute(
+                        15,
+                        nameof(FormCheckboxGroupField<MultiChoiceOption>.ValueExpression),
+                        valueExpression
+                    );
+                    builder.AddAttribute(
+                        16,
+                        nameof(FormCheckboxGroupField<MultiChoiceOption>.Options),
+                        checkboxOptions
+                    );
+                    builder.AddAttribute(
+                        17,
+                        nameof(FormCheckboxGroupField<MultiChoiceOption>.OtherOption),
+                        otherOption
+                    );
+                    builder.AddAttribute(
+                        18,
+                        nameof(FormCheckboxGroupField<MultiChoiceOption>.OtherValue),
+                        model.RequiredMultiChoiceOther
+                    );
+                    builder.AddAttribute(
+                        19,
+                        nameof(FormCheckboxGroupField<MultiChoiceOption>.OtherValueChanged),
+                        EventCallback.Factory.Create<string?>(
+                            this,
+                            value => model.RequiredMultiChoiceOther = value ?? string.Empty
+                        )
+                    );
+                    builder.AddAttribute(
+                        20,
+                        nameof(FormCheckboxGroupField<MultiChoiceOption>.OtherValueExpression),
+                        otherExpression
+                    );
+                    builder.CloseComponent();
+
+                    builder.OpenComponent<ValidationMessage<List<MultiChoiceOption>>>(30);
+                    builder.AddAttribute(
+                        31,
+                        nameof(ValidationMessage<List<MultiChoiceOption>>.For),
+                        valueExpression
+                    );
+                    builder.CloseComponent();
+
+                    builder.OpenComponent<ValidationMessage<string?>>(40);
+                    builder.AddAttribute(
+                        41,
+                        nameof(ValidationMessage<string?>.For),
+                        otherExpression
+                    );
+                    builder.CloseComponent();
+                };
+
+            return context.Render<EditForm>(parameters =>
+                parameters
+                    .Add(p => p.EditContext, editContext)
+                    .Add(p => p.ChildContent, childContent)
+            );
+        }
     }
 
     private enum TestOption

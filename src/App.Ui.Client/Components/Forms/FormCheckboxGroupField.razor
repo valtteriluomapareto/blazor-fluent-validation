@@ -165,12 +165,16 @@
         if (
             !isChecked
             && isOtherOption
-            && ClearOtherOnDeselect
-            && !string.IsNullOrWhiteSpace(OtherValue)
         )
         {
-            OtherValue = string.Empty;
-            await OtherValueChanged.InvokeAsync(OtherValue);
+            if (ClearOtherOnDeselect && !string.IsNullOrWhiteSpace(OtherValue))
+            {
+                OtherValue = string.Empty;
+                await OtherValueChanged.InvokeAsync(OtherValue);
+            }
+
+            // Always notify the "Other" field when it is deselected so
+            // conditional validation messages can clear correctly.
             NotifyFieldChanged(otherFieldIdentifier);
         }
     }
