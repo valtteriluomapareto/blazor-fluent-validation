@@ -18,6 +18,8 @@ Blazor Web App + Minimal API + FluentValidation solution organized for a validat
 - Tests:
   - `tests/App.Validation.Tests` — Unit tests for validators and error codes.
   - `tests/App.Api.Tests` — API tests validating response shapes and validation behavior.
+  - `tests/App.Ui.Client.Tests` — bUnit component tests for the WASM client.
+  - `tests/App.E2E.Tests` — Playwright end-to-end tests that boot `App.Host`.
 
 ## Commands (from repo root)
 
@@ -31,10 +33,43 @@ Build all projects:
 dotnet build FormValidationTest.sln -c Release
 ```
 
-Run tests:
+Run all tests (includes slower E2E):
 ```bash
 dotnet test FormValidationTest.sln -c Release
 ```
+
+Run fast tests only (skips E2E):
+```bash
+./scripts/test-fast.sh -c Release
+```
+This runs validation, API, and bUnit tests:
+- `tests/App.Validation.Tests/App.Validation.Tests.csproj`
+- `tests/App.Api.Tests/App.Api.Tests.csproj`
+- `tests/App.Ui.Client.Tests/App.Ui.Client.Tests.csproj`
+
+## Playwright E2E setup and usage
+
+Official docs: `https://playwright.dev/dotnet/docs/intro`
+
+1) Build the E2E project (generates the Playwright script):
+```bash
+dotnet build tests/App.E2E.Tests/App.E2E.Tests.csproj
+```
+
+2) Install Playwright browsers:
+```bash
+pwsh tests/App.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install
+```
+
+3) Run the E2E suite with line-friendly output:
+```bash
+dotnet test tests/App.E2E.Tests/App.E2E.Tests.csproj --logger "console;verbosity=detailed"
+```
+
+Useful E2E environment variables:
+- `E2E_BASE_URL` — point tests at an already running host (skips auto-start).
+- `E2E_APP_URL` — override the auto-start URL (default `http://127.0.0.1:5010`).
+- `E2E_HEADFUL=1` — run the browser headful for debugging.
 
 Restore local tools (CSharpier):
 ```bash
