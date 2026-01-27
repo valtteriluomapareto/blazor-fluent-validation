@@ -1,5 +1,5 @@
 using Microsoft.Playwright;
-using Microsoft.Playwright.Assertions;
+using Assertions = Microsoft.Playwright.Assertions;
 using Xunit.Abstractions;
 
 namespace App.E2E.Tests;
@@ -31,7 +31,7 @@ public sealed class SampleFormE2ETests
         var page = await context.NewPageAsync();
 
         TestReporter.Step(output, $"navigate {host.BaseUrl}/sample-form");
-        await page.GotoAsync("/sample-form");
+        await NavigateAndWaitForWasmAsync(page, "/sample-form");
 
         await Assertions.Expect(
                 page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Sample Form" })
@@ -42,10 +42,13 @@ public sealed class SampleFormE2ETests
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
             .ClickAsync();
 
-        await Assertions.Expect(page.GetByRole(AriaRole.Status))
-            .ToHaveTextAsync("Please fix the validation errors.");
+        await Assertions.Expect(page.GetByRole(AriaRole.Status)).ToHaveTextAsync(
+            "Please fix the validation errors.",
+            new() { Timeout = 15000 }
+        );
 
-        await Assertions.Expect(page.Locator(".text-rose-600")).ToHaveCountAsync(2);
+        await Assertions.Expect(page.Locator(".text-rose-600"))
+            .ToHaveCountAsync(2, new() { Timeout = 15000 });
     }
 
     [Fact]
@@ -57,7 +60,7 @@ public sealed class SampleFormE2ETests
         var page = await context.NewPageAsync();
 
         TestReporter.Step(output, $"navigate {host.BaseUrl}/sample-form");
-        await page.GotoAsync("/sample-form");
+        await NavigateAndWaitForWasmAsync(page, "/sample-form");
 
         await Assertions.Expect(
                 page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Sample Form" })
@@ -65,13 +68,35 @@ public sealed class SampleFormE2ETests
             .ToBeVisibleAsync();
 
         TestReporter.Step(output, "fill name and age");
-        await page.GetByLabel("Name").FillAsync("Jane");
-        await page.GetByLabel("Age").FillAsync("30");
+        await FillAndCommitAsync(page.GetByLabel("Name"), "Jane");
+        await FillAndCommitAsync(page.GetByLabel("Age"), "30");
 
         TestReporter.Step(output, "submit valid form");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
             .ClickAsync();
 
-        await Assertions.Expect(page.GetByRole(AriaRole.Status)).ToHaveTextAsync("Form is valid.");
+        await Assertions.Expect(page.GetByRole(AriaRole.Status)).ToHaveTextAsync(
+            "Form is valid.",
+            new() { Timeout = 15000 }
+        );
+    }
+
+    private static async Task NavigateAndWaitForWasmAsync(IPage page, string path)
+    {
+        var wasmResponse = page.WaitForResponseAsync(
+            response =>
+                response.Url.Contains("/_framework/dotnet", StringComparison.OrdinalIgnoreCase)
+                && response.Status == 200
+        );
+
+        await page.GotoAsync(path, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await wasmResponse;
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+    }
+
+    private static async Task FillAndCommitAsync(ILocator locator, string value)
+    {
+        await locator.FillAsync(value);
+        await locator.EvaluateAsync("el => el.dispatchEvent(new Event('change', { bubbles: true }))");
     }
 }

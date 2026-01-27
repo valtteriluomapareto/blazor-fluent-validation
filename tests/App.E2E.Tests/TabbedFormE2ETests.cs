@@ -1,6 +1,6 @@
 using System.Globalization;
 using Microsoft.Playwright;
-using Microsoft.Playwright.Assertions;
+using Assertions = Microsoft.Playwright.Assertions;
 using Xunit.Abstractions;
 
 namespace App.E2E.Tests;
@@ -32,7 +32,7 @@ public sealed class TabbedFormE2ETests
         var page = await context.NewPageAsync();
 
         TestReporter.Step(output, $"navigate {host.BaseUrl}/tabbed-form");
-        await page.GotoAsync("/tabbed-form");
+        await NavigateAndWaitForWasmAsync(page, "/tabbed-form");
 
         await Assertions.Expect(
                 page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Tabbed Form" })
@@ -40,9 +40,9 @@ public sealed class TabbedFormE2ETests
             .ToBeVisibleAsync();
 
         TestReporter.Step(output, "fill customer details");
-        await page.GetByLabel("Customer name").FillAsync("Acme Corp");
-        await page.GetByLabel("Contact email").FillAsync("hello@acme.com");
-        await page.GetByLabel("Industry").SelectOptionAsync("SaaS");
+        await FillAndCommitAsync(page.GetByLabel("Customer name"), "Acme Corp");
+        await FillAndCommitAsync(page.GetByLabel("Contact email"), "hello@acme.com");
+        await SelectByLabelAndCommitAsync(page.GetByLabel("Industry"), "SaaS");
 
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Next" })
             .ClickAsync();
@@ -50,12 +50,12 @@ public sealed class TabbedFormE2ETests
         await Assertions.Expect(page.GetByLabel("Contract type")).ToBeVisibleAsync();
 
         TestReporter.Step(output, "fill deal details");
-        await page.GetByLabel("Contract type").SelectOptionAsync("New");
-        await page.GetByLabel("Seats").FillAsync("25");
-        await page.GetByLabel("Estimated annual value").FillAsync("120000");
+        await SelectByLabelAndCommitAsync(page.GetByLabel("Contract type"), "New");
+        await FillAndCommitAsync(page.GetByLabel("Seats"), "25");
+        await FillAndCommitAsync(page.GetByLabel("Estimated annual value"), "120000");
 
         var startDate = DateTime.Today.AddDays(7).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        await page.GetByLabel("Expected start date").FillAsync(startDate);
+        await FillAndCommitAsync(page.GetByLabel("Expected start date"), startDate);
 
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Next" })
             .ClickAsync();
@@ -63,11 +63,38 @@ public sealed class TabbedFormE2ETests
         await Assertions.Expect(page.GetByLabel("Notes")).ToBeVisibleAsync();
 
         TestReporter.Step(output, "fill notes and submit");
-        await page.GetByLabel("Notes").FillAsync("E2E run notes.");
+        await FillAndCommitAsync(page.GetByLabel("Notes"), "E2E run notes.");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
             .ClickAsync();
 
-        await Assertions.Expect(page.GetByRole(AriaRole.Status))
-            .ToHaveTextAsync("Submission ready for CRM.");
+        await Assertions.Expect(page.GetByRole(AriaRole.Status)).ToHaveTextAsync(
+            "Submission ready for CRM.",
+            new() { Timeout = 15000 }
+        );
+    }
+
+    private static async Task NavigateAndWaitForWasmAsync(IPage page, string path)
+    {
+        var wasmResponse = page.WaitForResponseAsync(
+            response =>
+                response.Url.Contains("/_framework/dotnet", StringComparison.OrdinalIgnoreCase)
+                && response.Status == 200
+        );
+
+        await page.GotoAsync(path, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await wasmResponse;
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+    }
+
+    private static async Task FillAndCommitAsync(ILocator locator, string value)
+    {
+        await locator.FillAsync(value);
+        await locator.EvaluateAsync("el => el.dispatchEvent(new Event('change', { bubbles: true }))");
+    }
+
+    private static async Task SelectByLabelAndCommitAsync(ILocator locator, string label)
+    {
+        await locator.SelectOptionAsync(new[] { new SelectOptionValue { Label = label } });
+        await locator.EvaluateAsync("el => el.dispatchEvent(new Event('change', { bubbles: true }))");
     }
 }
