@@ -11,6 +11,6 @@ projects=(
 )
 
 for project in "${projects[@]}"; do
-  echo "==> dotnet test $project"
-  dotnet test "$project" "$@"
+  echo "==> dotnet test --project $project"
+  dotnet test --project "$project" "$@"
 done

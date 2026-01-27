@@ -23,5 +23,8 @@ steps:
   - script: dotnet build FormValidationTest.sln -c $(buildConfiguration)
     displayName: 'Build'
 
-  - script: dotnet test FormValidationTest.sln -c $(buildConfiguration) --no-build
-    displayName: 'Test'
+  - script: bash scripts/test-fast.sh -c $(buildConfiguration) --no-build
+    displayName: 'Test (non-E2E)'
+
+  - script: dotnet test --project tests/App.E2E.Tests/App.E2E.Tests.csproj -c $(buildConfiguration) --no-build
+    displayName: 'Test (E2E)'
