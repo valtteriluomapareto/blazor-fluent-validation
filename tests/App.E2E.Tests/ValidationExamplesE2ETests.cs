@@ -72,6 +72,75 @@ public sealed class ValidationExamplesE2ETests
             .ToHaveTextAsync("All validation rules passed.", new() { Timeout = 15000 });
     }
 
+    [Fact]
+    public async Task Validation_examples_other_requires_text_then_succeeds_when_fixed()
+    {
+        await using var context = await playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        );
+        var page = await context.NewPageAsync();
+
+        TestReporter.Step(output, $"navigate {host.BaseUrl}/validation-examples");
+        await NavigateAndWaitForWasmAsync(page, "/validation-examples");
+
+        await Assertions
+            .Expect(
+                page.GetByRole(
+                    AriaRole.Heading,
+                    new PageGetByRoleOptions { Name = "Validation Examples" }
+                )
+            )
+            .ToBeVisibleAsync();
+
+        TestReporter.Step(output, "fill required text inputs");
+        await FillAndCommitAsync(page.GetByLabel("Required SSN"), "010199-8148");
+        await FillAndCommitAsync(page.GetByLabel("Required business ID"), "2617416-4");
+        await FillAndCommitAsync(page.GetByLabel("Required IBAN"), "NL91 ABNA 0417 1643 00");
+        await FillAndCommitAsync(page.GetByLabel("Required email"), "name@example.com");
+        await FillAndCommitAsync(page.GetByLabel("Required decimal (fi-FI)"), "1234.56");
+        await FillAndCommitAsync(page.GetByLabel("Required EUR amount"), "1234.56 €");
+        await FillAndCommitAsync(page.GetByLabel("Required percentage"), "12.5%");
+
+        TestReporter.Step(output, "select enum values");
+        await SelectByLabelAndCommitAsync(page.GetByLabel("Industry (sentinel)"), "SaaS");
+        await SelectByLabelAndCommitAsync(page.GetByLabel("Industry (nullable)"), "Finance");
+
+        TestReporter.Step(output, "select Other without providing text");
+        await CheckAndCommitAsync(
+            page.Locator("input[id^='required-single-choice-opt-'][data-option-value='Other']")
+        );
+        await CheckAndCommitAsync(
+            page.Locator("input[id^='required-multi-choice-opt-'][data-option-value='Other']")
+        );
+
+        TestReporter.Step(output, "submit with missing Other text");
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Validate form" })
+            .ClickAsync();
+
+        await Assertions
+            .Expect(page.GetByRole(AriaRole.Status))
+            .ToHaveTextAsync("Please fix the validation errors.", new() { Timeout = 15000 });
+        await Assertions
+            .Expect(
+                page.GetByText("Muu-vaihtoehto vaatii lisäarvon.", new() { Exact = true }).First
+            )
+            .ToBeVisibleAsync(new() { Timeout = 15000 });
+
+        TestReporter.Step(output, "fill Other values and submit again");
+        await FillAndCommitAsync(page.Locator("input#required-single-choice-other-value"), "Delta");
+        await FillAndCommitAsync(page.Locator("input#required-multi-choice-other-value"), "Epsilon");
+
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Validate form" })
+            .ClickAsync();
+
+        await Assertions
+            .Expect(page.GetByRole(AriaRole.Status))
+            .ToHaveTextAsync("All validation rules passed.", new() { Timeout = 15000 });
+        await Assertions
+            .Expect(page.GetByText("Muu-vaihtoehto vaatii lisäarvon.", new() { Exact = true }))
+            .ToHaveCountAsync(0, new() { Timeout = 15000 });
+    }
+
     private static async Task NavigateAndWaitForWasmAsync(IPage page, string path)
     {
         var wasmResponse = page.WaitForResponseAsync(response =>

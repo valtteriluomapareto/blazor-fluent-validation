@@ -149,6 +149,71 @@ public sealed class TabbedFormE2ETests
         Assert.Contains("Yhteyssähköposti on pakollinen.", summaryText, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task Tabbed_form_invalid_then_fix_and_submit_succeeds()
+    {
+        await using var context = await playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        );
+        var page = await context.NewPageAsync();
+
+        TestReporter.Step(output, $"navigate {host.BaseUrl}/tabbed-form");
+        await NavigateAndWaitForWasmAsync(page, "/tabbed-form");
+
+        await Assertions
+            .Expect(
+                page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Tabbed Form" })
+            )
+            .ToBeVisibleAsync();
+
+        TestReporter.Step(output, "go to final tab and submit invalid form");
+        await GoToFinalTabAsync(page);
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
+            .ClickAsync();
+
+        await Assertions
+            .Expect(page.GetByRole(AriaRole.Status))
+            .ToHaveTextAsync("Please fix the validation errors.", new() { Timeout = 15000 });
+
+        TestReporter.Step(output, "navigate back and fix customer details");
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Back" })
+            .ClickAsync();
+        await Assertions.Expect(page.GetByLabel("Contract type")).ToBeVisibleAsync();
+
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Back" })
+            .ClickAsync();
+        await Assertions.Expect(page.GetByLabel("Customer name")).ToBeVisibleAsync();
+
+        await FillAndCommitAsync(page.GetByLabel("Customer name"), "Acme Corp");
+        await FillAndCommitAsync(page.GetByLabel("Contact email"), "hello@acme.com");
+        await SelectByLabelAndCommitAsync(page.GetByLabel("Industry"), "SaaS");
+
+        TestReporter.Step(output, "fix deal details and submit");
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Next" })
+            .ClickAsync();
+        await Assertions.Expect(page.GetByLabel("Contract type")).ToBeVisibleAsync();
+
+        await SelectByLabelAndCommitAsync(page.GetByLabel("Contract type"), "New");
+        await FillAndCommitAsync(page.GetByLabel("Seats"), "25");
+        await FillAndCommitAsync(page.GetByLabel("Estimated annual value"), "120000");
+
+        var startDate = DateTime
+            .Today.AddDays(7)
+            .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        await FillAndCommitAsync(page.GetByLabel("Expected start date"), startDate);
+
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Next" })
+            .ClickAsync();
+        await Assertions.Expect(page.GetByLabel("Notes")).ToBeVisibleAsync();
+
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
+            .ClickAsync();
+
+        await Assertions
+            .Expect(page.GetByRole(AriaRole.Status))
+            .ToHaveTextAsync("Submission ready for CRM.", new() { Timeout = 15000 });
+    }
+
     private static async Task NavigateAndWaitForWasmAsync(IPage page, string path)
     {
         var wasmResponse = page.WaitForResponseAsync(response =>

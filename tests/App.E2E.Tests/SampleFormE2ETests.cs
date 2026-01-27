@@ -82,6 +82,99 @@ public sealed class SampleFormE2ETests
             .ToHaveTextAsync("Form is valid.", new() { Timeout = 15000 });
     }
 
+    [Fact]
+    public async Task Sample_form_invalid_then_fix_and_submit_succeeds()
+    {
+        await using var context = await playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        );
+        var page = await context.NewPageAsync();
+
+        TestReporter.Step(output, $"navigate {host.BaseUrl}/sample-form");
+        await NavigateAndWaitForWasmAsync(page, "/sample-form");
+
+        await Assertions
+            .Expect(
+                page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Sample Form" })
+            )
+            .ToBeVisibleAsync();
+
+        TestReporter.Step(output, "submit invalid form first");
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
+            .ClickAsync();
+
+        await Assertions
+            .Expect(page.GetByRole(AriaRole.Status))
+            .ToHaveTextAsync("Please fix the validation errors.", new() { Timeout = 15000 });
+
+        await Assertions
+            .Expect(page.GetByText("Nimi on pakollinen.", new() { Exact = true }).First)
+            .ToBeVisibleAsync(new() { Timeout = 15000 });
+        await Assertions
+            .Expect(page.GetByText("Iän tulee olla välillä 18–120.", new() { Exact = true }).First)
+            .ToBeVisibleAsync(new() { Timeout = 15000 });
+
+        TestReporter.Step(output, "fix inputs and submit again");
+        await FillAndCommitAsync(page.GetByLabel("Name"), "Jane");
+        await FillAndCommitAsync(page.GetByLabel("Age"), "30");
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
+            .ClickAsync();
+
+        await Assertions
+            .Expect(page.GetByRole(AriaRole.Status))
+            .ToHaveTextAsync("Form is valid.", new() { Timeout = 15000 });
+
+        await Assertions
+            .Expect(page.GetByText("Nimi on pakollinen.", new() { Exact = true }))
+            .ToHaveCountAsync(0, new() { Timeout = 15000 });
+        await Assertions
+            .Expect(page.GetByText("Iän tulee olla välillä 18–120.", new() { Exact = true }))
+            .ToHaveCountAsync(0, new() { Timeout = 15000 });
+    }
+
+    [Fact]
+    public async Task Sample_form_server_error_then_fix_and_submit_succeeds()
+    {
+        await using var context = await playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        );
+        var page = await context.NewPageAsync();
+
+        TestReporter.Step(output, $"navigate {host.BaseUrl}/sample-form");
+        await NavigateAndWaitForWasmAsync(page, "/sample-form");
+
+        await Assertions
+            .Expect(
+                page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Sample Form" })
+            )
+            .ToBeVisibleAsync();
+
+        TestReporter.Step(output, "trigger server-side validation error");
+        await FillAndCommitAsync(page.GetByLabel("Name"), "Server");
+        await FillAndCommitAsync(page.GetByLabel("Age"), "30");
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
+            .ClickAsync();
+
+        await Assertions
+            .Expect(page.GetByRole(AriaRole.Status))
+            .ToHaveTextAsync("Please fix the validation errors.", new() { Timeout = 15000 });
+        await Assertions
+            .Expect(page.GetByText("Nimi ei voi olla 'Server'.", new() { Exact = true }).First)
+            .ToBeVisibleAsync(new() { Timeout = 15000 });
+
+        TestReporter.Step(output, "fix server error and submit again");
+        await FillAndCommitAsync(page.GetByLabel("Name"), "Jane");
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
+            .ClickAsync();
+
+        await Assertions
+            .Expect(page.GetByRole(AriaRole.Status))
+            .ToHaveTextAsync("Form is valid.", new() { Timeout = 15000 });
+        await Assertions
+            .Expect(page.GetByText("Nimi ei voi olla 'Server'.", new() { Exact = true }))
+            .ToHaveCountAsync(0, new() { Timeout = 15000 });
+    }
+
     private static async Task NavigateAndWaitForWasmAsync(IPage page, string path)
     {
         var wasmResponse = page.WaitForResponseAsync(response =>
