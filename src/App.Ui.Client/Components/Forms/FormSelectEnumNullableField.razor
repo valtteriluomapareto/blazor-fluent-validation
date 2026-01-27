@@ -1,0 +1,71 @@
+@using System.Linq.Expressions
+@typeparam TEnum where TEnum : struct, Enum
+
+<FormField
+    TValue="TEnum?"
+    Id="@ResolvedId"
+    Label="@Label"
+    HelpText="@HelpText"
+    ValueExpression="ValueExpression">
+    <InputSelect
+        TValue="TEnum?"
+        id="@ResolvedId"
+        class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+        @bind-Value="CurrentValue"
+        @attributes="InputAttributes">
+        @if (IncludePlaceholder)
+        {
+            <option value="" disabled="@PlaceholderDisabled">@PlaceholderLabel</option>
+        }
+
+        @foreach (var option in Enum.GetValues<TEnum>())
+        {
+            <option value="@option">@GetOptionLabel(option)</option>
+        }
+    </InputSelect>
+</FormField>
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string? HelpText { get; set; }
+    [Parameter] public TEnum? Value { get; set; }
+    [Parameter] public EventCallback<TEnum?> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<TEnum?>>? ValueExpression { get; set; }
+    [Parameter] public Func<TEnum, string>? OptionLabel { get; set; }
+    [Parameter] public Dictionary<string, object>? InputAttributes { get; set; }
+    [Parameter] public bool IncludePlaceholder { get; set; } = true;
+    [Parameter] public string PlaceholderLabel { get; set; } = "Select an option";
+    [Parameter] public bool PlaceholderDisabled { get; set; } = true;
+
+    private readonly string componentId = Guid.NewGuid().ToString("N")[..8];
+
+    private string ResolvedId => FormFieldIdResolver.Resolve(Id, ValueExpression, componentId);
+
+    private TEnum? CurrentValue
+    {
+        get => Value;
+        set
+        {
+            if (EqualityComparer<TEnum?>.Default.Equals(Value, value))
+            {
+                return;
+            }
+
+            Value = value;
+            _ = ValueChanged.InvokeAsync(value);
+        }
+    }
+
+    private string GetOptionLabel(TEnum value)
+    {
+        if (OptionLabel is not null)
+        {
+            return OptionLabel(value);
+        }
+
+        var text = value.ToString();
+        return string.IsNullOrWhiteSpace(text) ? string.Empty : text;
+    }
+}
+

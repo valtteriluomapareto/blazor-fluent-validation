@@ -8,7 +8,14 @@
         class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
         @bind-Value="CurrentValue"
         @attributes="InputAttributes">
-        @foreach (var option in Enum.GetValues<TEnum>())
+        @if (IncludePlaceholder)
+        {
+            <option value="@EffectivePlaceholderValue" disabled="@PlaceholderDisabled">
+                @PlaceholderLabel
+            </option>
+        }
+
+        @foreach (var option in OptionsToRender)
         {
             <option value="@option">@GetOptionLabel(option)</option>
         }
@@ -24,10 +31,40 @@
     [Parameter] public Expression<Func<TEnum>>? ValueExpression { get; set; }
     [Parameter] public Func<TEnum, string>? OptionLabel { get; set; }
     [Parameter] public Dictionary<string, object>? InputAttributes { get; set; }
+    [Parameter] public bool IncludePlaceholder { get; set; }
+    [Parameter] public string PlaceholderLabel { get; set; } = "Select an option";
+    [Parameter] public TEnum? PlaceholderValue { get; set; }
+    [Parameter] public bool PlaceholderDisabled { get; set; } = true;
 
     private readonly string componentId = Guid.NewGuid().ToString("N")[..8];
 
     private string ResolvedId => FormFieldIdResolver.Resolve(Id, ValueExpression, componentId);
+    private TEnum EffectivePlaceholderValue => PlaceholderValue ?? default;
+    private IReadOnlyList<TEnum> OptionsToRender =>
+        Enum.GetValues<TEnum>()
+            .Where(option =>
+                !IncludePlaceholder
+                || !EqualityComparer<TEnum>.Default.Equals(option, EffectivePlaceholderValue)
+            )
+            .ToArray();
+
+    protected override void OnParametersSet()
+    {
+        if (!IncludePlaceholder)
+        {
+            return;
+        }
+
+        // When using a placeholder with a non-nullable enum, require a defined sentinel value.
+        if (!Enum.IsDefined(typeof(TEnum), EffectivePlaceholderValue))
+        {
+            throw new InvalidOperationException(
+                $"{nameof(FormSelectEnumField<TEnum>)} requires a defined placeholder sentinel value. "
+                    + $"Either set {nameof(PlaceholderValue)} to a defined enum member "
+                    + $"or disable {nameof(IncludePlaceholder)}."
+            );
+        }
+    }
 
     private TEnum CurrentValue
     {

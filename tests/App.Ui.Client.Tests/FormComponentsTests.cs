@@ -135,6 +135,86 @@ public sealed class FormComponentsTests : IDisposable
     }
 
     [Fact]
+    public void FormSelectEnumField_includes_placeholder_when_requested()
+    {
+        var cut = context.Render<FormSelectEnumField<TestOption>>(parameters =>
+            parameters
+                .Add(p => p.Id, "option")
+                .Add(p => p.Label, "Option")
+                .Add(p => p.Value, TestOption.Unknown)
+                .Add(p => p.IncludePlaceholder, true)
+                .Add(p => p.PlaceholderLabel, "Select an option")
+        );
+
+        var options = cut.FindAll("select#option option");
+        Assert.Equal("Select an option", options[0].TextContent);
+        Assert.DoesNotContain(
+            options,
+            option => string.Equals(option.TextContent, "Unknown", StringComparison.Ordinal)
+        );
+    }
+
+    [Fact]
+    public void FormSelectEnumField_requires_defined_placeholder_sentinel()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            context.Render<FormSelectEnumField<NoZeroOption>>(parameters =>
+                parameters
+                    .Add(p => p.Id, "no-zero")
+                    .Add(p => p.Label, "No zero")
+                    .Add(p => p.Value, NoZeroOption.Alpha)
+                    .Add(p => p.IncludePlaceholder, true)
+            )
+        );
+
+        Assert.Contains(
+            nameof(FormSelectEnumField<NoZeroOption>),
+            exception.Message,
+            StringComparison.Ordinal
+        );
+    }
+
+    [Fact]
+    public void FormSelectEnumNullableField_allows_null_placeholder_and_selection()
+    {
+        var model = new NullableEnumModel();
+
+        var cut = RenderNullableSelect();
+        var options = cut.FindAll("select#nullable-option option");
+        Assert.Equal("Select an option", options[0].TextContent);
+
+        var select = cut.Find("select#nullable-option");
+        select.Change(NullableOption.Alpha);
+
+        cut = RenderNullableSelect();
+        Assert.Equal(NullableOption.Alpha, model.Option);
+
+        select = cut.Find("select#nullable-option");
+        select.Change(string.Empty);
+
+        cut = RenderNullableSelect();
+        Assert.Null(model.Option);
+
+        IRenderedComponent<FormSelectEnumNullableField<NullableOption>> RenderNullableSelect()
+        {
+            return context.Render<FormSelectEnumNullableField<NullableOption>>(parameters =>
+                parameters
+                    .Add(p => p.Id, "nullable-option")
+                    .Add(p => p.Label, "Nullable option")
+                    .Add(p => p.Value, model.Option)
+                    .Add(
+                        p => p.ValueChanged,
+                        EventCallback.Factory.Create<NullableOption?>(
+                            this,
+                            value => model.Option = value
+                        )
+                    )
+                    .Add(p => p.PlaceholderDisabled, false)
+            );
+        }
+    }
+
+    [Fact]
     public void FormTabs_invokes_active_tab_changed()
     {
         var activeTab = 0;
@@ -709,8 +789,25 @@ public sealed class FormComponentsTests : IDisposable
         Beta = 2,
     }
 
+    private enum NoZeroOption
+    {
+        Alpha = 1,
+        Beta = 2,
+    }
+
+    private enum NullableOption
+    {
+        Alpha = 1,
+        Beta = 2,
+    }
+
     private sealed class FallbackIdModel
     {
         public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed class NullableEnumModel
+    {
+        public NullableOption? Option { get; set; }
     }
 }
