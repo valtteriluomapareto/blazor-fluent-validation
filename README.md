@@ -35,7 +35,7 @@ dotnet build FormValidationTest.sln -c Release
 
 Run all tests (includes slower E2E):
 ```bash
-dotnet test FormValidationTest.sln -c Release
+dotnet test --solution FormValidationTest.sln -c Release
 ```
 
 Run fast tests only (skips E2E):
@@ -46,6 +46,11 @@ This runs validation, API, and bUnit tests:
 - `tests/App.Validation.Tests/App.Validation.Tests.csproj`
 - `tests/App.Api.Tests/App.Api.Tests.csproj`
 - `tests/App.Ui.Client.Tests/App.Ui.Client.Tests.csproj`
+
+Run E2E tests separately:
+```bash
+dotnet test --project tests/App.E2E.Tests/App.E2E.Tests.csproj -c Release
+```
 
 ## Playwright E2E setup and usage
 
@@ -63,7 +68,7 @@ pwsh tests/App.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install
 
 3) Run the E2E suite with line-friendly output:
 ```bash
-dotnet test tests/App.E2E.Tests/App.E2E.Tests.csproj --logger "console;verbosity=detailed"
+dotnet test --project tests/App.E2E.Tests/App.E2E.Tests.csproj --logger "console;verbosity=detailed"
 ```
 
 Useful E2E environment variables:
