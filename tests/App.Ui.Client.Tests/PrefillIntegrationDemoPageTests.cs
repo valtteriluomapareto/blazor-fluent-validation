@@ -11,27 +11,11 @@ namespace App.Ui.Client.Tests;
 
 public sealed class PrefillIntegrationDemoPageTests : IDisposable
 {
-    private readonly BunitContext context = new();
+    private readonly BunitContext context;
 
     public PrefillIntegrationDemoPageTests()
     {
-        context.Services.AddSingleton<
-            IValidator<PrefillIntegrationDemoForm>,
-            PrefillIntegrationDemoFormValidator
-        >();
-
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(
-                new Dictionary<string, string?> { ["Api:BaseUrl"] = "http://localhost/" }
-            )
-            .Build();
-        context.Services.AddSingleton<IConfiguration>(configuration);
-
-        var httpClient = new HttpClient(new StubPrefillHandler())
-        {
-            BaseAddress = new Uri("http://localhost/"),
-        };
-        context.Services.AddSingleton(httpClient);
+        context = CreateContext(new StubPrefillHandler());
     }
 
     public void Dispose() => context.Dispose();
@@ -72,6 +56,33 @@ public sealed class PrefillIntegrationDemoPageTests : IDisposable
                 cut.Find("input#prefill-email").GetAttribute("value")
             );
         });
+    }
+
+    [Fact]
+    public void Newer_lookup_result_wins_when_older_response_arrives_late()
+    {
+        using var localContext = CreateContext(new RacePrefillHandler());
+        var cut = localContext.Render<PrefillIntegrationDemo>();
+
+        var nameInput = cut.Find("input#prefill-name");
+        nameInput.Change("Slow Name");
+        nameInput.Change("Fast Name");
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Equal(
+                    "456 Rapid Ave",
+                    cut.Find("input#prefill-address-line1").GetAttribute("value")
+                );
+                Assert.Equal("Velocity City", cut.Find("input#prefill-city").GetAttribute("value"));
+                Assert.Equal(
+                    "fast@example.com",
+                    cut.Find("input#prefill-email").GetAttribute("value")
+                );
+            },
+            timeout: TimeSpan.FromSeconds(3)
+        );
     }
 
     private sealed class StubPrefillHandler : HttpMessageHandler
@@ -124,18 +135,98 @@ public sealed class PrefillIntegrationDemoPageTests : IDisposable
 
             return Task.FromResult(response);
         }
+    }
 
-        private static string GetLookupName(Uri uri)
+    private sealed class RacePrefillHandler : HttpMessageHandler
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
         {
-            var query = uri.Query;
-            const string prefix = "?name=";
-            if (!query.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            if (request.RequestUri is null)
             {
-                return string.Empty;
+                return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
 
-            var encoded = query[prefix.Length..];
-            return Uri.UnescapeDataString(encoded).Trim();
+            var lookupName = GetLookupName(request.RequestUri);
+            var isSlow = string.Equals(lookupName, "Slow Name", StringComparison.OrdinalIgnoreCase);
+
+            // Intentionally ignore cancellation so we can simulate a stale response arriving late.
+            await Task.Delay(
+                isSlow ? TimeSpan.FromMilliseconds(250) : TimeSpan.FromMilliseconds(25)
+            );
+
+            var payload = isSlow
+                ? new PrefillIntegrationDemoLookupResponse(
+                    Found: true,
+                    LookupName: lookupName,
+                    MatchingName: lookupName,
+                    Data: new PrefillIntegrationDemoPrefillData
+                    {
+                        AddressLine1 = "123 Slow St",
+                        AddressLine2 = "Suite 1",
+                        City = "Slowville",
+                        PostalCode = "11111",
+                        PhoneNumber = "+1 111 111 1111",
+                        Email = "slow@example.com",
+                    },
+                    Message: "Slow response"
+                )
+                : new PrefillIntegrationDemoLookupResponse(
+                    Found: true,
+                    LookupName: lookupName,
+                    MatchingName: lookupName,
+                    Data: new PrefillIntegrationDemoPrefillData
+                    {
+                        AddressLine1 = "456 Rapid Ave",
+                        AddressLine2 = "Floor 9",
+                        City = "Velocity City",
+                        PostalCode = "99999",
+                        PhoneNumber = "+1 999 999 9999",
+                        Email = "fast@example.com",
+                    },
+                    Message: "Fast response"
+                );
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(payload),
+            };
         }
+    }
+
+    private static BunitContext CreateContext(HttpMessageHandler handler)
+    {
+        var context = new BunitContext();
+        context.Services.AddSingleton<
+            IValidator<PrefillIntegrationDemoForm>,
+            PrefillIntegrationDemoFormValidator
+        >();
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?> { ["Api:BaseUrl"] = "http://localhost/" }
+            )
+            .Build();
+        context.Services.AddSingleton<IConfiguration>(configuration);
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("http://localhost/") };
+        context.Services.AddSingleton(httpClient);
+
+        return context;
+    }
+
+    private static string GetLookupName(Uri uri)
+    {
+        var query = uri.Query;
+        const string prefix = "?name=";
+        if (!query.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Empty;
+        }
+
+        var encoded = query[prefix.Length..];
+        return Uri.UnescapeDataString(encoded).Trim();
     }
 }

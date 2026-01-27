@@ -5,6 +5,7 @@
 @inject IConfiguration Configuration
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
 <PageTitle>Prefill From Integration</PageTitle>
 
@@ -130,11 +131,12 @@
     private bool _isApplyingPrefill;
     private string? _lastLookupName;
     private CancellationTokenSource? _lookupCts;
+    private EventHandler<FieldChangedEventArgs>? _onFieldChanged;
 
     protected override void OnInitialized()
     {
         _editContext = new EditContext(_model);
-        _editContext.OnFieldChanged += (_, args) =>
+        _onFieldChanged = (_, args) =>
         {
             if (_isApplyingPrefill)
             {
@@ -148,6 +150,7 @@
                 _lookupMessage = null;
             }
         };
+        _editContext.OnFieldChanged += _onFieldChanged;
     }
 
     private Task HandleNameChangedAfterBind()
@@ -163,6 +166,7 @@
         var lookupName = value.Trim();
         if (string.IsNullOrWhiteSpace(lookupName))
         {
+            CancelLookup();
             _lastLookupName = null;
             ClearPrefilledFields();
             return;
@@ -181,8 +185,7 @@
 
     private async Task LookupExistingDataAsync(string lookupName)
     {
-        _lookupCts?.Cancel();
-        _lookupCts?.Dispose();
+        CancelLookup();
         _lookupCts = new CancellationTokenSource();
 
         _isLookingUp = true;
@@ -201,6 +204,11 @@
                 requestUri,
                 _lookupCts.Token
             );
+
+            if (!IsCurrentLookup(lookupName))
+            {
+                return;
+            }
 
             if (response is null)
             {
@@ -223,12 +231,18 @@
         }
         catch (HttpRequestException)
         {
-            _lookupMessage = $"Could not reach the API at {ApiBaseUrl}.";
+            if (IsCurrentLookup(lookupName))
+            {
+                _lookupMessage = $"Could not reach the API at {ApiBaseUrl}.";
+            }
         }
         finally
         {
-            _isLookingUp = false;
-            StateHasChanged();
+            if (IsCurrentLookup(lookupName))
+            {
+                _isLookingUp = false;
+                StateHasChanged();
+            }
         }
     }
 
@@ -272,6 +286,17 @@
         _editContext.NotifyFieldChanged(new FieldIdentifier(_model, fieldName));
     }
 
+    private void CancelLookup()
+    {
+        _lookupCts?.Cancel();
+        _lookupCts?.Dispose();
+        _lookupCts = null;
+        _isLookingUp = false;
+    }
+
+    private bool IsCurrentLookup(string lookupName) =>
+        string.Equals(_lastLookupName, lookupName, StringComparison.OrdinalIgnoreCase);
+
     private async Task HandleSubmit(EditContext editContext)
     {
         _submitMessage = null;
@@ -304,5 +329,15 @@
             : configuredBaseUrl;
 
         return new Uri(baseUrl, UriKind.Absolute);
+    }
+
+    public void Dispose()
+    {
+        CancelLookup();
+
+        if (_onFieldChanged is not null)
+        {
+            _editContext.OnFieldChanged -= _onFieldChanged;
+        }
     }
 }

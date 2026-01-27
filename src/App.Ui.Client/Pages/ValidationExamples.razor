@@ -1,6 +1,7 @@
 @page "/validation-examples"
 @rendermode InteractiveWebAssembly
 @using global::App.Contracts
+@implements IDisposable
 @using FormValidationTest.Client.Components.Forms
 
 <PageTitle>Validation Examples</PageTitle>
@@ -245,6 +246,7 @@
     private EditContext _editContext = null!;
     private string? _submitMessage;
     private bool _isSubmitting;
+    private EventHandler<FieldChangedEventArgs>? _onFieldChanged;
 
     private readonly ChoiceOption<SingleChoiceOption>[] _singleChoiceOptions =
     [
@@ -270,7 +272,8 @@
     protected override void OnInitialized()
     {
         _editContext = new EditContext(_model);
-        _editContext.OnFieldChanged += (_, _) => _submitMessage = null;
+        _onFieldChanged = (_, _) => _submitMessage = null;
+        _editContext.OnFieldChanged += _onFieldChanged;
     }
 
     private async Task HandleSubmit(EditContext editContext)
@@ -291,6 +294,14 @@
         finally
         {
             _isSubmitting = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_onFieldChanged is not null)
+        {
+            _editContext.OnFieldChanged -= _onFieldChanged;
         }
     }
 }

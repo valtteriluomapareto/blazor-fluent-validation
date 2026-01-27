@@ -1,6 +1,7 @@
 @page "/tabbed-form"
 @rendermode InteractiveWebAssembly
 @using global::App.Contracts
+@implements IDisposable
 
 <PageTitle>Tabbed Form</PageTitle>
 
@@ -188,6 +189,7 @@
     private int _activeTab;
     private string? _submitMessage;
     private bool _isSubmitting;
+    private EventHandler<FieldChangedEventArgs>? _onFieldChanged;
 
     private readonly string[] _tabs = ["Customer", "Deal", "Notes"];
 
@@ -206,7 +208,8 @@
     protected override void OnInitialized()
     {
         _editContext = new EditContext(_model);
-        _editContext.OnFieldChanged += (_, _) => _submitMessage = null;
+        _onFieldChanged = (_, _) => _submitMessage = null;
+        _editContext.OnFieldChanged += _onFieldChanged;
     }
 
     private void NextTab()
@@ -248,4 +251,12 @@
 
     private static string DisplayOrDash(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
+
+    public void Dispose()
+    {
+        if (_onFieldChanged is not null)
+        {
+            _editContext.OnFieldChanged -= _onFieldChanged;
+        }
+    }
 }

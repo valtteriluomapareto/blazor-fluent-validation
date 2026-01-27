@@ -5,6 +5,7 @@
 @inject IConfiguration Configuration
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
 <PageTitle>Sample Form</PageTitle>
 
@@ -55,17 +56,19 @@
     private ValidationMessageStore? _messageStore;
     private string? _submitMessage;
     private bool _isSubmitting;
+    private EventHandler<FieldChangedEventArgs>? _onFieldChanged;
 
     protected override void OnInitialized()
     {
         _editContext = new EditContext(_model);
         _messageStore = new ValidationMessageStore(_editContext);
-        _editContext.OnFieldChanged += (_, args) =>
+        _onFieldChanged = (_, args) =>
         {
             _messageStore?.Clear(args.FieldIdentifier);
             _editContext.NotifyValidationStateChanged();
             _submitMessage = null;
         };
+        _editContext.OnFieldChanged += _onFieldChanged;
     }
 
     private async Task HandleSubmit(EditContext editContext)
@@ -137,5 +140,13 @@
             : configuredBaseUrl;
 
         return new Uri(baseUrl, UriKind.Absolute);
+    }
+
+    public void Dispose()
+    {
+        if (_onFieldChanged is not null)
+        {
+            _editContext.OnFieldChanged -= _onFieldChanged;
+        }
     }
 }
