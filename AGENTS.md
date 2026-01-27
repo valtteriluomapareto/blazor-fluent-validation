@@ -24,6 +24,7 @@
 Use the .NET 10 SDK (projects target `net10.0`).
 - `dotnet restore` — restore NuGet dependencies.
 - `dotnet build FormValidationTest.sln` — build the full solution.
+- `./scripts/lint-fix.sh` — always run this after making changes.
 - `dotnet run --project src/App.Host` — run UI + API together (recommended).
 - `dotnet run --project src/App.Ui` — run the UI.
 - `dotnet run --project src/App.Api` — run the API.
@@ -43,6 +44,7 @@ Use the .NET 10 SDK (projects target `net10.0`).
 - Locals and parameters: camelCase.
 - Nullable reference types are enabled; prefer explicit null checks and `?` where appropriate.
 - Formatting is enforced with CSharpier; run `dotnet csharpier .` before committing.
+- Always run `./scripts/lint-fix.sh` after making changes.
 
 ## Testing Guidelines
 Existing test project:
