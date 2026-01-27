@@ -9,6 +9,43 @@ Shared FluentValidation rules and validation utilities for the solution.
 - `FinnishBusinessIds` provides validation and checksum-based generation for Finnish Business IDs and VAT numbers.
 - `IbanValidation` validates IBANs via the `IbanNet` library, and `IbanNet.FluentValidation` is available for rule-based IBAN validation.
 
+## Validation Examples (Optional + Required)
+
+A dedicated demo page exercises common field types and shows both optional and required variants:
+
+- Route: `/validation-examples` in `src/App.Ui.Client/Pages/ValidationExamples.razor`
+- Shared contract: `src/App.Contracts/ValidationExamplesForm.cs`
+- Shared validator: `src/App.Validation/ValidationExamplesFormValidator.cs`
+
+### Optional vs Required Pattern
+
+For most fields, the validator follows this structure:
+
+- Optional: validate only when a value is provided via `When(x => !string.IsNullOrWhiteSpace(...))`
+- Required: use `NotEmpty()` for presence, then apply the same validity rule behind a `When(...)`
+
+### Finnish Locale Number Parsing
+
+Finnish-formatted decimal, currency, and percentage inputs are modeled as strings and parsed centrally:
+
+- Parsing helper: `src/App.Validation/FinnishNumberParsing.cs`
+- Accepted inputs include: `1 234,56`, `1 234,56 €`, `EUR 1 234,56`, and `12,5%`
+
+### Multiple Choice Components
+
+Reusable choice components live in the client UI project:
+
+- Option type: `src/App.Ui.Client/Components/Forms/ChoiceOption.cs`
+- Single choice (radio): `src/App.Ui.Client/Components/Forms/FormRadioGroupField.razor`
+- Multiple choice (checkboxes): `src/App.Ui.Client/Components/Forms/FormCheckboxGroupField.razor`
+
+### Tests to Use as Templates
+
+- Validator tests: `tests/App.Validation.Tests/ValidationExamplesFormValidatorTests.cs`
+- Parsing tests: `tests/App.Validation.Tests/FinnishNumberParsingTests.cs`
+- Component tests: `tests/App.Ui.Client.Tests/FormComponentsTests.cs`
+- Page coverage: `tests/App.Ui.Client.Tests/ValidationExamplesPageTests.cs`
+
 ## Finnish SSN Origin & Attribution
 
 The `FinnishSsn` implementation and its unit tests were ported from a TypeScript
