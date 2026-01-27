@@ -4,6 +4,7 @@ using App.Validation;
 using Blazilla;
 using FluentValidation;
 using FormValidationTest.Client.Components.Forms;
+using FormValidationTest.Client.Services.Validation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,7 @@ public sealed class FormComponentsTests : IDisposable
             IValidator<ValidationExamplesForm>,
             ValidationExamplesFormValidator
         >();
+        context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
     }
 
     public void Dispose() => context.Dispose();
@@ -555,9 +557,9 @@ public sealed class FormComponentsTests : IDisposable
             RenderFragment<EditContext> childContent = _ =>
                 builder =>
                 {
-                    builder.OpenComponent<FluentValidator>(0);
-                    builder.AddAttribute(1, nameof(FluentValidator.AsyncMode), true);
-                    builder.AddAttribute(2, nameof(FluentValidator.RuleSets), new[] { "Local" });
+                    builder.OpenComponent<LocalizedFluentValidator>(0);
+                    builder.AddAttribute(1, nameof(LocalizedFluentValidator.AsyncMode), true);
+                    builder.AddAttribute(2, nameof(LocalizedFluentValidator.RuleSets), new[] { "Local" });
                     builder.CloseComponent();
 
                     builder.OpenComponent<FormRadioGroupField<SingleChoiceOption>>(10);
@@ -693,9 +695,9 @@ public sealed class FormComponentsTests : IDisposable
             RenderFragment<EditContext> childContent = _ =>
                 builder =>
                 {
-                    builder.OpenComponent<FluentValidator>(0);
-                    builder.AddAttribute(1, nameof(FluentValidator.AsyncMode), true);
-                    builder.AddAttribute(2, nameof(FluentValidator.RuleSets), new[] { "Local" });
+                    builder.OpenComponent<LocalizedFluentValidator>(0);
+                    builder.AddAttribute(1, nameof(LocalizedFluentValidator.AsyncMode), true);
+                    builder.AddAttribute(2, nameof(LocalizedFluentValidator.RuleSets), new[] { "Local" });
                     builder.CloseComponent();
 
                     builder.OpenComponent<FormCheckboxGroupField<MultiChoiceOption>>(10);

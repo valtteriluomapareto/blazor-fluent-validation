@@ -1,0 +1,338 @@
+@using System.Collections.Concurrent
+@using System.Linq
+@using System.Linq.Expressions
+@using FluentValidation
+@using FluentValidation.Internal
+@using FluentValidation.Results
+@using Blazilla
+@using FormValidationTest.Client.Services.Validation
+@using Microsoft.Extensions.Logging
+@implements IDisposable
+
+@code {
+    public const string PendingTask = "__FluentValidation_Task";
+    public const string RuleSetProperty = "__FluentValidation_RuleSet";
+
+    private static readonly ConcurrentDictionary<
+        Type,
+        Func<object, PropertyChain?, IValidatorSelector, IValidationContext>
+    > contextFactoryCache = new();
+
+    private static readonly ConcurrentDictionary<Type, Type> validatorTypeCache = new();
+
+    private readonly PathResolver pathResolver = new();
+
+    private EditContext? currentContext;
+    private ValidationMessageStore? messages;
+    private IValidator? currentValidator;
+    private Type modelType = null!;
+
+    [Inject]
+    protected IServiceProvider ServiceProvider { get; set; } = null!;
+
+    [Inject]
+    protected ILogger<LocalizedFluentValidator> Logger { get; set; } = null!;
+
+    [Inject]
+    protected IValidationMessageLocalizer ValidationMessageLocalizer { get; set; } = null!;
+
+    [CascadingParameter]
+    protected EditContext? EditContext { get; set; }
+
+    [Parameter]
+    public IValidator? Validator { get; set; }
+
+    [Parameter]
+    public IEnumerable<string>? RuleSets { get; set; }
+
+    [Parameter]
+    public IValidatorSelector? Selector { get; set; }
+
+    [Parameter]
+    public bool AllRules { get; set; }
+
+    [Parameter]
+    public bool AsyncMode { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (EditContext is null)
+        {
+            throw new InvalidOperationException(
+                $"{nameof(LocalizedFluentValidator)} requires a cascading parameter of type {nameof(EditContext)}."
+            );
+        }
+
+        currentContext = EditContext;
+        messages = new ValidationMessageStore(currentContext);
+        modelType = currentContext.Model.GetType();
+
+        currentContext.OnFieldChanged += OnFieldChanged;
+        currentContext.OnValidationRequested += OnValidationRequested;
+
+        currentValidator = ResolveValidator();
+        if (currentValidator is null)
+        {
+            Logger.LogWarning(
+                "No validator found for model type {ModelType}. Register a validator or pass one via the Validator parameter.",
+                modelType.FullName
+            );
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (EditContext != currentContext)
+        {
+            throw new InvalidOperationException(
+                $"{GetType()} does not support changing the {nameof(EditContext)} dynamically."
+            );
+        }
+    }
+
+    private IValidator? ResolveValidator()
+    {
+        if (Validator is not null)
+        {
+            return Validator;
+        }
+
+        var validatorType = validatorTypeCache.GetOrAdd(
+            modelType,
+            static t => typeof(IValidator<>).MakeGenericType(t)
+        );
+
+        return ServiceProvider.GetService(validatorType) as IValidator;
+    }
+
+    private async void OnFieldChanged(object? sender, FieldChangedEventArgs eventArgs)
+    {
+        if (currentContext is null || currentValidator is null)
+        {
+            return;
+        }
+
+        var fieldIdentifier = eventArgs.FieldIdentifier;
+        var fieldPath = ResolveFieldPath(fieldIdentifier);
+        var validationContext = BuildContext(fieldPath);
+        if (validationContext is null)
+        {
+            return;
+        }
+
+        var validationResult = AsyncMode
+            ? await currentValidator
+                .ValidateAsync(validationContext)
+                .ConfigureAwait(continueOnCapturedContext: false)
+            : currentValidator.Validate(validationContext);
+
+        ApplyValidationResults(validationResult, fieldIdentifier);
+        await InvokeAsync(currentContext.NotifyValidationStateChanged);
+    }
+
+    private async void OnValidationRequested(object? sender, ValidationRequestedEventArgs eventArgs)
+    {
+        if (currentContext is null || currentValidator is null)
+        {
+            return;
+        }
+
+        var validationContext = BuildContext();
+        if (validationContext is null)
+        {
+            return;
+        }
+
+        if (AsyncMode)
+        {
+            var pendingValidationTask = currentValidator
+                .ValidateAsync(validationContext)
+                .ContinueWith(
+                    async validationTask =>
+                    {
+                        var result = await validationTask.ConfigureAwait(false);
+                        ApplyValidationResults(result);
+                    }
+                )
+                .Unwrap();
+
+            currentContext.Properties[PendingTask] = pendingValidationTask;
+            await pendingValidationTask.ConfigureAwait(continueOnCapturedContext: false);
+        }
+        else
+        {
+            var validationResult = currentValidator.Validate(validationContext);
+            ApplyValidationResults(validationResult);
+        }
+
+        await InvokeAsync(currentContext.NotifyValidationStateChanged);
+    }
+
+    private string ResolveFieldPath(in FieldIdentifier fieldIdentifier)
+    {
+        if (currentContext is null)
+        {
+            return fieldIdentifier.FieldName;
+        }
+
+        var fieldPath = fieldIdentifier.Model == currentContext.Model
+            ? fieldIdentifier.FieldName
+            : pathResolver.FindPath(currentContext.Model, in fieldIdentifier);
+
+        return string.IsNullOrWhiteSpace(fieldPath) ? fieldIdentifier.FieldName : fieldPath;
+    }
+
+    private IValidationContext? BuildContext(string? fieldName = null)
+    {
+        if (currentContext is null)
+        {
+            return null;
+        }
+
+        var selector = CreateSelector(fieldName);
+        var factory = contextFactoryCache.GetOrAdd(modelType, CreateContextFactory);
+        return factory(currentContext.Model, null, selector);
+    }
+
+    private IValidatorSelector CreateSelector(string? fieldName)
+    {
+        object? ruleSetProperty = null;
+        currentContext?.Properties.TryGetValue(RuleSetProperty, out ruleSetProperty);
+
+        if (Selector is null && fieldName is null && !AllRules && !HasAnyRuleSets(ruleSetProperty))
+        {
+            return ValidatorOptions.Global.ValidatorSelectors.DefaultValidatorSelectorFactory();
+        }
+
+        if (fieldName is not null)
+        {
+            return ValidatorOptions.Global.ValidatorSelectors.MemberNameValidatorSelectorFactory(
+                new[] { fieldName }
+            );
+        }
+
+        var selectors = new List<IValidatorSelector>();
+
+        if (Selector is not null)
+        {
+            selectors.Add(Selector);
+        }
+
+        if (ruleSetProperty is IEnumerable<string> ruleSetOverride)
+        {
+            selectors.Add(
+                ValidatorOptions.Global.ValidatorSelectors.RulesetValidatorSelectorFactory(ruleSetOverride)
+            );
+        }
+        else if (AllRules)
+        {
+            selectors.Add(
+                ValidatorOptions.Global.ValidatorSelectors.RulesetValidatorSelectorFactory(new[] { "*" })
+            );
+        }
+        else if (RuleSets?.Any() == true)
+        {
+            selectors.Add(
+                ValidatorOptions.Global.ValidatorSelectors.RulesetValidatorSelectorFactory(RuleSets)
+            );
+        }
+
+        return selectors.Count switch
+        {
+            0 => ValidatorOptions.Global.ValidatorSelectors.DefaultValidatorSelectorFactory(),
+            1 => selectors[0],
+            _ => ValidatorOptions.Global.ValidatorSelectors.CompositeValidatorSelectorFactory(selectors),
+        };
+    }
+
+    private bool HasAnyRuleSets(object? ruleSetProperty = null)
+    {
+        if (RuleSets?.Any() == true)
+        {
+            return true;
+        }
+
+        return ruleSetProperty is IEnumerable<string> ruleSets && ruleSets.Any();
+    }
+
+    private void ApplyValidationResults(
+        ValidationResult? validationResults,
+        FieldIdentifier? fieldIdentifier = null
+    )
+    {
+        validationResults ??= new ValidationResult();
+
+        if (fieldIdentifier.HasValue)
+        {
+            messages?.Clear(fieldIdentifier.Value);
+        }
+        else
+        {
+            messages?.Clear();
+        }
+
+        if (validationResults.IsValid || currentContext?.Model is not { } model)
+        {
+            return;
+        }
+
+        foreach (var error in validationResults.Errors)
+        {
+            var field = PathResolver.FindField(model, error.PropertyName)
+                ?? new FieldIdentifier(model, error.PropertyName);
+
+            if (fieldIdentifier.HasValue && !field.Equals(fieldIdentifier.Value))
+            {
+                continue;
+            }
+
+            var localizedMessage = ValidationMessageLocalizer.Localize(
+                error.ErrorCode,
+                error.ErrorMessage
+            );
+
+            messages?.Add(field, localizedMessage);
+        }
+    }
+
+    public void Dispose()
+    {
+        messages?.Clear();
+
+        if (currentContext is not null)
+        {
+            currentContext.OnFieldChanged -= OnFieldChanged;
+            currentContext.OnValidationRequested -= OnValidationRequested;
+            currentContext.NotifyValidationStateChanged();
+        }
+
+        GC.SuppressFinalize(this);
+    }
+
+    private static Func<object, PropertyChain?, IValidatorSelector, IValidationContext> CreateContextFactory(
+        Type modelType
+    )
+    {
+        var contextType = typeof(ValidationContext<>).MakeGenericType(modelType);
+        var constructor =
+            contextType.GetConstructor(new[] { modelType, typeof(PropertyChain), typeof(IValidatorSelector) })
+            ?? throw new InvalidOperationException($"Could not find appropriate constructor for {contextType}.");
+
+        var instanceParameter = Expression.Parameter(typeof(object), "instance");
+        var propertyChainParameter = Expression.Parameter(typeof(PropertyChain), "propertyChain");
+        var selectorParameter = Expression.Parameter(typeof(IValidatorSelector), "selector");
+
+        var castInstance = Expression.Convert(instanceParameter, modelType);
+        var newContext = Expression.New(constructor, castInstance, propertyChainParameter, selectorParameter);
+        var castResult = Expression.Convert(newContext, typeof(IValidationContext));
+
+        return Expression
+            .Lambda<Func<object, PropertyChain?, IValidatorSelector, IValidationContext>>(
+                castResult,
+                instanceParameter,
+                propertyChainParameter,
+                selectorParameter
+            )
+            .Compile();
+    }
+}

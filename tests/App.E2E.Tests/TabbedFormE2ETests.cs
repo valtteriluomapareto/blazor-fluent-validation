@@ -104,8 +104,8 @@ public sealed class TabbedFormE2ETests
             .ToHaveTextAsync("Please fix the validation errors.", new() { Timeout = 15000 });
 
         var summaryText = await page.Locator(".border-rose-200").InnerTextAsync();
-        Assert.Contains("Customer Name", summaryText, StringComparison.Ordinal);
-        Assert.Contains("Contact Email", summaryText, StringComparison.Ordinal);
+        Assert.Contains("Asiakkaan nimi on pakollinen.", summaryText, StringComparison.Ordinal);
+        Assert.Contains("Yhteyssähköposti on pakollinen.", summaryText, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -145,8 +145,8 @@ public sealed class TabbedFormE2ETests
         await Assertions.Expect(page.GetByLabel("Customer name")).ToBeVisibleAsync();
 
         var summaryText = await page.Locator(".border-rose-200").InnerTextAsync();
-        Assert.Contains("Customer Name", summaryText, StringComparison.Ordinal);
-        Assert.Contains("Contact Email", summaryText, StringComparison.Ordinal);
+        Assert.Contains("Asiakkaan nimi on pakollinen.", summaryText, StringComparison.Ordinal);
+        Assert.Contains("Yhteyssähköposti on pakollinen.", summaryText, StringComparison.Ordinal);
     }
 
     private static async Task NavigateAndWaitForWasmAsync(IPage page, string path)
