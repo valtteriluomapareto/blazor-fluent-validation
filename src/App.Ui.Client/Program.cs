@@ -13,6 +13,10 @@ builder.Services.AddSingleton<
     IValidator<ValidationExamplesForm>,
     ValidationExamplesFormValidator
 >();
+builder.Services.AddSingleton<
+    IValidator<PrefillIntegrationDemoForm>,
+    PrefillIntegrationDemoFormValidator
+>();
 builder.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
 
 var configuredBaseUrl = builder.Configuration["Api:BaseUrl"];

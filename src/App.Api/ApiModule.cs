@@ -16,7 +16,12 @@ public static class ApiModule
             IValidator<ValidationExamplesForm>,
             ValidationExamplesFormValidator
         >();
+        services.AddSingleton<
+            IValidator<PrefillIntegrationDemoForm>,
+            PrefillIntegrationDemoFormValidator
+        >();
         services.AddSingleton<IUsedNameLookup, MockUsedNameLookup>();
+        services.AddSingleton<IPrefillIntegrationLookup, MockPrefillIntegrationLookup>();
 
         return services;
     }
@@ -56,6 +61,46 @@ public static class ApiModule
                 }
             )
             .AddEndpointFilter(new ValidationFilter<SampleForm>("Local", "Server"));
+
+        app.MapGet(
+            "/api/prefill-integration-demo",
+            async (
+                string? name,
+                IPrefillIntegrationLookup prefillLookup,
+                CancellationToken cancellationToken
+            ) =>
+            {
+                var lookupName = name?.Trim() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(lookupName))
+                {
+                    return Results.Ok(
+                        new PrefillIntegrationDemoLookupResponse(
+                            Found: false,
+                            LookupName: lookupName,
+                            MatchingName: PrefillIntegrationDemoDefaults.MatchingName,
+                            Data: null,
+                            Message: "Enter a name to look up existing data."
+                        )
+                    );
+                }
+
+                var data = await prefillLookup.LookupAsync(lookupName, cancellationToken);
+                var found = data is not null;
+                var message = found
+                    ? "Integration returned existing data."
+                    : "No integration data found for that name.";
+
+                return Results.Ok(
+                    new PrefillIntegrationDemoLookupResponse(
+                        Found: found,
+                        LookupName: lookupName,
+                        MatchingName: PrefillIntegrationDemoDefaults.MatchingName,
+                        Data: data,
+                        Message: message
+                    )
+                );
+            }
+        );
 
         return app;
     }

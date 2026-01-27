@@ -13,6 +13,10 @@ builder
     .AddInteractiveWebAssemblyComponents();
 builder.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
 builder.Services.AddSingleton<IValidator<CustomerIntakeForm>, CustomerIntakeFormValidator>();
+builder.Services.AddSingleton<
+    IValidator<PrefillIntegrationDemoForm>,
+    PrefillIntegrationDemoFormValidator
+>();
 builder.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
 builder.Services.AddHttpClient(
     "Api",

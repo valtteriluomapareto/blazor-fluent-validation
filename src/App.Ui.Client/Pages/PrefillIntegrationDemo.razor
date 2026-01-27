@@ -1,0 +1,310 @@
+@page "/prefill-integration-demo"
+@rendermode InteractiveWebAssembly
+@using global::App.Contracts
+@using System.Net.Http.Json
+@inject IConfiguration Configuration
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>Prefill From Integration</PageTitle>
+
+<div class="space-y-6">
+    <div class="space-y-2">
+        <h1>Prefill From Integration</h1>
+        <p class="text-slate-600">Start with an empty form, enter a name, and let the API call an integration to prefill the rest.</p>
+    </div>
+
+    <FormCard>
+        <p class="text-sm font-semibold text-slate-700">What to try</p>
+        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+            <li>Submit immediately to see required-field validation.</li>
+            <li>Enter <code>@PrefillIntegrationDemoDefaults.MatchingName</code> as the name to trigger a match.</li>
+            <li>Try any other name to see the "no match" state.</li>
+        </ul>
+        <p class="mt-3 text-xs text-slate-500">API base: <code>@ApiBaseUrl</code></p>
+    </FormCard>
+
+    <FormCard>
+        <EditForm EditContext="_editContext" OnSubmit="HandleSubmit" class="space-y-6">
+            <FluentValidator AsyncMode="true" RuleSets="@(new[] { "Local" })" />
+            <ValidationSummary class="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 empty:hidden" />
+
+            <section class="space-y-4">
+                <h2 class="text-base font-semibold text-slate-800">Lookup</h2>
+                <FormTextField
+                    Id="prefill-name"
+                    Label="Name"
+                    HelpText="Used to look up existing data from the integration."
+                    Placeholder="@PrefillIntegrationDemoDefaults.MatchingName"
+                    Value="_model.Name"
+                    ValueChanged="HandleNameChanged"
+                    ValueExpression="() => _model.Name" />
+
+                @if (_isLookingUp)
+                {
+                    <div class="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700" role="status">
+                        Looking up <strong>@_model.Name</strong>...
+                    </div>
+                }
+                else if (!string.IsNullOrWhiteSpace(_lookupMessage))
+                {
+                    <div class="rounded-md border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800" role="status">
+                        @_lookupMessage
+                    </div>
+                }
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-base font-semibold text-slate-800">Contact Details</h2>
+                <div class="grid gap-5 md:grid-cols-2">
+                    <FormTextField
+                        Id="prefill-address-line1"
+                        Label="Address line 1"
+                        Placeholder="123 Main St"
+                        UpdateOnInput="true"
+                        @bind-Value="_model.AddressLine1" />
+
+                    <FormTextField
+                        Id="prefill-address-line2"
+                        Label="Address line 2"
+                        Placeholder="Apt 5B"
+                        UpdateOnInput="true"
+                        @bind-Value="_model.AddressLine2" />
+
+                    <FormTextField
+                        Id="prefill-city"
+                        Label="City"
+                        Placeholder="New York"
+                        UpdateOnInput="true"
+                        @bind-Value="_model.City" />
+
+                    <FormTextField
+                        Id="prefill-postal-code"
+                        Label="Postal code"
+                        Placeholder="10001"
+                        UpdateOnInput="true"
+                        @bind-Value="_model.PostalCode" />
+
+                    <FormTextField
+                        Id="prefill-phone"
+                        Label="Phone number"
+                        InputType="tel"
+                        Placeholder="(555) 123-4567"
+                        UpdateOnInput="true"
+                        @bind-Value="_model.PhoneNumber" />
+
+                    <FormTextField
+                        Id="prefill-email"
+                        Label="Email"
+                        InputType="email"
+                        Placeholder="name@example.com"
+                        UpdateOnInput="true"
+                        @bind-Value="_model.Email" />
+                </div>
+            </section>
+
+            <div class="flex items-center gap-3 border-t border-slate-200 pt-4">
+                <button type="submit" class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled="@(_isSubmitting || _isLookingUp)">
+                    @(_isSubmitting ? "Validating..." : "Validate form")
+                </button>
+                <span class="text-xs text-slate-500">Local validation + integration prefill</span>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_submitMessage))
+            {
+                <div class="rounded-md border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800" role="status">
+                    @_submitMessage
+                </div>
+            }
+        </EditForm>
+    </FormCard>
+</div>
+
+@code {
+    private readonly PrefillIntegrationDemoForm _model = new();
+    private EditContext _editContext = null!;
+
+    private string? _lookupMessage;
+    private string? _submitMessage;
+    private bool _isLookingUp;
+    private bool _isSubmitting;
+    private bool _isApplyingPrefill;
+    private string? _lastLookupName;
+    private CancellationTokenSource? _lookupCts;
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _editContext.OnFieldChanged += (_, args) =>
+        {
+            if (_isApplyingPrefill)
+            {
+                return;
+            }
+
+            _submitMessage = null;
+
+            if (args.FieldIdentifier.FieldName == nameof(PrefillIntegrationDemoForm.Name))
+            {
+                _lookupMessage = null;
+            }
+        };
+    }
+
+    private async Task HandleNameChanged(string value)
+    {
+        if (string.Equals(_model.Name, value, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _model.Name = value;
+        _lookupMessage = null;
+        _submitMessage = null;
+
+        var lookupName = value.Trim();
+        if (string.IsNullOrWhiteSpace(lookupName))
+        {
+            _lastLookupName = null;
+            ClearPrefilledFields();
+            return;
+        }
+
+        if (string.Equals(_lastLookupName, lookupName, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        ClearPrefilledFields();
+        _lastLookupName = lookupName;
+
+        await LookupExistingDataAsync(lookupName);
+    }
+
+    private async Task LookupExistingDataAsync(string lookupName)
+    {
+        _lookupCts?.Cancel();
+        _lookupCts?.Dispose();
+        _lookupCts = new CancellationTokenSource();
+
+        _isLookingUp = true;
+        _lookupMessage = "Looking up existing data...";
+        StateHasChanged();
+
+        try
+        {
+            var apiBaseUri = GetApiBaseUri();
+            var requestUri = new Uri(
+                apiBaseUri,
+                $"api/prefill-integration-demo?name={Uri.EscapeDataString(lookupName)}"
+            );
+
+            var response = await Http.GetFromJsonAsync<PrefillIntegrationDemoLookupResponse>(
+                requestUri,
+                _lookupCts.Token
+            );
+
+            if (response is null)
+            {
+                _lookupMessage = "Integration lookup returned no response.";
+                return;
+            }
+
+            if (response.Found && response.Data is not null)
+            {
+                ApplyPrefill(response.Data);
+                _lookupMessage = response.Message;
+                return;
+            }
+
+            _lookupMessage = response.Message;
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignore canceled lookups when the user types a new name quickly.
+        }
+        catch (HttpRequestException)
+        {
+            _lookupMessage = $"Could not reach the API at {ApiBaseUrl}.";
+        }
+        finally
+        {
+            _isLookingUp = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ApplyPrefill(PrefillIntegrationDemoPrefillData data)
+    {
+        _isApplyingPrefill = true;
+        try
+        {
+            _model.AddressLine1 = data.AddressLine1;
+            _model.AddressLine2 = data.AddressLine2;
+            _model.City = data.City;
+            _model.PostalCode = data.PostalCode;
+            _model.PhoneNumber = data.PhoneNumber;
+            _model.Email = data.Email;
+
+            NotifyFieldChanged(nameof(PrefillIntegrationDemoForm.AddressLine1));
+            NotifyFieldChanged(nameof(PrefillIntegrationDemoForm.AddressLine2));
+            NotifyFieldChanged(nameof(PrefillIntegrationDemoForm.City));
+            NotifyFieldChanged(nameof(PrefillIntegrationDemoForm.PostalCode));
+            NotifyFieldChanged(nameof(PrefillIntegrationDemoForm.PhoneNumber));
+            NotifyFieldChanged(nameof(PrefillIntegrationDemoForm.Email));
+        }
+        finally
+        {
+            _isApplyingPrefill = false;
+        }
+    }
+
+    private void ClearPrefilledFields()
+    {
+        _model.AddressLine1 = string.Empty;
+        _model.AddressLine2 = string.Empty;
+        _model.City = string.Empty;
+        _model.PostalCode = string.Empty;
+        _model.PhoneNumber = string.Empty;
+        _model.Email = string.Empty;
+    }
+
+    private void NotifyFieldChanged(string fieldName)
+    {
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_model, fieldName));
+    }
+
+    private async Task HandleSubmit(EditContext editContext)
+    {
+        _submitMessage = null;
+
+        var isValid = await editContext.ValidateAsync();
+        if (!isValid)
+        {
+            _submitMessage = "Please fix the validation errors.";
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            _submitMessage = "Form is valid and ready to submit.";
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private string ApiBaseUrl => GetApiBaseUri().GetLeftPart(UriPartial.Authority);
+
+    private Uri GetApiBaseUri()
+    {
+        var configuredBaseUrl = Configuration["Api:BaseUrl"];
+        var baseUrl = string.IsNullOrWhiteSpace(configuredBaseUrl)
+            ? NavigationManager.BaseUri
+            : configuredBaseUrl;
+
+        return new Uri(baseUrl, UriKind.Absolute);
+    }
+}
