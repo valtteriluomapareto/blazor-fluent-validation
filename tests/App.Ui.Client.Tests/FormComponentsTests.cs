@@ -68,7 +68,11 @@ public sealed class FormComponentsTests : IDisposable
             {
                 builder.OpenComponent<LocalizedFluentValidator>(0);
                 builder.AddAttribute(1, nameof(LocalizedFluentValidator.AsyncMode), true);
-                builder.AddAttribute(2, nameof(LocalizedFluentValidator.RuleSets), new[] { "Local" });
+                builder.AddAttribute(
+                    2,
+                    nameof(LocalizedFluentValidator.RuleSets),
+                    new[] { "Local" }
+                );
                 builder.CloseComponent();
 
                 builder.OpenComponent<FormTextField>(10);
@@ -105,7 +109,10 @@ public sealed class FormComponentsTests : IDisposable
         var ageField = new FieldIdentifier(model, nameof(SampleForm.Age));
 
         Assert.Contains("Nimi on pakollinen.", editContext.GetValidationMessages(nameField));
-        Assert.Contains("Iän tulee olla välillä 18–120.", editContext.GetValidationMessages(ageField));
+        Assert.Contains(
+            "Iän tulee olla välillä 18–120.",
+            editContext.GetValidationMessages(ageField)
+        );
     }
 
     [Fact]
@@ -157,6 +164,67 @@ public sealed class FormComponentsTests : IDisposable
         var input = cut.Find("input#start");
         Assert.Equal("date", input.GetAttribute("type"));
         Assert.Equal("2026-01-15", input.GetAttribute("value"));
+    }
+
+    [Fact]
+    public void FormDateField_change_updates_value_via_callback()
+    {
+        var received = new List<DateOnly>();
+
+        var cut = context.Render<FormDateField>(parameters =>
+            parameters
+                .Add(p => p.Id, "start")
+                .Add(p => p.Label, "Start")
+                .Add(p => p.Value, new DateOnly(2026, 1, 15))
+                .Add(p => p.ValueChanged, value => received.Add(value))
+        );
+
+        cut.Find("input#start").Change("2026-02-01");
+
+        var updated = Assert.Single(received);
+        Assert.Equal(new DateOnly(2026, 2, 1), updated);
+    }
+
+    [Fact]
+    public void FormDateField_update_on_input_does_not_break_change_handling()
+    {
+        var received = new List<DateOnly>();
+
+        var cut = context.Render<FormDateField>(parameters =>
+            parameters
+                .Add(p => p.Id, "start")
+                .Add(p => p.Label, "Start")
+                .Add(p => p.Value, new DateOnly(2026, 1, 15))
+                .Add(p => p.UpdateOnInput, true)
+                .Add(p => p.ValueChanged, value => received.Add(value))
+        );
+
+        cut.Find("input#start").Change("2026-03-05");
+
+        var updated = Assert.Single(received);
+        Assert.Equal(new DateOnly(2026, 3, 5), updated);
+    }
+
+    [Fact]
+    public void FormDateField_renders_input_attributes()
+    {
+        var attributes = new Dictionary<string, object>
+        {
+            ["min"] = "2026-01-01",
+            ["max"] = "2026-12-31",
+        };
+
+        var cut = context.Render<FormDateField>(parameters =>
+            parameters
+                .Add(p => p.Id, "start")
+                .Add(p => p.Label, "Start")
+                .Add(p => p.Value, new DateOnly(2026, 1, 15))
+                .Add(p => p.InputAttributes, attributes)
+        );
+
+        var input = cut.Find("input#start");
+        Assert.Equal("2026-01-01", input.GetAttribute("min"));
+        Assert.Equal("2026-12-31", input.GetAttribute("max"));
     }
 
     [Fact]
@@ -614,7 +682,11 @@ public sealed class FormComponentsTests : IDisposable
                 {
                     builder.OpenComponent<LocalizedFluentValidator>(0);
                     builder.AddAttribute(1, nameof(LocalizedFluentValidator.AsyncMode), true);
-                    builder.AddAttribute(2, nameof(LocalizedFluentValidator.RuleSets), new[] { "Local" });
+                    builder.AddAttribute(
+                        2,
+                        nameof(LocalizedFluentValidator.RuleSets),
+                        new[] { "Local" }
+                    );
                     builder.CloseComponent();
 
                     builder.OpenComponent<FormRadioGroupField<SingleChoiceOption>>(10);
@@ -752,7 +824,11 @@ public sealed class FormComponentsTests : IDisposable
                 {
                     builder.OpenComponent<LocalizedFluentValidator>(0);
                     builder.AddAttribute(1, nameof(LocalizedFluentValidator.AsyncMode), true);
-                    builder.AddAttribute(2, nameof(LocalizedFluentValidator.RuleSets), new[] { "Local" });
+                    builder.AddAttribute(
+                        2,
+                        nameof(LocalizedFluentValidator.RuleSets),
+                        new[] { "Local" }
+                    );
                     builder.CloseComponent();
 
                     builder.OpenComponent<FormCheckboxGroupField<MultiChoiceOption>>(10);
