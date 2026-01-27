@@ -6,6 +6,8 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="IbanNet" Version="6.0.0" />
+    <PackageReference Include="IbanNet.FluentValidation" Version="6.0.0" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -7,6 +7,7 @@ Shared FluentValidation rules and validation utilities for the solution.
 - `SampleFormValidator` and `CustomerIntakeFormValidator` contain form-specific rules.
 - `FinnishSsn` provides parsing and validation for Finnish personal identity codes (HETU).
 - `FinnishBusinessIds` provides validation and checksum-based generation for Finnish Business IDs and VAT numbers.
+- `IbanValidation` validates IBANs via the `IbanNet` library, and `IbanNet.FluentValidation` is available for rule-based IBAN validation.
 
 ## Finnish SSN Origin & Attribution
 
@@ -29,4 +30,14 @@ TypeScript validator and tests in the following project:
 
 ```text
 https://github.com/vkomulai/finnish-business-ids
+```
+
+## IBAN Validation Origin & Attribution
+
+IBAN validation is implemented using the `IbanNet` and `IbanNet.FluentValidation`
+NuGet packages:
+
+```text
+https://www.nuget.org/packages/IbanNet/
+https://www.nuget.org/packages/IbanNet.FluentValidation/
 ```
