@@ -152,6 +152,83 @@ public sealed class FormComponentsTests : IDisposable
     }
 
     [Fact]
+    public void FormDecimalField_change_updates_value_via_callback()
+    {
+        var received = new List<decimal>();
+
+        var cut = context.Render<FormDecimalField>(parameters =>
+            parameters
+                .Add(p => p.Id, "value")
+                .Add(p => p.Label, "Value")
+                .Add(p => p.Value, 1.5m)
+                .Add(p => p.ValueChanged, value => received.Add(value))
+        );
+
+        cut.Find("input#value").Change("2.75");
+
+        var updated = Assert.Single(received);
+        Assert.Equal(2.75m, updated);
+    }
+
+    [Fact]
+    public void FormDecimalField_renders_placeholder_and_step_attributes()
+    {
+        var cut = context.Render<FormDecimalField>(parameters =>
+            parameters
+                .Add(p => p.Id, "value")
+                .Add(p => p.Label, "Value")
+                .Add(p => p.Value, 42.5m)
+                .Add(p => p.Placeholder, "Enter amount")
+                .Add(p => p.Step, "0.5")
+        );
+
+        var input = cut.Find("input#value");
+        Assert.Equal("Enter amount", input.GetAttribute("placeholder"));
+        Assert.Equal("0.5", input.GetAttribute("step"));
+    }
+
+    [Fact]
+    public void FormDecimalField_null_step_results_in_any_step_attribute()
+    {
+        var cut = context.Render<FormDecimalField>(parameters =>
+            parameters
+                .Add(p => p.Id, "value")
+                .Add(p => p.Label, "Value")
+                .Add(p => p.Value, 42.5m)
+                .Add<string?>(p => p.Step, null)
+        );
+
+        var input = cut.Find("input#value");
+        Assert.Equal("any", input.GetAttribute("step"));
+    }
+
+    [Fact]
+    public void FormDecimalField_merges_input_attributes_and_overrides_conflicts()
+    {
+        var attributes = new Dictionary<string, object>
+        {
+            ["step"] = "9",
+            ["placeholder"] = "Old placeholder",
+            ["min"] = "0",
+        };
+
+        var cut = context.Render<FormDecimalField>(parameters =>
+            parameters
+                .Add(p => p.Id, "value")
+                .Add(p => p.Label, "Value")
+                .Add(p => p.Value, 42.5m)
+                .Add(p => p.InputAttributes, attributes)
+                .Add(p => p.Placeholder, "New placeholder")
+                .Add(p => p.Step, "0.25")
+        );
+
+        var input = cut.Find("input#value");
+        Assert.Equal("0", input.GetAttribute("min"));
+        Assert.Equal("New placeholder", input.GetAttribute("placeholder"));
+        Assert.Equal("0.25", input.GetAttribute("step"));
+    }
+
+    [Fact]
     public void FormDateField_renders_date_input()
     {
         var cut = context.Render<FormDateField>(parameters =>

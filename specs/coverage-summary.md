@@ -6,17 +6,17 @@ This summary is based on the latest coverage run from:
 - Date: 2026-01-27
 
 ## Executive Summary
-- Overall line coverage: **90.6%**
-- Overall branch coverage: **77.8%**
+- Overall line coverage: **91.1%**
+- Overall branch coverage: **78.5%**
 - Strongest areas: `App.Contracts` (100%), `App.Validation` (95.5%), `App.Api` (91.9%)
-- Main remaining opportunities: `App.Ui.Client` (86.6%) still has a few concentrated gaps
+- Main remaining opportunities: `App.Ui.Client` (87.5%) still has a few concentrated gaps
 
 ## Coverage By Assembly (Line Coverage)
 - `App.Contracts`: **100%**
 - `App.Validation`: **95.5%**
 - `App.Api`: **91.9%**
 - `App.Integrations`: **91.5%**
-- `App.Ui.Client`: **86.6%**
+- `App.Ui.Client`: **87.5%**
 
 ## Notable Gaps And Risks
 The most important gaps are concentrated in the UI client, especially in user-critical pages and input components.
@@ -26,17 +26,18 @@ High-risk coverage gaps:
 - `FormValidationTest.Client.ClientProgram`: **63.3%**
 
 Low-to-medium coverage gaps:
-- `FormFieldIdResolver`: **70.9%**
 - `ValidationExamples` page: **71%**
 - `PrefillIntegrationDemo` page: **78.2%**
-- `FormDecimalField`: **78.5%**
 - `LocalizedFluentValidator`: **81.7%**
+- `FormFieldIdResolver`: **83.8%**
+- `FormTextAreaField`: **80.7%**
 
 Tabbed flows improved substantially:
 - `FormValidationTest.Client.Pages.TabbedForm`: **100%**
 - `FormValidationTest.Client.Pages.ComplexForm`: **100%**
 - `FormValidationTest.Client.Services.LocalUsedNameLookup`: **100%**
 - `FormValidationTest.Client.Components.Forms.FormDateField`: **93.7%**
+- `FormValidationTest.Client.Components.Forms.FormDecimalField`: **96.4%**
 
 The remaining gaps are mostly around DI/bootstrap (`Program` / `ClientProgram`) and a few input/validation plumbing components.
 
@@ -57,13 +58,15 @@ Notes:
 Form input components are the “engine room” of validation UX. Incrementally hardening them pays off.
 
 Suggested additions (bUnit):
-- `FormDecimalField`:
-  - Decimal input with and without separators binds correctly.
-  - Edge cases (empty string, whitespace) behave consistently.
 - `FormFieldIdResolver`:
   - Explicit `Id` is preferred when provided.
   - Expression-based IDs are stable and predictable.
   - Fallback IDs remain deterministic within a render.
+- `FormTextAreaField`:
+  - Value binding works and updates the model.
+  - Rows attribute and input attributes are rendered as expected.
+- `LocalizedFluentValidator`:
+  - Add tests that exercise rule set selection and multi-field validation updates.
 
 ### P2: Deepen Page And Validator Branch Coverage
 These are already decent, but have room for more branch coverage.
@@ -73,13 +76,11 @@ Suggested additions:
   - Add invalid-then-fix flows for a few representative inputs.
 - `PrefillIntegrationDemo` page:
   - Add a submission flow test (not just field population and race behavior).
-- `LocalizedFluentValidator`:
-  - Add tests that exercise rule set selection and multi-field validation updates.
 
 ## Suggested Coverage Targets
 Pragmatic targets that match the current architecture and test style:
 - Keep `App.Validation`, `App.Api`, and `App.Contracts` above **90%** line coverage.
-- Raise `App.Ui.Client` from **86.6%** to at least **90%** line coverage.
+- Raise `App.Ui.Client` from **87.5%** to at least **90%** line coverage.
 - Aim for overall branch coverage above **80%**.
 
 ## How To Reproduce And Inspect
