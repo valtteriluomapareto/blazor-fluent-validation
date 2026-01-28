@@ -3,6 +3,7 @@ using App.Abstractions;
 using App.Contracts;
 using App.Validation;
 using FluentValidation;
+using FormValidationTest.Client.Services.Http;
 using FormValidationTest.Client.Services.Validation;
 using FormValidationTest.Services;
 
@@ -25,19 +26,23 @@ builder.Services.AddSingleton<
 >();
 builder.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
 builder.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
-builder.Services.AddHttpClient(
-    "Api",
-    client =>
-    {
-        var baseUrl = builder.Configuration["Api:BaseUrl"];
-        if (string.IsNullOrWhiteSpace(baseUrl))
+builder.Services.AddTransient<ResilientHttpMessageHandler>();
+builder
+    .Services.AddHttpClient(
+        "Api",
+        client =>
         {
-            baseUrl = "http://localhost:5113";
-        }
+            var baseUrl = builder.Configuration["Api:BaseUrl"];
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                baseUrl = "http://localhost:5113";
+            }
 
-        client.BaseAddress = new Uri(baseUrl);
-    }
-);
+            client.BaseAddress = new Uri(baseUrl);
+            client.Timeout = ResilientHttpMessageHandler.DefaultTimeout;
+        }
+    )
+    .AddHttpMessageHandler<ResilientHttpMessageHandler>();
 
 var app = builder.Build();
 

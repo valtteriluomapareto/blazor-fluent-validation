@@ -3,6 +3,7 @@ using App.Api;
 using App.Contracts;
 using App.Validation;
 using FluentValidation;
+using FormValidationTest.Client.Services.Http;
 using FormValidationTest.Client.Services.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,7 +17,13 @@ builder
     .Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
-builder.Services.AddHttpClient("Api");
+builder.Services.AddTransient<ResilientHttpMessageHandler>();
+builder
+    .Services.AddHttpClient(
+        "Api",
+        client => client.Timeout = ResilientHttpMessageHandler.DefaultTimeout
+    )
+    .AddHttpMessageHandler<ResilientHttpMessageHandler>();
 builder.Services.AddApiServices();
 builder.Services.AddSingleton<IValidator<CustomerIntakeForm>, CustomerIntakeFormValidator>();
 builder.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();

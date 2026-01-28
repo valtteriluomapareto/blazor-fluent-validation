@@ -1,4 +1,5 @@
 using App.Abstractions;
+using App.Api.Http;
 using App.Api.Validation;
 using App.Contracts;
 using App.Integrations;
@@ -11,6 +12,14 @@ public static class ApiModule
 {
     public static IServiceCollection AddApiServices(this IServiceCollection services)
     {
+        services.AddTransient<ResilientHttpMessageHandler>();
+        services
+            .AddHttpClient(
+                ResilientHttpMessageHandler.IntegrationsClientName,
+                client => client.Timeout = ResilientHttpMessageHandler.DefaultTimeout
+            )
+            .AddHttpMessageHandler<ResilientHttpMessageHandler>();
+
         services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
         services.AddSingleton<
             IValidator<ValidationExamplesForm>,

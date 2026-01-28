@@ -4,6 +4,7 @@ using App.Contracts;
 using App.Validation;
 using FluentValidation;
 using FormValidationTest.Client.Services;
+using FormValidationTest.Client.Services.Http;
 using FormValidationTest.Client.Services.Validation;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -60,7 +61,19 @@ public static class ClientProgram
 
         var baseUrl = ResolveBaseUrl(builder.Configuration, builder.HostEnvironment.BaseAddress);
 
-        builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(baseUrl) });
+        builder.Services.AddScoped(_ =>
+        {
+            var handler = new ResilientHttpMessageHandler
+            {
+                InnerHandler = new HttpClientHandler(),
+            };
+
+            return new HttpClient(handler)
+            {
+                BaseAddress = new Uri(baseUrl),
+                Timeout = ResilientHttpMessageHandler.DefaultTimeout,
+            };
+        });
 
         return builder;
     }
