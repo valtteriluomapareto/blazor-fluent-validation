@@ -22,6 +22,31 @@ Blazor Web App + Minimal API + FluentValidation solution organized for a validat
   - `tests/App.Ui.Client.Tests` — bUnit component tests for the WASM client.
   - `tests/App.E2E.Tests` — Playwright end-to-end tests that boot `App.Host`.
 
+## Developer Quickstart
+1. Restore tools and packages:
+```bash
+dotnet tool restore
+dotnet restore
+```
+2. Run the full app (UI + API):
+```bash
+dotnet run --project src/App.Host
+```
+3. Run fast tests (validation, API, bUnit):
+```bash
+./scripts/test-fast.sh -c Release
+```
+4. Fix formatting and analyzers after changes:
+```bash
+./scripts/lint-fix.sh
+```
+
+## Implementing A New Form (Detailed Guide)
+See `docs/new-form-guide.md` for the full, end-to-end walkthrough.
+
+## Docs
+See `docs/README.md` for the complete documentation index.
+
 ## Commands (from repo root)
 
 Restore dependencies:

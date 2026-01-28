@@ -130,7 +130,7 @@ Guidance:
 ## Forms and validation
 - Blazor uses `EditForm` + `EditContext`.
 - Validation can be built-in (DataAnnotations) or custom (FluentValidation).
-- In this repo, FluentValidation is used; see `specs/blazilla-usage.md` and `src/App.Ui.Client/Pages/SampleFormValidationWasm.razor`.
+- In this repo, FluentValidation is used; see `docs/blazilla-usage.md` and `src/App.Ui.Client/Pages/SampleFormValidationWasm.razor`.
 
 ## DI and services
 - Use constructor injection for services in `.razor.cs` (code-behind) or `@inject` in `.razor`.
