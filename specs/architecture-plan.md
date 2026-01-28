@@ -44,6 +44,70 @@ P2 (Later)
 - Validation rules are stable, testable, and deterministic.
 - External integrations are isolated behind adapters and normalized error contracts.
 
+## Project Dependency Diagram
+
+```mermaid
+flowchart TD
+    subgraph Host["Host Layer"]
+        AppHost["App.Host"]
+    end
+
+    subgraph Presentation["Presentation Layer"]
+        AppUi["App.Ui"]
+        AppUiClient["App.Ui.Client"]
+    end
+
+    subgraph Application["Application Layer"]
+        AppApi["App.Api"]
+    end
+
+    subgraph Core["Core Layer"]
+        AppValidation["App.Validation"]
+        AppIntegrations["App.Integrations"]
+    end
+
+    subgraph Foundation["Foundation Layer"]
+        AppContracts["App.Contracts"]
+        AppAbstractions["App.Abstractions"]
+    end
+
+    %% Host dependencies
+    AppHost --> AppUi
+    AppHost --> AppUiClient
+    AppHost --> AppApi
+
+    %% UI dependencies
+    AppUi --> AppUiClient
+    AppUi --> AppContracts
+    AppUi --> AppValidation
+
+    %% UI Client dependencies
+    AppUiClient --> AppContracts
+    AppUiClient --> AppValidation
+    AppUiClient --> AppAbstractions
+
+    %% API dependencies
+    AppApi --> AppContracts
+    AppApi --> AppValidation
+    AppApi --> AppAbstractions
+    AppApi --> AppIntegrations
+
+    %% Validation dependencies
+    AppValidation --> AppContracts
+    AppValidation --> AppAbstractions
+
+    %% Integrations dependencies
+    AppIntegrations --> AppAbstractions
+    AppIntegrations --> AppContracts
+```
+
+**Dependency flow:** Dependencies flow downward. Foundation layer projects (`App.Contracts`, `App.Abstractions`) have no internal dependencies and are shared by all other layers.
+
+**Key boundaries:**
+- `App.Ui` and `App.Ui.Client` do NOT depend on `App.Integrations` (external API access is API-only).
+- `App.Validation` does NOT depend on `App.Api` or `App.Integrations` (validation rules are pure).
+- `App.Integrations` implements interfaces from `App.Abstractions` (dependency inversion).
+
 ## Solution Structure (Projects)
 
 ### `App.Host`

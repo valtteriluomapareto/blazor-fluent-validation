@@ -10,6 +10,8 @@ namespace App.Api;
 
 public static class ApiModule
 {
+    private sealed class ApiModuleLog { }
+
     public static IServiceCollection AddApiServices(this IServiceCollection services)
     {
         services.AddTransient<ResilientHttpMessageHandler>();
@@ -39,10 +41,21 @@ public static class ApiModule
     {
         app.MapPost(
                 "/api/sample-form",
-                (HttpContext httpContext, SampleForm model) =>
+                (HttpContext httpContext, SampleForm model, ILogger<ApiModuleLog> logger) =>
                 {
+                    logger.LogInformation(
+                        "Received sample form submission with NameLength={NameLength} Age={Age}",
+                        model.Name?.Length ?? 0,
+                        model.Age
+                    );
+
                     if (string.Equals(model.Name, "ApiOnly", StringComparison.OrdinalIgnoreCase))
                     {
+                        logger.LogWarning(
+                            "Sample form rejected by endpoint-only rule. NameLength={NameLength}",
+                            model.Name?.Length ?? 0
+                        );
+
                         var errors = new Dictionary<string, string[]>
                         {
                             ["Name"] =
@@ -76,12 +89,14 @@ public static class ApiModule
             async (
                 string? name,
                 IPrefillIntegrationLookup prefillLookup,
+                ILogger<ApiModuleLog> logger,
                 CancellationToken cancellationToken
             ) =>
             {
                 var lookupName = name?.Trim() ?? string.Empty;
                 if (string.IsNullOrWhiteSpace(lookupName))
                 {
+                    logger.LogInformation("Prefill lookup skipped because name is empty.");
                     return Results.Ok(
                         new PrefillIntegrationDemoLookupResponse(
                             Found: false,
@@ -93,11 +108,22 @@ public static class ApiModule
                     );
                 }
 
+                logger.LogInformation(
+                    "Prefill lookup started for NameLength={NameLength}",
+                    lookupName.Length
+                );
+
                 var data = await prefillLookup.LookupAsync(lookupName, cancellationToken);
                 var found = data is not null;
                 var message = found
                     ? "Integration returned existing data."
                     : "No integration data found for that name.";
+
+                logger.LogInformation(
+                    "Prefill lookup completed. Found={Found} NameLength={NameLength}",
+                    found,
+                    lookupName.Length
+                );
 
                 return Results.Ok(
                     new PrefillIntegrationDemoLookupResponse(
