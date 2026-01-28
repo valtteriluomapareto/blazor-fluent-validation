@@ -20,6 +20,7 @@
     <FormCard>
         <p class="text-sm font-semibold text-slate-700">Testing guide</p>
         <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+            <li><strong>Validate on blur:</strong> click the Name field and then click elsewhere without typing to see the error appear.</li>
             <li><strong>Local UI rules:</strong> leave Name empty or Age below 18 to see immediate client-side errors.</li>
             <li><strong>Server rule-set:</strong> use Name <code>Server</code> with a valid Age to trigger API validation.</li>
             <li><strong>Integration lookup:</strong> use Name <code>Taken</code> with a valid Age to trigger async validation.</li>
@@ -32,7 +33,7 @@
             <LocalizedFluentValidator AsyncMode="true" RuleSets="@(new[] { "Local" })" />
             <ValidationSummary class="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 empty:hidden" />
 
-            <FormTextField Id="name" Label="Name" @bind-Value="_model.Name" />
+            <FormTextField Id="name" Label="Name" ValidateOnBlur="true" UpdateOnInput="true" @bind-Value="_model.Name" />
             <FormNumberField Id="age" Label="Age" @bind-Value="_model.Age" />
 
             <div class="flex items-center gap-3">

@@ -89,7 +89,36 @@ To add this feature to other form field components, follow this pattern:
     ... />
 ```
 
-### Step 3: Implement the handlers
+### Step 3: Update the CurrentValue setter to notify EditContext
+
+**Important:** The built-in `InputText`/`InputTextArea` components bind to your component's `CurrentValue` property, not the model property. This means their internal `EditContext.NotifyFieldChanged` call is for the wrong field. You must explicitly notify about the model field.
+
+```csharp
+private string CurrentValue
+{
+    get => Value;
+    set
+    {
+        if (string.Equals(Value, value, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Value = value;
+        _ = ValueChanged.InvokeAsync(value);
+
+        // Notify EditContext with the correct field identifier.
+        // InputText's internal binding notifies about "CurrentValue", not the model property,
+        // so we need to explicitly notify about the actual model field for validation to work.
+        if (EditContext is not null && ValueExpression is not null)
+        {
+            EditContext.NotifyFieldChanged(FieldIdentifier.Create(ValueExpression));
+        }
+    }
+}
+```
+
+### Step 4: Implement the focus/blur handlers
 
 ```csharp
 private void HandleFocus()
@@ -106,8 +135,8 @@ private void HandleBlur()
     }
 
     // Only trigger validation on blur if value didn't change since focus.
-    // If value changed, validation already ran via EditContext.OnFieldChanged.
-    if (EqualityComparer<TValue>.Default.Equals(Value, _valueOnFocus))
+    // If value changed, validation already ran via the CurrentValue setter.
+    if (string.Equals(Value, _valueOnFocus, StringComparison.Ordinal))
     {
         var fieldIdentifier = FieldIdentifier.Create(ValueExpression);
         EditContext.NotifyFieldChanged(fieldIdentifier);
@@ -115,9 +144,9 @@ private void HandleBlur()
 }
 ```
 
-For string fields, use `string.Equals(Value, _valueOnFocus, StringComparison.Ordinal)` instead of `EqualityComparer`.
+For non-string fields, use `EqualityComparer<TValue>.Default.Equals(Value, _valueOnFocus)` instead of `string.Equals`.
 
-### Step 4: Add tests
+### Step 5: Add tests
 
 Add tests to verify:
 1. Blur triggers validation for untouched empty fields

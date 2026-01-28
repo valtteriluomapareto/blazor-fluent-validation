@@ -44,6 +44,14 @@
 
             Value = value;
             _ = ValueChanged.InvokeAsync(value);
+
+            // Notify EditContext with the correct field identifier.
+            // InputText's internal binding notifies about "CurrentValue", not the model property,
+            // so we need to explicitly notify about the actual model field for validation to work.
+            if (EditContext is not null && ValueExpression is not null)
+            {
+                EditContext.NotifyFieldChanged(FieldIdentifier.Create(ValueExpression));
+            }
         }
     }
 

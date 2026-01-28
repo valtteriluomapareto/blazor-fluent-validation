@@ -132,6 +132,79 @@ public sealed class SampleFormE2ETests
     }
 
     [Fact]
+    public async Task Sample_form_validate_on_blur_shows_error_when_leaving_empty_field()
+    {
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
+        );
+        var page = await context.NewPageAsync();
+
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/sample-form");
+        await NavigateAndWaitForWasmAsync(page, "/sample-form");
+
+        await Assertions
+            .Expect(
+                page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Sample Form" })
+            )
+            .ToBeVisibleAsync();
+
+        TestReporter.Step(_output, "verify no error initially");
+        await Assertions
+            .Expect(page.GetByText("Nimi on pakollinen.", new() { Exact = true }))
+            .ToHaveCountAsync(0, new() { Timeout = 5000 });
+
+        TestReporter.Step(_output, "focus Name field and then blur without typing");
+        var nameInput = page.GetByLabel("Name");
+        await nameInput.FocusAsync();
+
+        // Click on Age field to blur the Name field
+        await page.GetByLabel("Age").ClickAsync();
+
+        TestReporter.Step(_output, "verify error appears after blur");
+        await Assertions
+            .Expect(page.GetByText("Nimi on pakollinen.", new() { Exact = true }).First)
+            .ToBeVisibleAsync(new() { Timeout = 15000 });
+    }
+
+    [Fact]
+    public async Task Sample_form_validate_on_blur_error_clears_when_fixed()
+    {
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
+        );
+        var page = await context.NewPageAsync();
+
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/sample-form");
+        await NavigateAndWaitForWasmAsync(page, "/sample-form");
+
+        await Assertions
+            .Expect(
+                page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Sample Form" })
+            )
+            .ToBeVisibleAsync();
+
+        TestReporter.Step(_output, "trigger validate-on-blur error");
+        var nameInput = page.GetByLabel("Name");
+        await nameInput.FocusAsync();
+        await page.GetByLabel("Age").ClickAsync();
+
+        var errorLocator = page.GetByText("Nimi on pakollinen.", new() { Exact = true }).First;
+        await Assertions.Expect(errorLocator).ToBeVisibleAsync(new() { Timeout = 15000 });
+
+        TestReporter.Step(_output, "fix the error by typing a name and submit");
+        await FillAndCommitAsync(page.GetByLabel("Name"), "Jane");
+        await FillAndCommitAsync(page.GetByLabel("Age"), "30");
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
+            .ClickAsync();
+
+        TestReporter.Step(_output, "verify error clears and form is valid");
+        await Assertions.Expect(errorLocator).ToBeHiddenAsync(new() { Timeout = 15000 });
+        await Assertions
+            .Expect(page.GetByRole(AriaRole.Status))
+            .ToHaveTextAsync("Form is valid.", new() { Timeout = 15000 });
+    }
+
+    [Fact]
     public async Task Sample_form_server_error_then_fix_and_submit_succeeds()
     {
         await using var context = await _playwright.Browser.NewContextAsync(
