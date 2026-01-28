@@ -16,6 +16,19 @@
 |----------|---------|
 | [coverage-summary.md](coverage-summary.md) | Latest test coverage snapshot with per-assembly breakdown, identified gaps, and prioritized improvement suggestions. |
 
+## Architecture Decisions
+
+| Document | Purpose |
+|----------|---------|
+| [decisions/](decisions/README.md) | Architecture Decision Records (ADRs) documenting key technical decisions and their rationale. |
+
+Key decisions:
+- [ADR-001](decisions/ADR-001-validation-first-architecture.md) — Why validation rules are the single source of truth
+- [ADR-002](decisions/ADR-002-dual-mode-blazor-ui.md) — Why we support both Server and WASM rendering
+- [ADR-003](decisions/ADR-003-error-codes-for-localization.md) — Why error codes are the contract for localization
+- [ADR-004](decisions/ADR-004-local-vs-server-rule-sets.md) — Why validation is split into Local and Server rule sets
+- [ADR-005](decisions/ADR-005-layered-project-structure.md) — Why the solution uses layered project boundaries
+
 ## See also
 
 - [README.md](../README.md) — Project quickstart and command reference.
