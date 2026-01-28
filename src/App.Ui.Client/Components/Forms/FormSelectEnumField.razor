@@ -23,6 +23,8 @@
 </FormField>
 
 @code {
+    [CascadingParameter] private EditContext? EditContext { get; set; }
+
     [Parameter] public string Id { get; set; } = string.Empty;
     [Parameter] public string Label { get; set; } = string.Empty;
     [Parameter] public string? HelpText { get; set; }
@@ -78,6 +80,12 @@
 
             Value = value;
             _ = ValueChanged.InvokeAsync(value);
+
+            // Notify EditContext with the correct field identifier.
+            if (EditContext is not null && ValueExpression is not null)
+            {
+                EditContext.NotifyFieldChanged(FieldIdentifier.Create(ValueExpression));
+            }
         }
     }
 

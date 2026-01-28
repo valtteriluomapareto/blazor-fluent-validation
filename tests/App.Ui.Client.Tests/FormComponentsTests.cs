@@ -1021,6 +1021,495 @@ public sealed class FormComponentsTests : IDisposable
         Assert.Equal(2, validationCount);
     }
 
+    // ===== Tests for EditContext notification fix =====
+    // These tests verify that each form component properly notifies EditContext about
+    // the correct model field (not the internal CurrentValue property) when values change.
+
+    [Fact]
+    public void FormNumberField_notifies_edit_context_for_correct_field_on_change()
+    {
+        var model = new SampleForm { Name = "Test", Age = 10 };
+        var editContext = new EditContext(model);
+        var ageField = new FieldIdentifier(model, nameof(SampleForm.Age));
+        Expression<Func<int>> ageExpression = () => model.Age;
+        var notifiedFields = new List<FieldIdentifier>();
+
+        editContext.OnFieldChanged += (_, args) => notifiedFields.Add(args.FieldIdentifier);
+
+        RenderFragment<EditContext> childContent = _ =>
+            builder =>
+            {
+                builder.OpenComponent<LocalizedFluentValidator>(0);
+                builder.AddAttribute(1, nameof(LocalizedFluentValidator.AsyncMode), true);
+                builder.AddAttribute(
+                    2,
+                    nameof(LocalizedFluentValidator.RuleSets),
+                    new[] { "Local" }
+                );
+                builder.CloseComponent();
+
+                builder.OpenComponent<FormNumberField>(10);
+                builder.AddAttribute(11, nameof(FormNumberField.Id), "age");
+                builder.AddAttribute(12, nameof(FormNumberField.Label), "Age");
+                builder.AddAttribute(13, nameof(FormNumberField.Value), model.Age);
+                builder.AddAttribute(14, nameof(FormNumberField.ValueExpression), ageExpression);
+                builder.AddAttribute(
+                    15,
+                    nameof(FormNumberField.ValueChanged),
+                    EventCallback.Factory.Create<int>(this, value => model.Age = value)
+                );
+                builder.CloseComponent();
+            };
+
+        var cut = _context.Render<EditForm>(parameters =>
+            parameters.Add(p => p.EditContext, editContext).Add(p => p.ChildContent, childContent)
+        );
+
+        var input = cut.Find("input#age");
+        input.Change("25");
+
+        // Verify that the correct field was notified (model.Age, not CurrentValue)
+        Assert.Contains(ageField, notifiedFields);
+    }
+
+    [Fact]
+    public void FormNumberField_validation_clears_error_when_value_becomes_valid()
+    {
+        var model = new SampleForm { Name = "Test", Age = 10 };
+        var editContext = new EditContext(model);
+        var ageField = new FieldIdentifier(model, nameof(SampleForm.Age));
+        Expression<Func<int>> ageExpression = () => model.Age;
+
+        RenderFragment<EditContext> childContent = _ =>
+            builder =>
+            {
+                builder.OpenComponent<LocalizedFluentValidator>(0);
+                builder.AddAttribute(1, nameof(LocalizedFluentValidator.AsyncMode), true);
+                builder.AddAttribute(
+                    2,
+                    nameof(LocalizedFluentValidator.RuleSets),
+                    new[] { "Local" }
+                );
+                builder.CloseComponent();
+
+                builder.OpenComponent<FormNumberField>(10);
+                builder.AddAttribute(11, nameof(FormNumberField.Id), "age");
+                builder.AddAttribute(12, nameof(FormNumberField.Label), "Age");
+                builder.AddAttribute(13, nameof(FormNumberField.Value), model.Age);
+                builder.AddAttribute(14, nameof(FormNumberField.ValueExpression), ageExpression);
+                builder.AddAttribute(
+                    15,
+                    nameof(FormNumberField.ValueChanged),
+                    EventCallback.Factory.Create<int>(this, value => model.Age = value)
+                );
+                builder.CloseComponent();
+            };
+
+        var cut = _context.Render<EditForm>(parameters =>
+            parameters.Add(p => p.EditContext, editContext).Add(p => p.ChildContent, childContent)
+        );
+
+        // Initial value is 10, which is invalid (must be 18-120)
+        // Trigger full form validation to get the initial error
+        editContext.Validate();
+
+        cut.WaitForAssertion(() =>
+        {
+            var messages = editContext.GetValidationMessages(ageField).ToList();
+            Assert.NotEmpty(messages);
+        });
+
+        // Now change to a valid value
+        // Use InvokeAsync to ensure no re-renders between Find and Change
+        cut.InvokeAsync(() => cut.Find("input#age").Change("25"));
+
+        // Error should clear because we now notify the correct field
+        cut.WaitForAssertion(() =>
+        {
+            var messages = editContext.GetValidationMessages(ageField).ToList();
+            Assert.Empty(messages);
+        });
+    }
+
+    [Fact]
+    public void FormSelectEnumField_notifies_edit_context_for_correct_field_on_change()
+    {
+        var model = new ValidationExamplesForm { SentinelIndustry = IndustryType.Unknown };
+        var editContext = new EditContext(model);
+        var industryField = new FieldIdentifier(
+            model,
+            nameof(ValidationExamplesForm.SentinelIndustry)
+        );
+        Expression<Func<IndustryType>> industryExpression = () => model.SentinelIndustry;
+        var notifiedFields = new List<FieldIdentifier>();
+
+        editContext.OnFieldChanged += (_, args) => notifiedFields.Add(args.FieldIdentifier);
+
+        RenderFragment<EditContext> childContent = _ =>
+            builder =>
+            {
+                builder.OpenComponent<LocalizedFluentValidator>(0);
+                builder.AddAttribute(1, nameof(LocalizedFluentValidator.AsyncMode), true);
+                builder.AddAttribute(
+                    2,
+                    nameof(LocalizedFluentValidator.RuleSets),
+                    new[] { "Local" }
+                );
+                builder.CloseComponent();
+
+                builder.OpenComponent<FormSelectEnumField<IndustryType>>(10);
+                builder.AddAttribute(11, nameof(FormSelectEnumField<IndustryType>.Id), "industry");
+                builder.AddAttribute(
+                    12,
+                    nameof(FormSelectEnumField<IndustryType>.Label),
+                    "Industry"
+                );
+                builder.AddAttribute(
+                    13,
+                    nameof(FormSelectEnumField<IndustryType>.Value),
+                    model.SentinelIndustry
+                );
+                builder.AddAttribute(
+                    14,
+                    nameof(FormSelectEnumField<IndustryType>.ValueExpression),
+                    industryExpression
+                );
+                builder.AddAttribute(
+                    15,
+                    nameof(FormSelectEnumField<IndustryType>.ValueChanged),
+                    EventCallback.Factory.Create<IndustryType>(
+                        this,
+                        value => model.SentinelIndustry = value
+                    )
+                );
+                builder.CloseComponent();
+            };
+
+        var cut = _context.Render<EditForm>(parameters =>
+            parameters.Add(p => p.EditContext, editContext).Add(p => p.ChildContent, childContent)
+        );
+
+        var select = cut.Find("select#industry");
+        select.Change(IndustryType.SaaS.ToString());
+
+        // Verify that the correct field was notified
+        Assert.Contains(industryField, notifiedFields);
+    }
+
+    [Fact]
+    public void FormSelectEnumField_validation_clears_error_when_value_becomes_valid()
+    {
+        var model = new ValidationExamplesForm { SentinelIndustry = IndustryType.Unknown };
+        var editContext = new EditContext(model);
+        var industryField = new FieldIdentifier(
+            model,
+            nameof(ValidationExamplesForm.SentinelIndustry)
+        );
+        Expression<Func<IndustryType>> industryExpression = () => model.SentinelIndustry;
+
+        RenderFragment<EditContext> childContent = _ =>
+            builder =>
+            {
+                builder.OpenComponent<LocalizedFluentValidator>(0);
+                builder.AddAttribute(1, nameof(LocalizedFluentValidator.AsyncMode), true);
+                builder.AddAttribute(
+                    2,
+                    nameof(LocalizedFluentValidator.RuleSets),
+                    new[] { "Local" }
+                );
+                builder.CloseComponent();
+
+                builder.OpenComponent<FormSelectEnumField<IndustryType>>(10);
+                builder.AddAttribute(11, nameof(FormSelectEnumField<IndustryType>.Id), "industry");
+                builder.AddAttribute(
+                    12,
+                    nameof(FormSelectEnumField<IndustryType>.Label),
+                    "Industry"
+                );
+                builder.AddAttribute(
+                    13,
+                    nameof(FormSelectEnumField<IndustryType>.Value),
+                    model.SentinelIndustry
+                );
+                builder.AddAttribute(
+                    14,
+                    nameof(FormSelectEnumField<IndustryType>.ValueExpression),
+                    industryExpression
+                );
+                builder.AddAttribute(
+                    15,
+                    nameof(FormSelectEnumField<IndustryType>.ValueChanged),
+                    EventCallback.Factory.Create<IndustryType>(
+                        this,
+                        value => model.SentinelIndustry = value
+                    )
+                );
+                builder.CloseComponent();
+            };
+
+        var cut = _context.Render<EditForm>(parameters =>
+            parameters.Add(p => p.EditContext, editContext).Add(p => p.ChildContent, childContent)
+        );
+
+        // Initial value is Unknown, which is invalid
+        // Trigger full form validation to get the initial error
+        editContext.Validate();
+
+        cut.WaitForAssertion(() =>
+        {
+            var messages = editContext.GetValidationMessages(industryField).ToList();
+            Assert.NotEmpty(messages);
+        });
+
+        // Now change to a valid value
+        // Use InvokeAsync to ensure no re-renders between Find and Change
+        cut.InvokeAsync(() => cut.Find("select#industry").Change(IndustryType.SaaS.ToString()));
+
+        // Error should clear because we now notify the correct field
+        cut.WaitForAssertion(() =>
+        {
+            var messages = editContext.GetValidationMessages(industryField).ToList();
+            Assert.Empty(messages);
+        });
+    }
+
+    [Fact]
+    public void FormSelectEnumNullableField_notifies_edit_context_for_correct_field_on_change()
+    {
+        var model = new ValidationExamplesForm { NullableIndustry = null };
+        var editContext = new EditContext(model);
+        var industryField = new FieldIdentifier(
+            model,
+            nameof(ValidationExamplesForm.NullableIndustry)
+        );
+        Expression<Func<IndustryType?>> industryExpression = () => model.NullableIndustry;
+        var notifiedFields = new List<FieldIdentifier>();
+
+        editContext.OnFieldChanged += (_, args) => notifiedFields.Add(args.FieldIdentifier);
+
+        RenderFragment<EditContext> childContent = _ =>
+            builder =>
+            {
+                builder.OpenComponent<LocalizedFluentValidator>(0);
+                builder.AddAttribute(1, nameof(LocalizedFluentValidator.AsyncMode), true);
+                builder.AddAttribute(
+                    2,
+                    nameof(LocalizedFluentValidator.RuleSets),
+                    new[] { "Local" }
+                );
+                builder.CloseComponent();
+
+                builder.OpenComponent<FormSelectEnumNullableField<IndustryType>>(10);
+                builder.AddAttribute(
+                    11,
+                    nameof(FormSelectEnumNullableField<IndustryType>.Id),
+                    "industry"
+                );
+                builder.AddAttribute(
+                    12,
+                    nameof(FormSelectEnumNullableField<IndustryType>.Label),
+                    "Industry"
+                );
+                builder.AddAttribute(
+                    13,
+                    nameof(FormSelectEnumNullableField<IndustryType>.Value),
+                    model.NullableIndustry
+                );
+                builder.AddAttribute(
+                    14,
+                    nameof(FormSelectEnumNullableField<IndustryType>.ValueExpression),
+                    industryExpression
+                );
+                builder.AddAttribute(
+                    15,
+                    nameof(FormSelectEnumNullableField<IndustryType>.ValueChanged),
+                    EventCallback.Factory.Create<IndustryType?>(
+                        this,
+                        value => model.NullableIndustry = value
+                    )
+                );
+                builder.CloseComponent();
+            };
+
+        var cut = _context.Render<EditForm>(parameters =>
+            parameters.Add(p => p.EditContext, editContext).Add(p => p.ChildContent, childContent)
+        );
+
+        var select = cut.Find("select#industry");
+        select.Change(IndustryType.Finance.ToString());
+
+        // Verify that the correct field was notified
+        Assert.Contains(industryField, notifiedFields);
+    }
+
+    [Fact]
+    public void FormSelectEnumNullableField_validation_updates_when_value_changes()
+    {
+        var model = new ValidationExamplesForm { NullableIndustry = null };
+        var editContext = new EditContext(model);
+        var industryField = new FieldIdentifier(
+            model,
+            nameof(ValidationExamplesForm.NullableIndustry)
+        );
+        Expression<Func<IndustryType?>> industryExpression = () => model.NullableIndustry;
+
+        RenderFragment<EditContext> childContent = _ =>
+            builder =>
+            {
+                builder.OpenComponent<LocalizedFluentValidator>(0);
+                builder.AddAttribute(1, nameof(LocalizedFluentValidator.AsyncMode), true);
+                builder.AddAttribute(
+                    2,
+                    nameof(LocalizedFluentValidator.RuleSets),
+                    new[] { "Local" }
+                );
+                builder.CloseComponent();
+
+                builder.OpenComponent<FormSelectEnumNullableField<IndustryType>>(10);
+                builder.AddAttribute(
+                    11,
+                    nameof(FormSelectEnumNullableField<IndustryType>.Id),
+                    "industry"
+                );
+                builder.AddAttribute(
+                    12,
+                    nameof(FormSelectEnumNullableField<IndustryType>.Label),
+                    "Industry"
+                );
+                builder.AddAttribute(
+                    13,
+                    nameof(FormSelectEnumNullableField<IndustryType>.Value),
+                    model.NullableIndustry
+                );
+                builder.AddAttribute(
+                    14,
+                    nameof(FormSelectEnumNullableField<IndustryType>.ValueExpression),
+                    industryExpression
+                );
+                builder.AddAttribute(
+                    15,
+                    nameof(FormSelectEnumNullableField<IndustryType>.IncludePlaceholder),
+                    true
+                );
+                builder.AddAttribute(
+                    16,
+                    nameof(FormSelectEnumNullableField<IndustryType>.ValueChanged),
+                    EventCallback.Factory.Create<IndustryType?>(
+                        this,
+                        value => model.NullableIndustry = value
+                    )
+                );
+                builder.CloseComponent();
+            };
+
+        var cut = _context.Render<EditForm>(parameters =>
+            parameters.Add(p => p.EditContext, editContext).Add(p => p.ChildContent, childContent)
+        );
+
+        var select = cut.Find("select#industry");
+
+        // Initial value is null, which is invalid (NotNull rule)
+        // Trigger validation with no change to confirm the error state
+        editContext.Validate();
+
+        cut.WaitForAssertion(() =>
+        {
+            var messages = editContext.GetValidationMessages(industryField).ToList();
+            Assert.NotEmpty(messages);
+        });
+
+        // Now change to a valid value
+        select.Change(IndustryType.Finance.ToString());
+
+        cut.WaitForAssertion(() =>
+        {
+            var messages = editContext.GetValidationMessages(industryField).ToList();
+            Assert.Empty(messages);
+        });
+    }
+
+    [Fact]
+    public void FormDecimalField_notifies_edit_context_for_correct_field_on_change()
+    {
+        var model = new DecimalTestModel { Amount = 0m };
+        var editContext = new EditContext(model);
+        var amountField = new FieldIdentifier(model, nameof(DecimalTestModel.Amount));
+        Expression<Func<decimal>> amountExpression = () => model.Amount;
+        var notifiedFields = new List<FieldIdentifier>();
+
+        editContext.OnFieldChanged += (_, args) => notifiedFields.Add(args.FieldIdentifier);
+
+        RenderFragment<EditContext> childContent = _ =>
+            builder =>
+            {
+                builder.OpenComponent<FormDecimalField>(10);
+                builder.AddAttribute(11, nameof(FormDecimalField.Id), "amount");
+                builder.AddAttribute(12, nameof(FormDecimalField.Label), "Amount");
+                builder.AddAttribute(13, nameof(FormDecimalField.Value), model.Amount);
+                builder.AddAttribute(
+                    14,
+                    nameof(FormDecimalField.ValueExpression),
+                    amountExpression
+                );
+                builder.AddAttribute(
+                    15,
+                    nameof(FormDecimalField.ValueChanged),
+                    EventCallback.Factory.Create<decimal>(this, value => model.Amount = value)
+                );
+                builder.CloseComponent();
+            };
+
+        var cut = _context.Render<EditForm>(parameters =>
+            parameters.Add(p => p.EditContext, editContext).Add(p => p.ChildContent, childContent)
+        );
+
+        var input = cut.Find("input#amount");
+        input.Change("123.45");
+
+        // Verify that the correct field was notified (model.Amount, not CurrentValue)
+        Assert.Contains(amountField, notifiedFields);
+    }
+
+    [Fact]
+    public void FormDateField_notifies_edit_context_for_correct_field_on_change()
+    {
+        var model = new DateTestModel { BirthDate = DateOnly.FromDateTime(DateTime.Today) };
+        var editContext = new EditContext(model);
+        var dateField = new FieldIdentifier(model, nameof(DateTestModel.BirthDate));
+        Expression<Func<DateOnly>> dateExpression = () => model.BirthDate;
+        var notifiedFields = new List<FieldIdentifier>();
+
+        editContext.OnFieldChanged += (_, args) => notifiedFields.Add(args.FieldIdentifier);
+
+        RenderFragment<EditContext> childContent = _ =>
+            builder =>
+            {
+                builder.OpenComponent<FormDateField>(10);
+                builder.AddAttribute(11, nameof(FormDateField.Id), "birthdate");
+                builder.AddAttribute(12, nameof(FormDateField.Label), "Birth Date");
+                builder.AddAttribute(13, nameof(FormDateField.Value), model.BirthDate);
+                builder.AddAttribute(14, nameof(FormDateField.ValueExpression), dateExpression);
+                builder.AddAttribute(
+                    15,
+                    nameof(FormDateField.ValueChanged),
+                    EventCallback.Factory.Create<DateOnly>(this, value => model.BirthDate = value)
+                );
+                builder.CloseComponent();
+            };
+
+        var cut = _context.Render<EditForm>(parameters =>
+            parameters.Add(p => p.EditContext, editContext).Add(p => p.ChildContent, childContent)
+        );
+
+        var input = cut.Find("input#birthdate");
+        input.Change("2000-01-15");
+
+        // Verify that the correct field was notified (model.BirthDate, not CurrentValue)
+        Assert.Contains(dateField, notifiedFields);
+    }
+
+    // ===== End of EditContext notification fix tests =====
+
     [Fact]
     public void FormTextField_generates_fallback_id_from_value_expression()
     {
@@ -1361,5 +1850,15 @@ public sealed class FormComponentsTests : IDisposable
     private sealed class NullableEnumModel
     {
         public NullableOption? Option { get; set; }
+    }
+
+    private sealed class DecimalTestModel
+    {
+        public decimal Amount { get; set; }
+    }
+
+    private sealed class DateTestModel
+    {
+        public DateOnly BirthDate { get; set; }
     }
 }
