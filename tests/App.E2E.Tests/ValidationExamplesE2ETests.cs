@@ -128,7 +128,10 @@ public sealed class ValidationExamplesE2ETests
 
         TestReporter.Step(output, "fill Other values and submit again");
         await FillAndCommitAsync(page.Locator("input#required-single-choice-other-value"), "Delta");
-        await FillAndCommitAsync(page.Locator("input#required-multi-choice-other-value"), "Epsilon");
+        await FillAndCommitAsync(
+            page.Locator("input#required-multi-choice-other-value"),
+            "Epsilon"
+        );
 
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Validate form" })
             .ClickAsync();

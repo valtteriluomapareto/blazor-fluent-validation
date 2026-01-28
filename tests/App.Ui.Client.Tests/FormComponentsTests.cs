@@ -320,6 +320,71 @@ public sealed class FormComponentsTests : IDisposable
     }
 
     [Fact]
+    public void FormTextAreaField_change_updates_value_via_callback()
+    {
+        var received = new List<string>();
+
+        var cut = context.Render<FormTextAreaField>(parameters =>
+            parameters
+                .Add(p => p.Id, "notes")
+                .Add(p => p.Label, "Notes")
+                .Add(p => p.Value, "Initial")
+                .Add(p => p.ValueChanged, value => received.Add(value))
+        );
+
+        cut.Find("textarea#notes").Change("Updated");
+
+        var updated = Assert.Single(received);
+        Assert.Equal("Updated", updated);
+    }
+
+    [Fact]
+    public void FormTextAreaField_update_on_input_does_not_break_change_handling()
+    {
+        var received = new List<string>();
+
+        var cut = context.Render<FormTextAreaField>(parameters =>
+            parameters
+                .Add(p => p.Id, "notes")
+                .Add(p => p.Label, "Notes")
+                .Add(p => p.Value, "Initial")
+                .Add(p => p.UpdateOnInput, true)
+                .Add(p => p.ValueChanged, value => received.Add(value))
+        );
+
+        cut.Find("textarea#notes").Change("Updated");
+
+        var updated = Assert.Single(received);
+        Assert.Equal("Updated", updated);
+    }
+
+    [Fact]
+    public void FormTextAreaField_merges_input_attributes_and_placeholder()
+    {
+        var attributes = new Dictionary<string, object>
+        {
+            ["rows"] = "10",
+            ["placeholder"] = "Old placeholder",
+            ["data-test-id"] = "notes-field",
+        };
+
+        var cut = context.Render<FormTextAreaField>(parameters =>
+            parameters
+                .Add(p => p.Id, "notes")
+                .Add(p => p.Label, "Notes")
+                .Add(p => p.Value, "Initial")
+                .Add(p => p.Rows, 4)
+                .Add(p => p.Placeholder, "New placeholder")
+                .Add(p => p.InputAttributes, attributes)
+        );
+
+        var textarea = cut.Find("textarea#notes");
+        Assert.Equal("10", textarea.GetAttribute("rows"));
+        Assert.Equal("notes-field", textarea.GetAttribute("data-test-id"));
+        Assert.Equal("New placeholder", textarea.GetAttribute("placeholder"));
+    }
+
+    [Fact]
     public void FormSelectEnumField_renders_all_enum_options()
     {
         var cut = context.Render<FormSelectEnumField<TestOption>>(parameters =>

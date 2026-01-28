@@ -63,7 +63,10 @@ public sealed class SampleFormValidationWasmPageTests : IDisposable
             CancellationToken cancellationToken
         )
         {
-            if (request.Method == HttpMethod.Post && request.RequestUri?.AbsolutePath == "/api/sample-form")
+            if (
+                request.Method == HttpMethod.Post
+                && request.RequestUri?.AbsolutePath == "/api/sample-form"
+            )
             {
                 var errorResponse = new ValidationErrorResponse(
                     Title: "Validation failed.",

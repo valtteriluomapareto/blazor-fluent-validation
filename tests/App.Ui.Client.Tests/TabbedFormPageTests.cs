@@ -18,7 +18,10 @@ public sealed class TabbedFormPageTests : IDisposable
 
     public TabbedFormPageTests()
     {
-        context.Services.AddSingleton<IValidator<CustomerIntakeForm>, CustomerIntakeFormValidator>();
+        context.Services.AddSingleton<
+            IValidator<CustomerIntakeForm>,
+            CustomerIntakeFormValidator
+        >();
         context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
     }
 
@@ -78,9 +81,7 @@ public sealed class TabbedFormPageTests : IDisposable
         FindButton(cut, "Back").Click();
         FindButton(cut, "Back").Click();
 
-        cut.WaitForAssertion(() =>
-            Assert.NotEmpty(cut.FindAll("input#tab-customer-name"))
-        );
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("input#tab-customer-name")));
 
         cut.Find("input#tab-customer-name").Change("Acme Corp");
         cut.Find("input#tab-contact-email").Change("sales@acme.fi");
@@ -92,18 +93,14 @@ public sealed class TabbedFormPageTests : IDisposable
 
         FindButton(cut, "Next").Click();
 
-        cut.WaitForAssertion(() =>
-            Assert.NotEmpty(cut.FindAll("select#tab-contract-type"))
-        );
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("select#tab-contract-type")));
 
         SelectFirstNonDefaultOption(cut, "select#tab-contract-type");
         cut.Find("input#tab-seats").Change("25");
 
         FindButton(cut, "Next").Click();
 
-        cut.WaitForAssertion(() =>
-            Assert.NotEmpty(cut.FindAll("textarea#tab-notes"))
-        );
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("textarea#tab-notes")));
 
         cut.Find("form").Submit();
 

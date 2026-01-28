@@ -17,7 +17,10 @@ public sealed class ComplexFormPageTests : IDisposable
 
     public ComplexFormPageTests()
     {
-        context.Services.AddSingleton<IValidator<CustomerIntakeForm>, CustomerIntakeFormValidator>();
+        context.Services.AddSingleton<
+            IValidator<CustomerIntakeForm>,
+            CustomerIntakeFormValidator
+        >();
         context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
     }
 
