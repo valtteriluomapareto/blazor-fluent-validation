@@ -59,12 +59,38 @@ If you add more tests:
 - Prefer `./scripts/test-fast.sh` during iteration, and run E2E separately when needed.
 - Name test files to mirror the unit under test (e.g., `WeatherForecastTests.cs`).
 
+## Architecture Decision Records (ADRs)
+ADRs document significant technical decisions. They live in `docs/decisions/`.
+
+**When to create an ADR:**
+- Adding a new architectural pattern or layer
+- Changing how validation, error handling, or localization works
+- Introducing a new dependency or integration approach
+- Making a decision that future maintainers might question
+
+**When to update an ADR:**
+- If you're making a change that contradicts an existing ADR, either update it or create a new ADR that supersedes it
+- Add "Superseded by ADR-NNN" to the old ADR's status
+
+**How to create an ADR:**
+1. Copy `docs/decisions/_template.md` to `docs/decisions/ADR-NNN-short-title.md`
+2. Fill in Context, Decision, Consequences, and Alternatives
+3. Add an entry to `docs/decisions/README.md`
+
+Existing ADRs:
+- ADR-001: Validation-First Architecture
+- ADR-002: Dual-Mode Blazor UI
+- ADR-003: Error Codes for Localization
+- ADR-004: Local vs Server Rule Sets
+- ADR-005: Layered Project Structure
+
 ## Commit & Pull Request Guidelines
-- Commit history is minimal and uses short sentence case (e.g., “Initial scaffolding”). Keep subjects concise and action-oriented.
+- Commit history is minimal and uses short sentence case (e.g., "Initial scaffolding"). Keep subjects concise and action-oriented.
 - PRs should include:
   - A brief summary of the change and rationale.
-  - Testing notes (`dotnet run`, `dotnet test`, or “not run”).
+  - Testing notes (`dotnet run`, `dotnet test`, or "not run").
   - Screenshots or GIFs for UI changes in `src/App.Ui.Client/Pages/` or `src/App.Ui.Client/Components/`.
+  - Reference to new or updated ADRs if architectural decisions were made.
 
 ## Configuration & Security Tips
 - Keep secrets out of `appsettings*.json`; use environment variables or user secrets for local development.
