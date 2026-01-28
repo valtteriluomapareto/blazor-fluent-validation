@@ -1,5 +1,3 @@
-using App.Validation;
-
 namespace App.Validation.Tests;
 
 public sealed class FinnishSsnTests

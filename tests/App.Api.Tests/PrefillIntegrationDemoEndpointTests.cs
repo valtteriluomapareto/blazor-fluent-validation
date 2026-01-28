@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using App.Contracts;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Xunit;
 
 namespace App.Api.Tests;
 

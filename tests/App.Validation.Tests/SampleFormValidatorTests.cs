@@ -1,7 +1,6 @@
 using App.Abstractions;
 using App.Contracts;
 using FluentValidation.TestHelper;
-using Xunit;
 
 namespace App.Validation.Tests;
 

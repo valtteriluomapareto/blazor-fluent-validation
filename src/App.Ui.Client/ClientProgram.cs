@@ -7,8 +7,6 @@ using FormValidationTest.Client.Services;
 using FormValidationTest.Client.Services.Http;
 using FormValidationTest.Client.Services.Validation;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace FormValidationTest.Client;
 

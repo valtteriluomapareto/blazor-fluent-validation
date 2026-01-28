@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
 using App.Api.Http;
-using Xunit;
 
 namespace App.Api.Tests;
 

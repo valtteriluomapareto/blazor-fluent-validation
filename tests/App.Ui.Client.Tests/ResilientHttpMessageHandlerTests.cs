@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
 using FormValidationTest.Client.Services.Http;
-using Xunit;
 
 namespace App.Ui.Client.Tests;
 

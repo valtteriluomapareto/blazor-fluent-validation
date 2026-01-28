@@ -1,5 +1,4 @@
 using Microsoft.Playwright;
-using Xunit;
 using Assertions = Microsoft.Playwright.Assertions;
 
 namespace App.E2E.Tests;
