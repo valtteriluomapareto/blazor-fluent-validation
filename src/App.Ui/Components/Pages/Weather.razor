@@ -7,7 +7,7 @@
     <h1>Weather</h1>
     <p class="text-slate-600">This component demonstrates showing data.</p>
 
-    @if (forecasts == null)
+    @if (_forecasts == null)
     {
         <p class="text-slate-500">
             <em>Loading...</em>
@@ -27,7 +27,7 @@
                     </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-slate-700">
-                    @foreach (var forecast in forecasts)
+                    @foreach (var forecast in _forecasts)
                     {
                         <tr class="hover:bg-slate-50">
                             <td class="whitespace-nowrap px-4 py-3">@forecast.Date.ToShortDateString()</td>
@@ -44,7 +44,7 @@
 </div>
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private WeatherForecast[]? _forecasts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -53,7 +53,7 @@
 
         var startDate = DateOnly.FromDateTime(DateTime.Now);
         var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
-        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        _forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
         {
             Date = startDate.AddDays(index),
             TemperatureC = Random.Shared.Next(-20, 55),

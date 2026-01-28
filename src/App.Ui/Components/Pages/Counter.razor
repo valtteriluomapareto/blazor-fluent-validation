@@ -7,7 +7,7 @@
     <h1>Counter</h1>
 
     <p role="status" class="text-slate-600">
-        Current count: <span class="font-semibold text-slate-900">@currentCount</span>
+        Current count: <span class="font-semibold text-slate-900">@_currentCount</span>
     </p>
 
     <button class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300" @onclick="IncrementCount">
@@ -16,11 +16,11 @@
 </div>
 
 @code {
-    private int currentCount = 0;
+    private int _currentCount = 0;
 
     private void IncrementCount()
     {
-        currentCount++;
+        _currentCount++;
     }
 
 }

@@ -90,18 +90,18 @@ public sealed class SampleFormValidatorTests
 
     private sealed class TestUsedNameLookup : IUsedNameLookup
     {
-        private readonly IReadOnlyCollection<string> usedNames;
+        private readonly IReadOnlyCollection<string> _usedNames;
 
         public TestUsedNameLookup(IEnumerable<string> usedNames)
         {
-            this.usedNames = usedNames.ToArray();
+            this._usedNames = usedNames.ToArray();
         }
 
         public Task<IReadOnlyCollection<string>> GetUsedNamesAsync(
             CancellationToken cancellationToken = default
         )
         {
-            return Task.FromResult(usedNames);
+            return Task.FromResult(_usedNames);
         }
     }
 }

@@ -6,9 +6,9 @@ namespace App.E2E.Tests;
 [Collection("E2E")]
 public sealed class SampleFormE2ETests
 {
-    private readonly AppHostFixture host;
-    private readonly PlaywrightFixture playwright;
-    private readonly ITestOutputHelper output;
+    private readonly AppHostFixture _host;
+    private readonly PlaywrightFixture _playwright;
+    private readonly ITestOutputHelper _output;
 
     public SampleFormE2ETests(
         AppHostFixture host,
@@ -16,20 +16,20 @@ public sealed class SampleFormE2ETests
         ITestOutputHelper output
     )
     {
-        this.host = host;
-        this.playwright = playwright;
-        this.output = output;
+        this._host = host;
+        this._playwright = playwright;
+        this._output = output;
     }
 
     [Fact]
     public async Task Sample_form_shows_local_validation_errors()
     {
-        await using var context = await playwright.Browser.NewContextAsync(
-            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
         );
         var page = await context.NewPageAsync();
 
-        TestReporter.Step(output, $"navigate {host.BaseUrl}/sample-form");
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/sample-form");
         await NavigateAndWaitForWasmAsync(page, "/sample-form");
 
         await Assertions
@@ -38,7 +38,7 @@ public sealed class SampleFormE2ETests
             )
             .ToBeVisibleAsync();
 
-        TestReporter.Step(output, "submit with empty values");
+        TestReporter.Step(_output, "submit with empty values");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
             .ClickAsync();
 
@@ -54,12 +54,12 @@ public sealed class SampleFormE2ETests
     [Fact]
     public async Task Sample_form_accepts_valid_submission()
     {
-        await using var context = await playwright.Browser.NewContextAsync(
-            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
         );
         var page = await context.NewPageAsync();
 
-        TestReporter.Step(output, $"navigate {host.BaseUrl}/sample-form");
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/sample-form");
         await NavigateAndWaitForWasmAsync(page, "/sample-form");
 
         await Assertions
@@ -68,11 +68,11 @@ public sealed class SampleFormE2ETests
             )
             .ToBeVisibleAsync();
 
-        TestReporter.Step(output, "fill name and age");
+        TestReporter.Step(_output, "fill name and age");
         await FillAndCommitAsync(page.GetByLabel("Name"), "Jane");
         await FillAndCommitAsync(page.GetByLabel("Age"), "30");
 
-        TestReporter.Step(output, "submit valid form");
+        TestReporter.Step(_output, "submit valid form");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
             .ClickAsync();
 
@@ -84,12 +84,12 @@ public sealed class SampleFormE2ETests
     [Fact]
     public async Task Sample_form_invalid_then_fix_and_submit_succeeds()
     {
-        await using var context = await playwright.Browser.NewContextAsync(
-            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
         );
         var page = await context.NewPageAsync();
 
-        TestReporter.Step(output, $"navigate {host.BaseUrl}/sample-form");
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/sample-form");
         await NavigateAndWaitForWasmAsync(page, "/sample-form");
 
         await Assertions
@@ -98,7 +98,7 @@ public sealed class SampleFormE2ETests
             )
             .ToBeVisibleAsync();
 
-        TestReporter.Step(output, "submit invalid form first");
+        TestReporter.Step(_output, "submit invalid form first");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
             .ClickAsync();
 
@@ -113,7 +113,7 @@ public sealed class SampleFormE2ETests
             .Expect(page.GetByText("Iän tulee olla välillä 18–120.", new() { Exact = true }).First)
             .ToBeVisibleAsync(new() { Timeout = 15000 });
 
-        TestReporter.Step(output, "fix inputs and submit again");
+        TestReporter.Step(_output, "fix inputs and submit again");
         await FillAndCommitAsync(page.GetByLabel("Name"), "Jane");
         await FillAndCommitAsync(page.GetByLabel("Age"), "30");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
@@ -134,12 +134,12 @@ public sealed class SampleFormE2ETests
     [Fact]
     public async Task Sample_form_server_error_then_fix_and_submit_succeeds()
     {
-        await using var context = await playwright.Browser.NewContextAsync(
-            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
         );
         var page = await context.NewPageAsync();
 
-        TestReporter.Step(output, $"navigate {host.BaseUrl}/sample-form");
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/sample-form");
         await NavigateAndWaitForWasmAsync(page, "/sample-form");
 
         await Assertions
@@ -148,7 +148,7 @@ public sealed class SampleFormE2ETests
             )
             .ToBeVisibleAsync();
 
-        TestReporter.Step(output, "trigger server-side validation error");
+        TestReporter.Step(_output, "trigger server-side validation error");
         await FillAndCommitAsync(page.GetByLabel("Name"), "Server");
         await FillAndCommitAsync(page.GetByLabel("Age"), "30");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
@@ -161,7 +161,7 @@ public sealed class SampleFormE2ETests
             .Expect(page.GetByText("Nimi ei voi olla 'Server'.", new() { Exact = true }).First)
             .ToBeVisibleAsync(new() { Timeout = 15000 });
 
-        TestReporter.Step(output, "fix server error and submit again");
+        TestReporter.Step(_output, "fix server error and submit again");
         await FillAndCommitAsync(page.GetByLabel("Name"), "Jane");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
             .ClickAsync();

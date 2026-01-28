@@ -6,8 +6,8 @@ namespace App.E2E.Tests;
 public sealed class AppHostFixture : IAsyncLifetime
 {
     private const string DefaultBaseUrl = "http://127.0.0.1:5010";
-    private readonly ConcurrentQueue<string> outputLines = new();
-    private Process? hostProcess;
+    private readonly ConcurrentQueue<string> _outputLines = new();
+    private Process? _hostProcess;
 
     public Uri BaseUri { get; private set; } = null!;
     public string BaseUrl => BaseUri.ToString().TrimEnd('/');
@@ -31,13 +31,13 @@ public sealed class AppHostFixture : IAsyncLifetime
 
     public ValueTask DisposeAsync()
     {
-        if (hostProcess is not null)
+        if (_hostProcess is not null)
         {
             try
             {
-                if (!hostProcess.HasExited)
+                if (!_hostProcess.HasExited)
                 {
-                    hostProcess.Kill(entireProcessTree: true);
+                    _hostProcess.Kill(entireProcessTree: true);
                 }
             }
             catch (InvalidOperationException)
@@ -46,7 +46,7 @@ public sealed class AppHostFixture : IAsyncLifetime
             }
             finally
             {
-                hostProcess.Dispose();
+                _hostProcess.Dispose();
             }
         }
 
@@ -74,12 +74,12 @@ public sealed class AppHostFixture : IAsyncLifetime
         startInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
         startInfo.Environment["ASPNETCORE_URLS"] = baseUri.ToString();
 
-        hostProcess = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
-        hostProcess.OutputDataReceived += (_, args) => CaptureOutput(args.Data);
-        hostProcess.ErrorDataReceived += (_, args) => CaptureOutput(args.Data);
-        hostProcess.Start();
-        hostProcess.BeginOutputReadLine();
-        hostProcess.BeginErrorReadLine();
+        _hostProcess = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
+        _hostProcess.OutputDataReceived += (_, args) => CaptureOutput(args.Data);
+        _hostProcess.ErrorDataReceived += (_, args) => CaptureOutput(args.Data);
+        _hostProcess.Start();
+        _hostProcess.BeginOutputReadLine();
+        _hostProcess.BeginErrorReadLine();
     }
 
     private void CaptureOutput(string? data)
@@ -89,8 +89,8 @@ public sealed class AppHostFixture : IAsyncLifetime
             return;
         }
 
-        outputLines.Enqueue(data);
-        while (outputLines.Count > 30 && outputLines.TryDequeue(out _)) { }
+        _outputLines.Enqueue(data);
+        while (_outputLines.Count > 30 && _outputLines.TryDequeue(out _)) { }
     }
 
     private async Task WaitForHealthyAsync()
@@ -117,7 +117,7 @@ public sealed class AppHostFixture : IAsyncLifetime
             await Task.Delay(500);
         }
 
-        var output = string.Join(Environment.NewLine, outputLines);
+        var output = string.Join(Environment.NewLine, _outputLines);
         throw new TimeoutException(
             $"App.Host did not become ready at {endpoint}. Output:{Environment.NewLine}{output}"
         );

@@ -126,24 +126,24 @@ public sealed class ResilientHttpMessageHandlerTests
 
     private sealed class SequenceHandler : HttpMessageHandler
     {
-        private readonly Queue<HttpResponseMessage> responses;
-        private int callCount;
+        private readonly Queue<HttpResponseMessage> _responses;
+        private int _callCount;
 
         public SequenceHandler(params HttpResponseMessage[] responses)
         {
-            this.responses = new Queue<HttpResponseMessage>(responses);
+            this._responses = new Queue<HttpResponseMessage>(responses);
         }
 
-        public int CallCount => callCount;
+        public int CallCount => _callCount;
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken
         )
         {
-            callCount++;
+            _callCount++;
 
-            if (!responses.TryDequeue(out var response))
+            if (!_responses.TryDequeue(out var response))
             {
                 throw new InvalidOperationException("No more responses configured.");
             }

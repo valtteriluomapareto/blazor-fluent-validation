@@ -10,23 +10,23 @@ namespace App.Ui.Client.Tests;
 
 public sealed class ComplexFormPageTests : IDisposable
 {
-    private readonly BunitContext context = new();
+    private readonly BunitContext _context = new();
 
     public ComplexFormPageTests()
     {
-        context.Services.AddSingleton<
+        _context.Services.AddSingleton<
             IValidator<CustomerIntakeForm>,
             CustomerIntakeFormValidator
         >();
-        context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
+        _context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
     }
 
-    public void Dispose() => context.Dispose();
+    public void Dispose() => _context.Dispose();
 
     [Fact]
     public void ComplexForm_renders_expected_fields()
     {
-        var cut = context.Render<ComplexForm>();
+        var cut = _context.Render<ComplexForm>();
 
         Assert.NotNull(cut.Find("input#customer-name"));
         Assert.NotNull(cut.Find("input#contact-email"));
@@ -44,7 +44,7 @@ public sealed class ComplexFormPageTests : IDisposable
     [Fact]
     public void ComplexForm_invalid_then_fixing_values_allows_submission()
     {
-        var cut = context.Render<ComplexForm>();
+        var cut = _context.Render<ComplexForm>();
 
         cut.Find("form").Submit();
 

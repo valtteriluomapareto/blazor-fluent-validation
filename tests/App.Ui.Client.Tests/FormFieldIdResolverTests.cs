@@ -27,7 +27,7 @@ public sealed class FormFieldIdResolverTests
     [Fact]
     public void Resolve_sanitizes_field_name_with_underscores()
     {
-        var model = new TestModel { Some_Value = 5 };
+        var model = new TestModel { SomeValue = 5 };
         Expression<Func<int>> expression = () => model.Some_Value;
 
         var result = FormFieldIdResolver.Resolve(null, expression, componentKey: "abc123");
@@ -77,7 +77,7 @@ public sealed class FormFieldIdResolverTests
 
     private sealed class TestModel
     {
-        public int Some_Value { get; init; }
         public int SomeValue { get; init; }
+        public int Some_Value { get; init; }
     }
 }

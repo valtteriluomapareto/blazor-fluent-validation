@@ -7,9 +7,9 @@ namespace App.E2E.Tests;
 [Collection("E2E")]
 public sealed class PrefillIntegrationDemoE2ETests
 {
-    private readonly AppHostFixture host;
-    private readonly PlaywrightFixture playwright;
-    private readonly ITestOutputHelper output;
+    private readonly AppHostFixture _host;
+    private readonly PlaywrightFixture _playwright;
+    private readonly ITestOutputHelper _output;
 
     public PrefillIntegrationDemoE2ETests(
         AppHostFixture host,
@@ -17,20 +17,20 @@ public sealed class PrefillIntegrationDemoE2ETests
         ITestOutputHelper output
     )
     {
-        this.host = host;
-        this.playwright = playwright;
-        this.output = output;
+        this._host = host;
+        this._playwright = playwright;
+        this._output = output;
     }
 
     [Fact]
     public async Task Matching_name_prefills_form_and_validates()
     {
-        await using var context = await playwright.Browser.NewContextAsync(
-            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
         );
         var page = await context.NewPageAsync();
 
-        TestReporter.Step(output, $"navigate {host.BaseUrl}/prefill-integration-demo");
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/prefill-integration-demo");
         await NavigateAndWaitForWasmAsync(page, "/prefill-integration-demo");
 
         await Assertions
@@ -42,7 +42,7 @@ public sealed class PrefillIntegrationDemoE2ETests
             )
             .ToBeVisibleAsync();
 
-        TestReporter.Step(output, "enter matching name");
+        TestReporter.Step(_output, "enter matching name");
         await FillAndCommitAsync(
             page.GetByLabel("Name"),
             PrefillIntegrationDemoDefaults.MatchingName
@@ -56,7 +56,7 @@ public sealed class PrefillIntegrationDemoE2ETests
             .Expect(page.GetByLabel("Email"))
             .ToHaveValueAsync("ada.lovelace@example.com", new() { Timeout = 15000 });
 
-        TestReporter.Step(output, "submit prefilled form");
+        TestReporter.Step(_output, "submit prefilled form");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Validate form" })
             .ClickAsync();
 
@@ -68,12 +68,12 @@ public sealed class PrefillIntegrationDemoE2ETests
     [Fact]
     public async Task Newer_name_wins_over_late_stale_response()
     {
-        await using var context = await playwright.Browser.NewContextAsync(
-            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
         );
         var page = await context.NewPageAsync();
 
-        TestReporter.Step(output, $"navigate {host.BaseUrl}/prefill-integration-demo");
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/prefill-integration-demo");
         await NavigateAndWaitForWasmAsync(page, "/prefill-integration-demo");
 
         await Assertions
@@ -87,7 +87,7 @@ public sealed class PrefillIntegrationDemoE2ETests
 
         var nameInput = page.GetByLabel("Name");
 
-        TestReporter.Step(output, "trigger slow lookup then fast lookup");
+        TestReporter.Step(_output, "trigger slow lookup then fast lookup");
         await FillAndCommitAsync(nameInput, PrefillIntegrationDemoDefaults.SlowRaceName);
         await FillAndCommitAsync(nameInput, PrefillIntegrationDemoDefaults.FastRaceName);
 

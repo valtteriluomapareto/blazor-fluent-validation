@@ -5,11 +5,11 @@ namespace App.Api.Validation;
 public sealed class ValidationFilter<T> : IEndpointFilter
     where T : class
 {
-    private readonly string[] ruleSets;
+    private readonly string[] _ruleSets;
 
     public ValidationFilter(params string[] ruleSets)
     {
-        this.ruleSets = ruleSets.Length == 0 ? ["Local", "Server"] : ruleSets;
+        this._ruleSets = ruleSets.Length == 0 ? ["Local", "Server"] : ruleSets;
     }
 
     public async ValueTask<object?> InvokeAsync(
@@ -33,9 +33,9 @@ public sealed class ValidationFilter<T> : IEndpointFilter
             model,
             options =>
             {
-                if (ruleSets.Length > 0)
+                if (_ruleSets.Length > 0)
                 {
-                    options.IncludeRuleSets(ruleSets);
+                    options.IncludeRuleSets(_ruleSets);
                 }
             }
         );

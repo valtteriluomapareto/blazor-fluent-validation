@@ -8,12 +8,12 @@ namespace App.Api.Tests;
 
 public sealed class SampleFormEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly HttpClient client;
+    private readonly HttpClient _client;
     private static CancellationToken CancellationToken => TestContext.Current.CancellationToken;
 
     public SampleFormEndpointTests(WebApplicationFactory<Program> factory)
     {
-        client = factory.CreateClient();
+        _client = factory.CreateClient();
     }
 
     [Fact]
@@ -21,7 +21,7 @@ public sealed class SampleFormEndpointTests : IClassFixture<WebApplicationFactor
     {
         var model = new SampleForm { Name = "", Age = 10 };
 
-        var response = await client.PostAsJsonAsync(
+        var response = await _client.PostAsJsonAsync(
             "/api/sample-form",
             model,
             options: null,
@@ -46,7 +46,7 @@ public sealed class SampleFormEndpointTests : IClassFixture<WebApplicationFactor
     {
         var model = new SampleForm { Name = "Server", Age = 30 };
 
-        var response = await client.PostAsJsonAsync(
+        var response = await _client.PostAsJsonAsync(
             "/api/sample-form",
             model,
             options: null,
@@ -69,7 +69,7 @@ public sealed class SampleFormEndpointTests : IClassFixture<WebApplicationFactor
     {
         var model = new SampleForm { Name = "Taken", Age = 30 };
 
-        var response = await client.PostAsJsonAsync(
+        var response = await _client.PostAsJsonAsync(
             "/api/sample-form",
             model,
             options: null,
@@ -92,7 +92,7 @@ public sealed class SampleFormEndpointTests : IClassFixture<WebApplicationFactor
     {
         var model = new SampleForm { Name = "ApiOnly", Age = 30 };
 
-        var response = await client.PostAsJsonAsync(
+        var response = await _client.PostAsJsonAsync(
             "/api/sample-form",
             model,
             options: null,
@@ -115,7 +115,7 @@ public sealed class SampleFormEndpointTests : IClassFixture<WebApplicationFactor
     {
         var model = new SampleForm { Name = "Jane", Age = 30 };
 
-        var response = await client.PostAsJsonAsync(
+        var response = await _client.PostAsJsonAsync(
             "/api/sample-form",
             model,
             options: null,

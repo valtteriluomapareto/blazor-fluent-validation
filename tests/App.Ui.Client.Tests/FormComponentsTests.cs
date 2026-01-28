@@ -15,25 +15,25 @@ namespace App.Ui.Client.Tests;
 
 public sealed class FormComponentsTests : IDisposable
 {
-    private readonly BunitContext context = new();
+    private readonly BunitContext _context = new();
 
     public FormComponentsTests()
     {
-        context.Services.AddSingleton<
+        _context.Services.AddSingleton<
             IValidator<ValidationExamplesForm>,
             ValidationExamplesFormValidator
         >();
-        context.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
-        context.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
-        context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
+        _context.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
+        _context.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
+        _context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
     }
 
-    public void Dispose() => context.Dispose();
+    public void Dispose() => _context.Dispose();
 
     [Fact]
     public void FormCard_renders_child_content()
     {
-        var cut = context.Render<FormCard>(parameters =>
+        var cut = _context.Render<FormCard>(parameters =>
             parameters.AddChildContent("<p>Card content</p>")
         );
 
@@ -44,7 +44,7 @@ public sealed class FormComponentsTests : IDisposable
     [Fact]
     public void FormField_renders_label_and_help_text()
     {
-        var cut = context.Render<FormField<string>>(parameters =>
+        var cut = _context.Render<FormField<string>>(parameters =>
             parameters
                 .Add(p => p.Id, "field")
                 .Add(p => p.Label, "Field label")
@@ -98,7 +98,7 @@ public sealed class FormComponentsTests : IDisposable
                 builder.CloseComponent();
             };
 
-        context.Render<EditForm>(parameters =>
+        _context.Render<EditForm>(parameters =>
             parameters.Add(p => p.EditContext, editContext).Add(p => p.ChildContent, childContent)
         );
 
@@ -118,7 +118,7 @@ public sealed class FormComponentsTests : IDisposable
     [Fact]
     public void FormTextField_renders_text_input()
     {
-        var cut = context.Render<FormTextField>(parameters =>
+        var cut = _context.Render<FormTextField>(parameters =>
             parameters.Add(p => p.Id, "name").Add(p => p.Label, "Name").Add(p => p.Value, "Acme")
         );
 
@@ -130,7 +130,7 @@ public sealed class FormComponentsTests : IDisposable
     [Fact]
     public void FormNumberField_renders_number_input()
     {
-        var cut = context.Render<FormNumberField>(parameters =>
+        var cut = _context.Render<FormNumberField>(parameters =>
             parameters.Add(p => p.Id, "seats").Add(p => p.Label, "Seats").Add(p => p.Value, 12)
         );
 
@@ -142,7 +142,7 @@ public sealed class FormComponentsTests : IDisposable
     [Fact]
     public void FormDecimalField_renders_decimal_input()
     {
-        var cut = context.Render<FormDecimalField>(parameters =>
+        var cut = _context.Render<FormDecimalField>(parameters =>
             parameters.Add(p => p.Id, "value").Add(p => p.Label, "Value").Add(p => p.Value, 42.5m)
         );
 
@@ -156,7 +156,7 @@ public sealed class FormComponentsTests : IDisposable
     {
         var received = new List<decimal>();
 
-        var cut = context.Render<FormDecimalField>(parameters =>
+        var cut = _context.Render<FormDecimalField>(parameters =>
             parameters
                 .Add(p => p.Id, "value")
                 .Add(p => p.Label, "Value")
@@ -173,7 +173,7 @@ public sealed class FormComponentsTests : IDisposable
     [Fact]
     public void FormDecimalField_renders_placeholder_and_step_attributes()
     {
-        var cut = context.Render<FormDecimalField>(parameters =>
+        var cut = _context.Render<FormDecimalField>(parameters =>
             parameters
                 .Add(p => p.Id, "value")
                 .Add(p => p.Label, "Value")
@@ -190,7 +190,7 @@ public sealed class FormComponentsTests : IDisposable
     [Fact]
     public void FormDecimalField_null_step_results_in_any_step_attribute()
     {
-        var cut = context.Render<FormDecimalField>(parameters =>
+        var cut = _context.Render<FormDecimalField>(parameters =>
             parameters
                 .Add(p => p.Id, "value")
                 .Add(p => p.Label, "Value")
@@ -212,7 +212,7 @@ public sealed class FormComponentsTests : IDisposable
             ["min"] = "0",
         };
 
-        var cut = context.Render<FormDecimalField>(parameters =>
+        var cut = _context.Render<FormDecimalField>(parameters =>
             parameters
                 .Add(p => p.Id, "value")
                 .Add(p => p.Label, "Value")
@@ -231,7 +231,7 @@ public sealed class FormComponentsTests : IDisposable
     [Fact]
     public void FormDateField_renders_date_input()
     {
-        var cut = context.Render<FormDateField>(parameters =>
+        var cut = _context.Render<FormDateField>(parameters =>
             parameters
                 .Add(p => p.Id, "start")
                 .Add(p => p.Label, "Start")
@@ -248,7 +248,7 @@ public sealed class FormComponentsTests : IDisposable
     {
         var received = new List<DateOnly>();
 
-        var cut = context.Render<FormDateField>(parameters =>
+        var cut = _context.Render<FormDateField>(parameters =>
             parameters
                 .Add(p => p.Id, "start")
                 .Add(p => p.Label, "Start")
@@ -267,7 +267,7 @@ public sealed class FormComponentsTests : IDisposable
     {
         var received = new List<DateOnly>();
 
-        var cut = context.Render<FormDateField>(parameters =>
+        var cut = _context.Render<FormDateField>(parameters =>
             parameters
                 .Add(p => p.Id, "start")
                 .Add(p => p.Label, "Start")
@@ -291,7 +291,7 @@ public sealed class FormComponentsTests : IDisposable
             ["max"] = "2026-12-31",
         };
 
-        var cut = context.Render<FormDateField>(parameters =>
+        var cut = _context.Render<FormDateField>(parameters =>
             parameters
                 .Add(p => p.Id, "start")
                 .Add(p => p.Label, "Start")
@@ -307,7 +307,7 @@ public sealed class FormComponentsTests : IDisposable
     [Fact]
     public void FormTextAreaField_renders_textarea()
     {
-        var cut = context.Render<FormTextAreaField>(parameters =>
+        var cut = _context.Render<FormTextAreaField>(parameters =>
             parameters
                 .Add(p => p.Id, "notes")
                 .Add(p => p.Label, "Notes")
@@ -324,7 +324,7 @@ public sealed class FormComponentsTests : IDisposable
     {
         var received = new List<string>();
 
-        var cut = context.Render<FormTextAreaField>(parameters =>
+        var cut = _context.Render<FormTextAreaField>(parameters =>
             parameters
                 .Add(p => p.Id, "notes")
                 .Add(p => p.Label, "Notes")
@@ -343,7 +343,7 @@ public sealed class FormComponentsTests : IDisposable
     {
         var received = new List<string>();
 
-        var cut = context.Render<FormTextAreaField>(parameters =>
+        var cut = _context.Render<FormTextAreaField>(parameters =>
             parameters
                 .Add(p => p.Id, "notes")
                 .Add(p => p.Label, "Notes")
@@ -368,7 +368,7 @@ public sealed class FormComponentsTests : IDisposable
             ["data-test-id"] = "notes-field",
         };
 
-        var cut = context.Render<FormTextAreaField>(parameters =>
+        var cut = _context.Render<FormTextAreaField>(parameters =>
             parameters
                 .Add(p => p.Id, "notes")
                 .Add(p => p.Label, "Notes")
@@ -387,7 +387,7 @@ public sealed class FormComponentsTests : IDisposable
     [Fact]
     public void FormSelectEnumField_renders_all_enum_options()
     {
-        var cut = context.Render<FormSelectEnumField<TestOption>>(parameters =>
+        var cut = _context.Render<FormSelectEnumField<TestOption>>(parameters =>
             parameters
                 .Add(p => p.Id, "option")
                 .Add(p => p.Label, "Option")
@@ -404,7 +404,7 @@ public sealed class FormComponentsTests : IDisposable
     [Fact]
     public void FormSelectEnumField_includes_placeholder_when_requested()
     {
-        var cut = context.Render<FormSelectEnumField<TestOption>>(parameters =>
+        var cut = _context.Render<FormSelectEnumField<TestOption>>(parameters =>
             parameters
                 .Add(p => p.Id, "option")
                 .Add(p => p.Label, "Option")
@@ -425,7 +425,7 @@ public sealed class FormComponentsTests : IDisposable
     public void FormSelectEnumField_requires_defined_placeholder_sentinel()
     {
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            context.Render<FormSelectEnumField<NoZeroOption>>(parameters =>
+            _context.Render<FormSelectEnumField<NoZeroOption>>(parameters =>
                 parameters
                     .Add(p => p.Id, "no-zero")
                     .Add(p => p.Label, "No zero")
@@ -464,7 +464,7 @@ public sealed class FormComponentsTests : IDisposable
 
         IRenderedComponent<FormSelectEnumNullableField<NullableOption>> RenderNullableSelect()
         {
-            return context.Render<FormSelectEnumNullableField<NullableOption>>(parameters =>
+            return _context.Render<FormSelectEnumNullableField<NullableOption>>(parameters =>
                 parameters
                     .Add(p => p.Id, "nullable-option")
                     .Add(p => p.Label, "Nullable option")
@@ -486,7 +486,7 @@ public sealed class FormComponentsTests : IDisposable
     {
         var activeTab = 0;
 
-        var cut = context.Render<FormTabs>(parameters =>
+        var cut = _context.Render<FormTabs>(parameters =>
             parameters
                 .Add(p => p.Tabs, new[] { "One", "Two", "Three" })
                 .Add(p => p.ActiveTab, activeTab)
@@ -512,7 +512,7 @@ public sealed class FormComponentsTests : IDisposable
             new ChoiceOption<SingleChoiceOption>(SingleChoiceOption.Beta, "Beta"),
         };
 
-        var cut = context.Render<FormRadioGroupField<SingleChoiceOption>>(parameters =>
+        var cut = _context.Render<FormRadioGroupField<SingleChoiceOption>>(parameters =>
             parameters
                 .Add(p => p.Id, "choice")
                 .Add(p => p.Label, "Choice")
@@ -543,7 +543,7 @@ public sealed class FormComponentsTests : IDisposable
             new ChoiceOption<MultiChoiceOption>(MultiChoiceOption.Beta, "Beta"),
         };
 
-        var cut = context.Render<FormCheckboxGroupField<MultiChoiceOption>>(parameters =>
+        var cut = _context.Render<FormCheckboxGroupField<MultiChoiceOption>>(parameters =>
             parameters
                 .Add(p => p.Id, "multi")
                 .Add(p => p.Label, "Multi")
@@ -632,7 +632,7 @@ public sealed class FormComponentsTests : IDisposable
             Action<SingleChoiceOption> valueChanged
         )
         {
-            return context.Render<FormRadioGroupField<SingleChoiceOption>>(parameters =>
+            return _context.Render<FormRadioGroupField<SingleChoiceOption>>(parameters =>
                 parameters
                     .Add(p => p.Id, "choice")
                     .Add(p => p.Label, "Choice")
@@ -721,7 +721,7 @@ public sealed class FormComponentsTests : IDisposable
             Action<List<MultiChoiceOption>> valueChanged
         )
         {
-            return context.Render<FormCheckboxGroupField<MultiChoiceOption>>(parameters =>
+            return _context.Render<FormCheckboxGroupField<MultiChoiceOption>>(parameters =>
                 parameters
                     .Add(p => p.Id, "multi")
                     .Add(p => p.Label, "Multi")
@@ -759,7 +759,7 @@ public sealed class FormComponentsTests : IDisposable
                 builder.CloseComponent();
             };
 
-        var cut = context.Render<EditForm>(parameters =>
+        var cut = _context.Render<EditForm>(parameters =>
             parameters.Add(p => p.Model, model).Add(p => p.ChildContent, childContent)
         );
 
@@ -907,7 +907,7 @@ public sealed class FormComponentsTests : IDisposable
                     builder.CloseComponent();
                 };
 
-            return context.Render<EditForm>(parameters =>
+            return _context.Render<EditForm>(parameters =>
                 parameters
                     .Add(p => p.EditContext, editContext)
                     .Add(p => p.ChildContent, childContent)
@@ -1049,7 +1049,7 @@ public sealed class FormComponentsTests : IDisposable
                     builder.CloseComponent();
                 };
 
-            return context.Render<EditForm>(parameters =>
+            return _context.Render<EditForm>(parameters =>
                 parameters
                     .Add(p => p.EditContext, editContext)
                     .Add(p => p.ChildContent, childContent)

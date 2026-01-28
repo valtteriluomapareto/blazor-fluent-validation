@@ -15,16 +15,16 @@ namespace App.Ui.Client.Tests;
 
 public sealed class LocalizedFluentValidatorTests : IDisposable
 {
-    private readonly BunitContext context = new();
+    private readonly BunitContext _context = new();
 
     public LocalizedFluentValidatorTests()
     {
-        context.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
-        context.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
-        context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
+        _context.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
+        _context.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
+        _context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
     }
 
-    public void Dispose() => context.Dispose();
+    public void Dispose() => _context.Dispose();
 
     [Fact]
     public async Task LocalizedFluentValidator_respects_ruleset_override_property()
@@ -138,7 +138,7 @@ public sealed class LocalizedFluentValidatorTests : IDisposable
                 builder.CloseComponent();
             };
 
-        context.Render<EditForm>(parameters =>
+        _context.Render<EditForm>(parameters =>
             parameters.Add(p => p.EditContext, editContext).Add(p => p.ChildContent, childContent)
         );
     }

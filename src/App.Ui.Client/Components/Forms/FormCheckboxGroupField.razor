@@ -107,11 +107,11 @@
     // FieldIdentifier lets us manually notify the EditContext that a value changed.
     // This is important because the component manages state internally and doesn't
     // always use the built-in InputBase pipeline for every interaction.
-    private FieldIdentifier? fieldIdentifier;
-    private FieldIdentifier? otherFieldIdentifier;
-    private readonly string componentId = Guid.NewGuid().ToString("N")[..8];
+    private FieldIdentifier? _fieldIdentifier;
+    private FieldIdentifier? _otherFieldIdentifier;
+    private readonly string _componentId = Guid.NewGuid().ToString("N")[..8];
 
-    private string ResolvedId => FormFieldIdResolver.Resolve(Id, ValueExpression, componentId, "group");
+    private string ResolvedId => FormFieldIdResolver.Resolve(Id, ValueExpression, _componentId, "group");
 
     protected override void OnParametersSet()
     {
@@ -119,12 +119,12 @@
         // after we update Value/OtherValue. This keeps validation messages in sync.
         if (EditContext is not null && ValueExpression is not null)
         {
-            fieldIdentifier = FieldIdentifier.Create(ValueExpression);
+            _fieldIdentifier = FieldIdentifier.Create(ValueExpression);
         }
 
         if (EditContext is not null && OtherValueExpression is not null)
         {
-            otherFieldIdentifier = FieldIdentifier.Create(OtherValueExpression);
+            _otherFieldIdentifier = FieldIdentifier.Create(OtherValueExpression);
         }
     }
 
@@ -157,7 +157,7 @@
 
         Value = next;
         await ValueChanged.InvokeAsync(next);
-        NotifyFieldChanged(fieldIdentifier);
+        NotifyFieldChanged(_fieldIdentifier);
 
         // If the user deselects "Other", we can optionally clear its text value.
         // Clearing prevents stale "Other" text from being submitted later.
@@ -174,7 +174,7 @@
 
             // Always notify the "Other" field when it is deselected so
             // conditional validation messages can clear correctly.
-            NotifyFieldChanged(otherFieldIdentifier);
+            NotifyFieldChanged(_otherFieldIdentifier);
         }
     }
 
@@ -204,7 +204,7 @@
         // so any validators watching the "Other" text run immediately.
         OtherValue = nextOtherValue;
         await OtherValueChanged.InvokeAsync(nextOtherValue);
-        NotifyFieldChanged(otherFieldIdentifier);
+        NotifyFieldChanged(_otherFieldIdentifier);
     }
 
     private void NotifyFieldChanged(FieldIdentifier? identifier)

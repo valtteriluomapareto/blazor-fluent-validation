@@ -9,23 +9,23 @@ namespace App.Ui.Client.Tests;
 
 public sealed class ValidationExamplesPageTests : IDisposable
 {
-    private readonly BunitContext context = new();
+    private readonly BunitContext _context = new();
 
     public ValidationExamplesPageTests()
     {
-        context.Services.AddSingleton<
+        _context.Services.AddSingleton<
             IValidator<ValidationExamplesForm>,
             ValidationExamplesFormValidator
         >();
-        context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
+        _context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
     }
 
-    public void Dispose() => context.Dispose();
+    public void Dispose() => _context.Dispose();
 
     [Fact]
     public void ValidationExamples_renders_all_requested_input_types()
     {
-        var cut = context.Render<ValidationExamples>();
+        var cut = _context.Render<ValidationExamples>();
 
         Assert.NotNull(cut.Find("input#optional-ssn"));
         Assert.NotNull(cut.Find("input#required-ssn"));

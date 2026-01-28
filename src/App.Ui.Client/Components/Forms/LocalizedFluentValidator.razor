@@ -15,16 +15,16 @@
     private static readonly ConcurrentDictionary<
         Type,
         Func<object, PropertyChain?, IValidatorSelector, IValidationContext>
-    > contextFactoryCache = new();
+    > ContextFactoryCache = new();
 
-    private static readonly ConcurrentDictionary<Type, Type> validatorTypeCache = new();
+    private static readonly ConcurrentDictionary<Type, Type> ValidatorTypeCache = new();
 
-    private readonly PathResolver pathResolver = new();
+    private readonly PathResolver _pathResolver = new();
 
-    private EditContext? currentContext;
-    private ValidationMessageStore? messages;
-    private IValidator? currentValidator;
-    private Type modelType = null!;
+    private EditContext? _currentContext;
+    private ValidationMessageStore? _messages;
+    private IValidator? _currentValidator;
+    private Type _modelType = null!;
 
     [Inject]
     protected IServiceProvider ServiceProvider { get; set; } = null!;
@@ -55,33 +55,28 @@
 
     protected override void OnInitialized()
     {
-        if (EditContext is null)
-        {
-            throw new InvalidOperationException(
-                $"{nameof(LocalizedFluentValidator)} requires a cascading parameter of type {nameof(EditContext)}."
-            );
-        }
+        _currentContext = EditContext ?? throw new InvalidOperationException(
+            $"{nameof(LocalizedFluentValidator)} requires a cascading parameter of type {nameof(EditContext)}."
+        );
+        _messages = new ValidationMessageStore(_currentContext);
+        _modelType = _currentContext.Model.GetType();
 
-        currentContext = EditContext;
-        messages = new ValidationMessageStore(currentContext);
-        modelType = currentContext.Model.GetType();
+        _currentContext.OnFieldChanged += OnFieldChanged;
+        _currentContext.OnValidationRequested += OnValidationRequested;
 
-        currentContext.OnFieldChanged += OnFieldChanged;
-        currentContext.OnValidationRequested += OnValidationRequested;
-
-        currentValidator = ResolveValidator();
-        if (currentValidator is null)
+        _currentValidator = ResolveValidator();
+        if (_currentValidator is null)
         {
             Logger.LogWarning(
                 "No validator found for model type {ModelType}. Register a validator or pass one via the Validator parameter.",
-                modelType.FullName
+                _modelType.FullName
             );
         }
     }
 
     protected override void OnParametersSet()
     {
-        if (EditContext != currentContext)
+        if (EditContext != _currentContext)
         {
             throw new InvalidOperationException(
                 $"{GetType()} does not support changing the {nameof(EditContext)} dynamically."
@@ -96,8 +91,8 @@
             return Validator;
         }
 
-        var validatorType = validatorTypeCache.GetOrAdd(
-            modelType,
+        var validatorType = ValidatorTypeCache.GetOrAdd(
+            _modelType,
             static t => typeof(IValidator<>).MakeGenericType(t)
         );
 
@@ -106,7 +101,7 @@
 
     private async void OnFieldChanged(object? sender, FieldChangedEventArgs eventArgs)
     {
-        if (currentContext is null || currentValidator is null)
+        if (_currentContext is null || _currentValidator is null)
         {
             return;
         }
@@ -120,18 +115,18 @@
         }
 
         var validationResult = AsyncMode
-            ? await currentValidator
+            ? await _currentValidator
                 .ValidateAsync(validationContext)
                 .ConfigureAwait(continueOnCapturedContext: false)
-            : currentValidator.Validate(validationContext);
+            : _currentValidator.Validate(validationContext);
 
         ApplyValidationResults(validationResult, fieldIdentifier);
-        await InvokeAsync(currentContext.NotifyValidationStateChanged);
+        await InvokeAsync(_currentContext.NotifyValidationStateChanged);
     }
 
     private async void OnValidationRequested(object? sender, ValidationRequestedEventArgs eventArgs)
     {
-        if (currentContext is null || currentValidator is null)
+        if (_currentContext is null || _currentValidator is null)
         {
             return;
         }
@@ -144,7 +139,7 @@
 
         if (AsyncMode)
         {
-            var pendingValidationTask = currentValidator
+            var pendingValidationTask = _currentValidator
                 .ValidateAsync(validationContext)
                 .ContinueWith(
                     async validationTask =>
@@ -155,48 +150,48 @@
                 )
                 .Unwrap();
 
-            currentContext.Properties[PendingTask] = pendingValidationTask;
+            _currentContext.Properties[PendingTask] = pendingValidationTask;
             await pendingValidationTask.ConfigureAwait(continueOnCapturedContext: false);
         }
         else
         {
-            var validationResult = currentValidator.Validate(validationContext);
+            var validationResult = _currentValidator.Validate(validationContext);
             ApplyValidationResults(validationResult);
         }
 
-        await InvokeAsync(currentContext.NotifyValidationStateChanged);
+        await InvokeAsync(_currentContext.NotifyValidationStateChanged);
     }
 
     private string ResolveFieldPath(in FieldIdentifier fieldIdentifier)
     {
-        if (currentContext is null)
+        if (_currentContext is null)
         {
             return fieldIdentifier.FieldName;
         }
 
-        var fieldPath = fieldIdentifier.Model == currentContext.Model
+        var fieldPath = fieldIdentifier.Model == _currentContext.Model
             ? fieldIdentifier.FieldName
-            : pathResolver.FindPath(currentContext.Model, in fieldIdentifier);
+            : _pathResolver.FindPath(_currentContext.Model, in fieldIdentifier);
 
         return string.IsNullOrWhiteSpace(fieldPath) ? fieldIdentifier.FieldName : fieldPath;
     }
 
     private IValidationContext? BuildContext(string? fieldName = null)
     {
-        if (currentContext is null)
+        if (_currentContext is null)
         {
             return null;
         }
 
         var selector = CreateSelector(fieldName);
-        var factory = contextFactoryCache.GetOrAdd(modelType, CreateContextFactory);
-        return factory(currentContext.Model, null, selector);
+        var factory = ContextFactoryCache.GetOrAdd(_modelType, CreateContextFactory);
+        return factory(_currentContext.Model, null, selector);
     }
 
     private IValidatorSelector CreateSelector(string? fieldName)
     {
         object? ruleSetProperty = null;
-        currentContext?.Properties.TryGetValue(RuleSetProperty, out ruleSetProperty);
+        _currentContext?.Properties.TryGetValue(RuleSetProperty, out ruleSetProperty);
 
         if (Selector is null && fieldName is null && !AllRules && !HasAnyRuleSets(ruleSetProperty))
         {
@@ -263,14 +258,14 @@
 
         if (fieldIdentifier.HasValue)
         {
-            messages?.Clear(fieldIdentifier.Value);
+            _messages?.Clear(fieldIdentifier.Value);
         }
         else
         {
-            messages?.Clear();
+            _messages?.Clear();
         }
 
-        if (validationResults.IsValid || currentContext?.Model is not { } model)
+        if (validationResults.IsValid || _currentContext?.Model is not { } model)
         {
             return;
         }
@@ -290,19 +285,19 @@
                 error.ErrorMessage
             );
 
-            messages?.Add(field, localizedMessage);
+            _messages?.Add(field, localizedMessage);
         }
     }
 
     public void Dispose()
     {
-        messages?.Clear();
+        _messages?.Clear();
 
-        if (currentContext is not null)
+        if (_currentContext is not null)
         {
-            currentContext.OnFieldChanged -= OnFieldChanged;
-            currentContext.OnValidationRequested -= OnValidationRequested;
-            currentContext.NotifyValidationStateChanged();
+            _currentContext.OnFieldChanged -= OnFieldChanged;
+            _currentContext.OnValidationRequested -= OnValidationRequested;
+            _currentContext.NotifyValidationStateChanged();
         }
 
         GC.SuppressFinalize(this);

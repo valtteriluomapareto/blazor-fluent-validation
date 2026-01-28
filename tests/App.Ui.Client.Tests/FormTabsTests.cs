@@ -4,14 +4,14 @@ namespace App.Ui.Client.Tests;
 
 public sealed class FormTabsTests : IDisposable
 {
-    private readonly BunitContext context = new();
+    private readonly BunitContext _context = new();
 
-    public void Dispose() => context.Dispose();
+    public void Dispose() => _context.Dispose();
 
     [Fact]
     public void FormTabs_renders_buttons_and_step_indicator()
     {
-        var cut = context.Render<FormTabs>(parameters =>
+        var cut = _context.Render<FormTabs>(parameters =>
             parameters
                 .Add(p => p.Tabs, new[] { "Basics", "Details" })
                 .Add(p => p.ActiveTab, 0)
@@ -28,7 +28,7 @@ public sealed class FormTabsTests : IDisposable
     [Fact]
     public void FormTabs_hides_step_indicator_when_disabled()
     {
-        var cut = context.Render<FormTabs>(parameters =>
+        var cut = _context.Render<FormTabs>(parameters =>
             parameters
                 .Add(p => p.Tabs, new[] { "Basics", "Details" })
                 .Add(p => p.ActiveTab, 0)
@@ -41,7 +41,7 @@ public sealed class FormTabsTests : IDisposable
     [Fact]
     public void FormTabs_does_not_render_when_tabs_empty()
     {
-        var cut = context.Render<FormTabs>(parameters =>
+        var cut = _context.Render<FormTabs>(parameters =>
             parameters.Add(p => p.Tabs, Array.Empty<string>())
         );
 
@@ -53,7 +53,7 @@ public sealed class FormTabsTests : IDisposable
     {
         var selected = new List<int>();
 
-        var cut = context.Render<FormTabs>(parameters =>
+        var cut = _context.Render<FormTabs>(parameters =>
             parameters
                 .Add(p => p.Tabs, new[] { "Basics", "Details" })
                 .Add(p => p.ActiveTab, 0)
@@ -71,7 +71,7 @@ public sealed class FormTabsTests : IDisposable
     {
         var selected = new List<int>();
 
-        var cut = context.Render<FormTabs>(parameters =>
+        var cut = _context.Render<FormTabs>(parameters =>
             parameters
                 .Add(p => p.Tabs, new[] { "Basics", "Details" })
                 .Add(p => p.ActiveTab, 0)

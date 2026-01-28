@@ -6,11 +6,11 @@ namespace App.Validation;
 
 public sealed class SampleFormValidator : AbstractValidator<SampleForm>
 {
-    private readonly IUsedNameLookup usedNameLookup;
+    private readonly IUsedNameLookup _usedNameLookup;
 
     public SampleFormValidator(IUsedNameLookup usedNameLookup)
     {
-        this.usedNameLookup = usedNameLookup;
+        this._usedNameLookup = usedNameLookup;
 
         RuleSet(
             "Local",

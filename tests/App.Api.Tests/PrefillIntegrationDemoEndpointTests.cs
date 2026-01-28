@@ -8,18 +8,18 @@ namespace App.Api.Tests;
 public sealed class PrefillIntegrationDemoEndpointTests
     : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly HttpClient client;
+    private readonly HttpClient _client;
     private static CancellationToken CancellationToken => TestContext.Current.CancellationToken;
 
     public PrefillIntegrationDemoEndpointTests(WebApplicationFactory<Program> factory)
     {
-        client = factory.CreateClient();
+        _client = factory.CreateClient();
     }
 
     [Fact]
     public async Task Non_matching_name_returns_not_found_response()
     {
-        var response = await client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/prefill-integration-demo?name=Jane",
             CancellationToken
         );
@@ -41,7 +41,7 @@ public sealed class PrefillIntegrationDemoEndpointTests
     [Fact]
     public async Task Matching_name_returns_prefill_data()
     {
-        var response = await client.GetAsync(
+        var response = await _client.GetAsync(
             $"/api/prefill-integration-demo?name={Uri.EscapeDataString(PrefillIntegrationDemoDefaults.MatchingName)}",
             CancellationToken
         );

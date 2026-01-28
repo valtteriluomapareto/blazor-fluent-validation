@@ -95,11 +95,11 @@
 
     // We cache FieldIdentifier values so we can manually notify the EditContext
     // when the selected value or the "Other" text changes.
-    private FieldIdentifier? fieldIdentifier;
-    private FieldIdentifier? otherFieldIdentifier;
-    private readonly string componentId = Guid.NewGuid().ToString("N")[..8];
+    private FieldIdentifier? _fieldIdentifier;
+    private FieldIdentifier? _otherFieldIdentifier;
+    private readonly string _componentId = Guid.NewGuid().ToString("N")[..8];
 
-    private string ResolvedId => FormFieldIdResolver.Resolve(Id, ValueExpression, componentId, "group");
+    private string ResolvedId => FormFieldIdResolver.Resolve(Id, ValueExpression, _componentId, "group");
 
     protected override void OnParametersSet()
     {
@@ -107,12 +107,12 @@
         // so we guard each identifier creation.
         if (EditContext is not null && ValueExpression is not null)
         {
-            fieldIdentifier = FieldIdentifier.Create(ValueExpression);
+            _fieldIdentifier = FieldIdentifier.Create(ValueExpression);
         }
 
         if (EditContext is not null && OtherValueExpression is not null)
         {
-            otherFieldIdentifier = FieldIdentifier.Create(OtherValueExpression);
+            _otherFieldIdentifier = FieldIdentifier.Create(OtherValueExpression);
         }
     }
 
@@ -130,7 +130,7 @@
             var wasOtherSelected = IsOtherValue(Value);
             Value = value;
             _ = ValueChanged.InvokeAsync(value);
-            NotifyFieldChanged(fieldIdentifier);
+            NotifyFieldChanged(_fieldIdentifier);
 
             // If the user moves away from "Other", optionally clear its text so
             // we do not carry a stale free-form value forward.
@@ -144,7 +144,7 @@
 
                 // Always notify the "Other" field when it becomes inactive so
                 // conditional validation messages can clear correctly.
-                NotifyFieldChanged(otherFieldIdentifier);
+                NotifyFieldChanged(_otherFieldIdentifier);
             }
         }
     }
@@ -187,7 +187,7 @@
         // Keep parent state and validation in sync with every keystroke.
         OtherValue = nextOtherValue;
         await OtherValueChanged.InvokeAsync(nextOtherValue);
-        NotifyFieldChanged(otherFieldIdentifier);
+        NotifyFieldChanged(_otherFieldIdentifier);
     }
 
     private void NotifyFieldChanged(FieldIdentifier? identifier)

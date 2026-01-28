@@ -36,9 +36,9 @@
     [Parameter] public TEnum? PlaceholderValue { get; set; }
     [Parameter] public bool PlaceholderDisabled { get; set; } = true;
 
-    private readonly string componentId = Guid.NewGuid().ToString("N")[..8];
+    private readonly string _componentId = Guid.NewGuid().ToString("N")[..8];
 
-    private string ResolvedId => FormFieldIdResolver.Resolve(Id, ValueExpression, componentId);
+    private string ResolvedId => FormFieldIdResolver.Resolve(Id, ValueExpression, _componentId);
     private TEnum EffectivePlaceholderValue => PlaceholderValue ?? default;
     private IReadOnlyList<TEnum> OptionsToRender =>
         Enum.GetValues<TEnum>()

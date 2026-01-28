@@ -12,19 +12,19 @@ namespace App.Ui.Client.Tests;
 
 public sealed class PrefillIntegrationDemoPageTests : IDisposable
 {
-    private readonly BunitContext context;
+    private readonly BunitContext _context;
 
     public PrefillIntegrationDemoPageTests()
     {
-        context = CreateContext(new StubPrefillHandler());
+        _context = CreateContext(new StubPrefillHandler());
     }
 
-    public void Dispose() => context.Dispose();
+    public void Dispose() => _context.Dispose();
 
     [Fact]
     public void PrefillIntegrationDemo_renders_expected_fields()
     {
-        var cut = context.Render<PrefillIntegrationDemo>();
+        var cut = _context.Render<PrefillIntegrationDemo>();
 
         Assert.NotNull(cut.Find("input#prefill-name"));
         Assert.NotNull(cut.Find("input#prefill-address-line1"));
@@ -38,7 +38,7 @@ public sealed class PrefillIntegrationDemoPageTests : IDisposable
     [Fact]
     public void Matching_name_prefills_contact_fields()
     {
-        var cut = context.Render<PrefillIntegrationDemo>();
+        var cut = _context.Render<PrefillIntegrationDemo>();
 
         cut.Find("input#prefill-name").Change(PrefillIntegrationDemoDefaults.MatchingName);
 

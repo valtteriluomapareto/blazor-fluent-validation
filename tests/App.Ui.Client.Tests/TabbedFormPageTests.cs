@@ -11,23 +11,23 @@ namespace App.Ui.Client.Tests;
 
 public sealed class TabbedFormPageTests : IDisposable
 {
-    private readonly BunitContext context = new();
+    private readonly BunitContext _context = new();
 
     public TabbedFormPageTests()
     {
-        context.Services.AddSingleton<
+        _context.Services.AddSingleton<
             IValidator<CustomerIntakeForm>,
             CustomerIntakeFormValidator
         >();
-        context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
+        _context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
     }
 
-    public void Dispose() => context.Dispose();
+    public void Dispose() => _context.Dispose();
 
     [Fact]
     public void TabbedForm_initial_render_shows_customer_tab_fields()
     {
-        var cut = context.Render<TabbedForm>();
+        var cut = _context.Render<TabbedForm>();
 
         Assert.NotNull(cut.Find("input#tab-customer-name"));
         Assert.NotNull(cut.Find("input#tab-contact-email"));
@@ -45,7 +45,7 @@ public sealed class TabbedFormPageTests : IDisposable
     [Fact]
     public void TabbedForm_can_navigate_between_tabs()
     {
-        var cut = context.Render<TabbedForm>();
+        var cut = _context.Render<TabbedForm>();
 
         FindButton(cut, "Next").Click();
 
@@ -62,7 +62,7 @@ public sealed class TabbedFormPageTests : IDisposable
     [Fact]
     public void TabbedForm_invalid_then_fixing_values_allows_submission()
     {
-        var cut = context.Render<TabbedForm>();
+        var cut = _context.Render<TabbedForm>();
 
         // Move to the final tab and submit with invalid defaults.
         FindButton(cut, "Next").Click();

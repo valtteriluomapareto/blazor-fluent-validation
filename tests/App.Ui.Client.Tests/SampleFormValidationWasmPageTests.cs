@@ -14,36 +14,36 @@ namespace App.Ui.Client.Tests;
 
 public sealed class SampleFormValidationWasmPageTests : IDisposable
 {
-    private readonly BunitContext context;
+    private readonly BunitContext _context;
 
     public SampleFormValidationWasmPageTests()
     {
-        context = new BunitContext();
+        _context = new BunitContext();
 
-        context.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
-        context.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
-        context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
+        _context.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
+        _context.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
+        _context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
 
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(
                 new Dictionary<string, string?> { ["Api:BaseUrl"] = "http://localhost/" }
             )
             .Build();
-        context.Services.AddSingleton<IConfiguration>(configuration);
+        _context.Services.AddSingleton<IConfiguration>(configuration);
 
         var httpClient = new HttpClient(new ServerValidationHandler())
         {
             BaseAddress = new Uri("http://localhost/"),
         };
-        context.Services.AddSingleton(httpClient);
+        _context.Services.AddSingleton(httpClient);
     }
 
-    public void Dispose() => context.Dispose();
+    public void Dispose() => _context.Dispose();
 
     [Fact]
     public void Server_error_codes_are_localized_in_ui()
     {
-        var cut = context.Render<SampleFormValidationWasm>();
+        var cut = _context.Render<SampleFormValidationWasm>();
 
         cut.Find("input#name").Change("Jane");
         cut.Find("input#age").Change("30");

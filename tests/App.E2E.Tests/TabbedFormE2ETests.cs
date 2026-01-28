@@ -7,9 +7,9 @@ namespace App.E2E.Tests;
 [Collection("E2E")]
 public sealed class TabbedFormE2ETests
 {
-    private readonly AppHostFixture host;
-    private readonly PlaywrightFixture playwright;
-    private readonly ITestOutputHelper output;
+    private readonly AppHostFixture _host;
+    private readonly PlaywrightFixture _playwright;
+    private readonly ITestOutputHelper _output;
 
     public TabbedFormE2ETests(
         AppHostFixture host,
@@ -17,20 +17,20 @@ public sealed class TabbedFormE2ETests
         ITestOutputHelper output
     )
     {
-        this.host = host;
-        this.playwright = playwright;
-        this.output = output;
+        this._host = host;
+        this._playwright = playwright;
+        this._output = output;
     }
 
     [Fact]
     public async Task Tabbed_form_submits_with_valid_data()
     {
-        await using var context = await playwright.Browser.NewContextAsync(
-            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
         );
         var page = await context.NewPageAsync();
 
-        TestReporter.Step(output, $"navigate {host.BaseUrl}/tabbed-form");
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/tabbed-form");
         await NavigateAndWaitForWasmAsync(page, "/tabbed-form");
 
         await Assertions
@@ -39,7 +39,7 @@ public sealed class TabbedFormE2ETests
             )
             .ToBeVisibleAsync();
 
-        TestReporter.Step(output, "fill customer details");
+        TestReporter.Step(_output, "fill customer details");
         await FillAndCommitAsync(page.GetByLabel("Customer name"), "Acme Corp");
         await FillAndCommitAsync(page.GetByLabel("Contact email"), "hello@acme.com");
         await SelectByLabelAndCommitAsync(page.GetByLabel("Industry"), "SaaS");
@@ -49,7 +49,7 @@ public sealed class TabbedFormE2ETests
 
         await Assertions.Expect(page.GetByLabel("Contract type")).ToBeVisibleAsync();
 
-        TestReporter.Step(output, "fill deal details");
+        TestReporter.Step(_output, "fill deal details");
         await SelectByLabelAndCommitAsync(page.GetByLabel("Contract type"), "New");
         await FillAndCommitAsync(page.GetByLabel("Seats"), "25");
         await FillAndCommitAsync(page.GetByLabel("Estimated annual value"), "120000");
@@ -64,7 +64,7 @@ public sealed class TabbedFormE2ETests
 
         await Assertions.Expect(page.GetByLabel("Notes")).ToBeVisibleAsync();
 
-        TestReporter.Step(output, "fill notes and submit");
+        TestReporter.Step(_output, "fill notes and submit");
         await FillAndCommitAsync(page.GetByLabel("Notes"), "E2E run notes.");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
             .ClickAsync();
@@ -77,12 +77,12 @@ public sealed class TabbedFormE2ETests
     [Fact]
     public async Task Tabbed_form_submit_empty_shows_validation_errors()
     {
-        await using var context = await playwright.Browser.NewContextAsync(
-            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
         );
         var page = await context.NewPageAsync();
 
-        TestReporter.Step(output, $"navigate {host.BaseUrl}/tabbed-form");
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/tabbed-form");
         await NavigateAndWaitForWasmAsync(page, "/tabbed-form");
 
         await Assertions
@@ -91,10 +91,10 @@ public sealed class TabbedFormE2ETests
             )
             .ToBeVisibleAsync();
 
-        TestReporter.Step(output, "go to final tab without filling");
+        TestReporter.Step(_output, "go to final tab without filling");
         await GoToFinalTabAsync(page);
 
-        TestReporter.Step(output, "submit empty form");
+        TestReporter.Step(_output, "submit empty form");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
             .ClickAsync();
 
@@ -110,12 +110,12 @@ public sealed class TabbedFormE2ETests
     [Fact]
     public async Task Tabbed_form_errors_persist_when_navigating_tabs_after_failed_submit()
     {
-        await using var context = await playwright.Browser.NewContextAsync(
-            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
         );
         var page = await context.NewPageAsync();
 
-        TestReporter.Step(output, $"navigate {host.BaseUrl}/tabbed-form");
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/tabbed-form");
         await NavigateAndWaitForWasmAsync(page, "/tabbed-form");
 
         await Assertions
@@ -126,7 +126,7 @@ public sealed class TabbedFormE2ETests
 
         await GoToFinalTabAsync(page);
 
-        TestReporter.Step(output, "submit empty form to generate errors");
+        TestReporter.Step(_output, "submit empty form to generate errors");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
             .ClickAsync();
 
@@ -134,7 +134,7 @@ public sealed class TabbedFormE2ETests
             .Expect(page.GetByRole(AriaRole.Status))
             .ToHaveTextAsync("Please fix the validation errors.", new() { Timeout = 15000 });
 
-        TestReporter.Step(output, "navigate back across tabs");
+        TestReporter.Step(_output, "navigate back across tabs");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Back" })
             .ClickAsync();
         await Assertions.Expect(page.GetByLabel("Contract type")).ToBeVisibleAsync();
@@ -151,12 +151,12 @@ public sealed class TabbedFormE2ETests
     [Fact]
     public async Task Tabbed_form_invalid_then_fix_and_submit_succeeds()
     {
-        await using var context = await playwright.Browser.NewContextAsync(
-            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
         );
         var page = await context.NewPageAsync();
 
-        TestReporter.Step(output, $"navigate {host.BaseUrl}/tabbed-form");
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/tabbed-form");
         await NavigateAndWaitForWasmAsync(page, "/tabbed-form");
 
         await Assertions
@@ -165,7 +165,7 @@ public sealed class TabbedFormE2ETests
             )
             .ToBeVisibleAsync();
 
-        TestReporter.Step(output, "go to final tab and submit invalid form");
+        TestReporter.Step(_output, "go to final tab and submit invalid form");
         await GoToFinalTabAsync(page);
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" })
             .ClickAsync();
@@ -174,7 +174,7 @@ public sealed class TabbedFormE2ETests
             .Expect(page.GetByRole(AriaRole.Status))
             .ToHaveTextAsync("Please fix the validation errors.", new() { Timeout = 15000 });
 
-        TestReporter.Step(output, "navigate back and fix customer details");
+        TestReporter.Step(_output, "navigate back and fix customer details");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Back" })
             .ClickAsync();
         await Assertions.Expect(page.GetByLabel("Contract type")).ToBeVisibleAsync();
@@ -187,7 +187,7 @@ public sealed class TabbedFormE2ETests
         await FillAndCommitAsync(page.GetByLabel("Contact email"), "hello@acme.com");
         await SelectByLabelAndCommitAsync(page.GetByLabel("Industry"), "SaaS");
 
-        TestReporter.Step(output, "fix deal details and submit");
+        TestReporter.Step(_output, "fix deal details and submit");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Next" })
             .ClickAsync();
         await Assertions.Expect(page.GetByLabel("Contract type")).ToBeVisibleAsync();

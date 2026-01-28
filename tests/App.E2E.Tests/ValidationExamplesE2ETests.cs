@@ -6,9 +6,9 @@ namespace App.E2E.Tests;
 [Collection("E2E")]
 public sealed class ValidationExamplesE2ETests
 {
-    private readonly AppHostFixture host;
-    private readonly PlaywrightFixture playwright;
-    private readonly ITestOutputHelper output;
+    private readonly AppHostFixture _host;
+    private readonly PlaywrightFixture _playwright;
+    private readonly ITestOutputHelper _output;
 
     public ValidationExamplesE2ETests(
         AppHostFixture host,
@@ -16,20 +16,20 @@ public sealed class ValidationExamplesE2ETests
         ITestOutputHelper output
     )
     {
-        this.host = host;
-        this.playwright = playwright;
-        this.output = output;
+        this._host = host;
+        this._playwright = playwright;
+        this._output = output;
     }
 
     [Fact]
     public async Task Validation_examples_submits_when_required_fields_are_valid()
     {
-        await using var context = await playwright.Browser.NewContextAsync(
-            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
         );
         var page = await context.NewPageAsync();
 
-        TestReporter.Step(output, $"navigate {host.BaseUrl}/validation-examples");
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/validation-examples");
         await NavigateAndWaitForWasmAsync(page, "/validation-examples");
 
         await Assertions
@@ -41,7 +41,7 @@ public sealed class ValidationExamplesE2ETests
             )
             .ToBeVisibleAsync();
 
-        TestReporter.Step(output, "fill required text inputs");
+        TestReporter.Step(_output, "fill required text inputs");
         await FillAndCommitAsync(page.GetByLabel("Required SSN"), "010199-8148");
         await FillAndCommitAsync(page.GetByLabel("Required business ID"), "2617416-4");
         await FillAndCommitAsync(page.GetByLabel("Required IBAN"), "NL91 ABNA 0417 1643 00");
@@ -50,11 +50,11 @@ public sealed class ValidationExamplesE2ETests
         await FillAndCommitAsync(page.GetByLabel("Required EUR amount"), "1234.56 €");
         await FillAndCommitAsync(page.GetByLabel("Required percentage"), "12.5%");
 
-        TestReporter.Step(output, "select enum values");
+        TestReporter.Step(_output, "select enum values");
         await SelectByLabelAndCommitAsync(page.GetByLabel("Industry (sentinel)"), "SaaS");
         await SelectByLabelAndCommitAsync(page.GetByLabel("Industry (nullable)"), "Finance");
 
-        TestReporter.Step(output, "select required choices");
+        TestReporter.Step(_output, "select required choices");
         await CheckAndCommitAsync(
             page.Locator("input[id^='required-single-choice-opt-'][data-option-value='Alpha']")
         );
@@ -62,7 +62,7 @@ public sealed class ValidationExamplesE2ETests
             page.Locator("input[id^='required-multi-choice-opt-'][data-option-value='Alpha']")
         );
 
-        TestReporter.Step(output, "submit");
+        TestReporter.Step(_output, "submit");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Validate form" })
             .ClickAsync();
 
@@ -74,12 +74,12 @@ public sealed class ValidationExamplesE2ETests
     [Fact]
     public async Task Validation_examples_other_requires_text_then_succeeds_when_fixed()
     {
-        await using var context = await playwright.Browser.NewContextAsync(
-            new BrowserNewContextOptions { BaseURL = host.BaseUrl }
+        await using var context = await _playwright.Browser.NewContextAsync(
+            new BrowserNewContextOptions { BaseURL = _host.BaseUrl }
         );
         var page = await context.NewPageAsync();
 
-        TestReporter.Step(output, $"navigate {host.BaseUrl}/validation-examples");
+        TestReporter.Step(_output, $"navigate {_host.BaseUrl}/validation-examples");
         await NavigateAndWaitForWasmAsync(page, "/validation-examples");
 
         await Assertions
@@ -91,7 +91,7 @@ public sealed class ValidationExamplesE2ETests
             )
             .ToBeVisibleAsync();
 
-        TestReporter.Step(output, "fill required text inputs");
+        TestReporter.Step(_output, "fill required text inputs");
         await FillAndCommitAsync(page.GetByLabel("Required SSN"), "010199-8148");
         await FillAndCommitAsync(page.GetByLabel("Required business ID"), "2617416-4");
         await FillAndCommitAsync(page.GetByLabel("Required IBAN"), "NL91 ABNA 0417 1643 00");
@@ -100,11 +100,11 @@ public sealed class ValidationExamplesE2ETests
         await FillAndCommitAsync(page.GetByLabel("Required EUR amount"), "1234.56 €");
         await FillAndCommitAsync(page.GetByLabel("Required percentage"), "12.5%");
 
-        TestReporter.Step(output, "select enum values");
+        TestReporter.Step(_output, "select enum values");
         await SelectByLabelAndCommitAsync(page.GetByLabel("Industry (sentinel)"), "SaaS");
         await SelectByLabelAndCommitAsync(page.GetByLabel("Industry (nullable)"), "Finance");
 
-        TestReporter.Step(output, "select Other without providing text");
+        TestReporter.Step(_output, "select Other without providing text");
         await CheckAndCommitAsync(
             page.Locator("input[id^='required-single-choice-opt-'][data-option-value='Other']")
         );
@@ -112,7 +112,7 @@ public sealed class ValidationExamplesE2ETests
             page.Locator("input[id^='required-multi-choice-opt-'][data-option-value='Other']")
         );
 
-        TestReporter.Step(output, "submit with missing Other text");
+        TestReporter.Step(_output, "submit with missing Other text");
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Validate form" })
             .ClickAsync();
 
@@ -125,7 +125,7 @@ public sealed class ValidationExamplesE2ETests
             )
             .ToBeVisibleAsync(new() { Timeout = 15000 });
 
-        TestReporter.Step(output, "fill Other values and submit again");
+        TestReporter.Step(_output, "fill Other values and submit again");
         await FillAndCommitAsync(page.Locator("input#required-single-choice-other-value"), "Delta");
         await FillAndCommitAsync(
             page.Locator("input#required-multi-choice-other-value"),
