@@ -24,8 +24,8 @@ This guide explains how server-side validation errors flow from the API to the U
 │                                           ↓                                 │
 │  6. Receive 400 Bad Request ←──────── ValidationErrorResponse               │
 │     ↓                                    {                                  │
-│  7. Deserialize response                   "errors": { "Name": [...] },    │
-│     ↓                                      "errorCodes": { "Name": [...] } │
+│  7. Deserialize response                   "errors": { "Name": [...] },     │
+│     ↓                                      "errorCodes": { "Name": [...] }  │
 │  8. Localize error codes                 }                                  │
 │     ↓                                                                       │
 │  9. Add to ValidationMessageStore                                           │
