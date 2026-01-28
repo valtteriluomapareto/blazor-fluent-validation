@@ -6,10 +6,14 @@
         class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
         @bind-Value="CurrentValue"
         @bind-Value:event="@(UpdateOnInput ? "oninput" : "onchange")"
+        @onfocus="HandleFocus"
+        @onfocusout="HandleBlur"
         @attributes="MergedInputAttributes" />
 </FormField>
 
 @code {
+    [CascadingParameter] private EditContext? EditContext { get; set; }
+
     [Parameter] public string Id { get; set; } = string.Empty;
     [Parameter] public string Label { get; set; } = string.Empty;
     [Parameter] public string? HelpText { get; set; }
@@ -19,9 +23,12 @@
     [Parameter] public string? Placeholder { get; set; }
     [Parameter] public string InputType { get; set; } = "text";
     [Parameter] public bool UpdateOnInput { get; set; }
+    [Parameter] public bool ValidateOnBlur { get; set; }
     [Parameter] public Dictionary<string, object>? InputAttributes { get; set; }
 
     private readonly string _componentId = Guid.NewGuid().ToString("N")[..8];
+    private bool _touched;
+    private string? _valueOnFocus;
 
     private string ResolvedId => FormFieldIdResolver.Resolve(Id, ValueExpression, _componentId);
 
@@ -37,6 +44,28 @@
 
             Value = value;
             _ = ValueChanged.InvokeAsync(value);
+        }
+    }
+
+    private void HandleFocus()
+    {
+        _touched = true;
+        _valueOnFocus = Value;
+    }
+
+    private void HandleBlur()
+    {
+        if (!ValidateOnBlur || !_touched || EditContext is null || ValueExpression is null)
+        {
+            return;
+        }
+
+        // Only trigger validation on blur if value didn't change since focus.
+        // If value changed, validation already ran via EditContext.OnFieldChanged.
+        if (string.Equals(Value, _valueOnFocus, StringComparison.Ordinal))
+        {
+            var fieldIdentifier = FieldIdentifier.Create(ValueExpression);
+            EditContext.NotifyFieldChanged(fieldIdentifier);
         }
     }
 
