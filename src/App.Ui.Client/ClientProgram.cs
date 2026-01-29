@@ -4,6 +4,7 @@ using App.Contracts;
 using App.Validation;
 using FluentValidation;
 using FormValidationTest.Client.Services;
+using FormValidationTest.Client.Services.Forms;
 using FormValidationTest.Client.Services.Http;
 using FormValidationTest.Client.Services.Validation;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -33,6 +34,7 @@ public static class ClientProgram
         >();
         services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
         services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
+        services.AddScoped<IApiFormSubmitter, ApiFormSubmitter>();
     }
 
     public static string ResolveBaseUrl(IConfiguration configuration, string hostBaseAddress)

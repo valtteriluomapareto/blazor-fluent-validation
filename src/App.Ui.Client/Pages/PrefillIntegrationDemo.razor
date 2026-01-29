@@ -1,9 +1,8 @@
 @page "/prefill-integration-demo"
 @rendermode InteractiveWebAssembly
 @using global::App.Contracts
-@inject IConfiguration Configuration
+@inject IApiFormSubmitter FormSubmitter
 @inject HttpClient Http
-@inject NavigationManager NavigationManager
 @implements IDisposable
 
 <PageTitle>Prefill From Integration</PageTitle>
@@ -21,7 +20,7 @@
             <li>Enter <code>@PrefillIntegrationDemoDefaults.MatchingName</code> as the name to trigger a match.</li>
             <li>Try any other name to see the "no match" state.</li>
         </ul>
-        <p class="mt-3 text-xs text-slate-500">API base: <code>@ApiBaseUrl</code></p>
+        <p class="mt-3 text-xs text-slate-500">API base: <code>@FormSubmitter.ApiBaseUrl</code></p>
     </FormCard>
 
     <FormCard>
@@ -104,9 +103,9 @@
 
             <div class="flex items-center gap-3 border-t border-slate-200 pt-4">
                 <button type="submit" class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled="@(_isSubmitting || _isLookingUp)">
-                    @(_isSubmitting ? "Validating..." : "Validate form")
+                    @(_isSubmitting ? "Submitting..." : "Submit to API")
                 </button>
-                <span class="text-xs text-slate-500">Local validation + integration prefill</span>
+                <span class="text-xs text-slate-500">API + integration prefill</span>
             </div>
 
             @if (!string.IsNullOrWhiteSpace(_submitMessage))
@@ -122,6 +121,7 @@
 @code {
     private readonly PrefillIntegrationDemoForm _model = new();
     private EditContext _editContext = null!;
+    private ValidationMessageStore? _messageStore;
 
     private string? _lookupMessage;
     private string? _submitMessage;
@@ -135,6 +135,7 @@
     protected override void OnInitialized()
     {
         _editContext = new EditContext(_model);
+        _messageStore = new ValidationMessageStore(_editContext);
         _onFieldChanged = (_, args) =>
         {
             if (_isApplyingPrefill)
@@ -143,6 +144,8 @@
             }
 
             _submitMessage = null;
+            _messageStore?.Clear(args.FieldIdentifier);
+            _editContext.NotifyValidationStateChanged();
 
             if (args.FieldIdentifier.FieldName == nameof(PrefillIntegrationDemoForm.Name))
             {
@@ -232,7 +235,7 @@
         {
             if (IsCurrentLookup(lookupName))
             {
-                _lookupMessage = $"Could not reach the API at {ApiBaseUrl}.";
+                _lookupMessage = $"Could not reach the API at {FormSubmitter.ApiBaseUrl}.";
             }
         }
         finally
@@ -300,17 +303,22 @@
     {
         _submitMessage = null;
 
-        var isValid = await editContext.ValidateAsync();
-        if (!isValid)
-        {
-            _submitMessage = "Please fix the validation errors.";
-            return;
-        }
-
         _isSubmitting = true;
         try
         {
-            _submitMessage = "Form is valid and ready to submit.";
+            if (_messageStore is null)
+            {
+                _submitMessage = "Unable to submit form.";
+                return;
+            }
+
+            var result = await FormSubmitter.SubmitAsync(
+                "api/prefill-integration-demo",
+                _model,
+                editContext,
+                _messageStore
+            );
+            _submitMessage = result.Message;
         }
         finally
         {
@@ -318,17 +326,7 @@
         }
     }
 
-    private string ApiBaseUrl => GetApiBaseUri().GetLeftPart(UriPartial.Authority);
-
-    private Uri GetApiBaseUri()
-    {
-        var configuredBaseUrl = Configuration["Api:BaseUrl"];
-        var baseUrl = string.IsNullOrWhiteSpace(configuredBaseUrl)
-            ? NavigationManager.BaseUri
-            : configuredBaseUrl;
-
-        return new Uri(baseUrl, UriKind.Absolute);
-    }
+    private Uri GetApiBaseUri() => FormSubmitter.ApiBaseUri;
 
     public void Dispose()
     {

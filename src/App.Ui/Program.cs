@@ -3,6 +3,7 @@ using App.Abstractions;
 using App.Contracts;
 using App.Validation;
 using FluentValidation;
+using FormValidationTest.Client.Services.Forms;
 using FormValidationTest.Client.Services.Http;
 using FormValidationTest.Client.Services.Validation;
 using FormValidationTest.Services;
@@ -26,6 +27,7 @@ builder.Services.AddSingleton<
 >();
 builder.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
 builder.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
+builder.Services.AddScoped<IApiFormSubmitter, ApiFormSubmitter>();
 builder.Services.AddTransient<ResilientHttpMessageHandler>();
 builder
     .Services.AddHttpClient(

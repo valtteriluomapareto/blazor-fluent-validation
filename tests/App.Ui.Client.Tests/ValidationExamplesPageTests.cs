@@ -2,7 +2,9 @@ using App.Contracts;
 using App.Validation;
 using FluentValidation;
 using FormValidationTest.Client.Pages;
+using FormValidationTest.Client.Services.Forms;
 using FormValidationTest.Client.Services.Validation;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace App.Ui.Client.Tests;
@@ -18,6 +20,28 @@ public sealed class ValidationExamplesPageTests : IDisposable
             ValidationExamplesFormValidator
         >();
         _context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
+        _context.Services.AddScoped<IApiFormSubmitter, ApiFormSubmitter>();
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?> { ["Api:BaseUrl"] = "http://localhost/" }
+            )
+            .Build();
+        _context.Services.AddSingleton<IConfiguration>(configuration);
+
+        var httpClient = new HttpClient(
+            new FormSubmitHandler(
+                new Dictionary<string, string>
+                {
+                    ["/api/validation-examples"] =
+                        "Validation examples submitted to the integration.",
+                }
+            )
+        )
+        {
+            BaseAddress = new Uri("http://localhost/"),
+        };
+        _context.Services.AddSingleton(httpClient);
     }
 
     public void Dispose() => _context.Dispose();

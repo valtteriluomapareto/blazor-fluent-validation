@@ -57,11 +57,13 @@ public sealed class PrefillIntegrationDemoE2ETests
             .ToHaveValueAsync("ada.lovelace@example.com", new() { Timeout = 15000 });
 
         TestReporter.Step(_output, "submit prefilled form");
-        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Validate form" })
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit to API" })
             .ClickAsync();
 
         await Assertions
-            .Expect(page.GetByText("Form is valid and ready to submit.", new() { Exact = true }))
+            .Expect(
+                page.GetByText("Prefill demo submitted to the integration.", new() { Exact = true })
+            )
             .ToBeVisibleAsync(new() { Timeout = 15000 });
     }
 

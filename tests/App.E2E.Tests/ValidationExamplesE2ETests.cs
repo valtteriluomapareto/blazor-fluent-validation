@@ -63,12 +63,15 @@ public sealed class ValidationExamplesE2ETests
         );
 
         TestReporter.Step(_output, "submit");
-        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Validate form" })
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit to API" })
             .ClickAsync();
 
         await Assertions
             .Expect(page.GetByRole(AriaRole.Status))
-            .ToHaveTextAsync("All validation rules passed.", new() { Timeout = 15000 });
+            .ToHaveTextAsync(
+                "Validation examples submitted to the integration.",
+                new() { Timeout = 15000 }
+            );
     }
 
     [Fact]
@@ -113,7 +116,7 @@ public sealed class ValidationExamplesE2ETests
         );
 
         TestReporter.Step(_output, "submit with missing Other text");
-        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Validate form" })
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit to API" })
             .ClickAsync();
 
         await Assertions
@@ -132,12 +135,15 @@ public sealed class ValidationExamplesE2ETests
             "Epsilon"
         );
 
-        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Validate form" })
+        await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit to API" })
             .ClickAsync();
 
         await Assertions
             .Expect(page.GetByRole(AriaRole.Status))
-            .ToHaveTextAsync("All validation rules passed.", new() { Timeout = 15000 });
+            .ToHaveTextAsync(
+                "Validation examples submitted to the integration.",
+                new() { Timeout = 15000 }
+            );
         await Assertions
             .Expect(page.GetByText("Muu-vaihtoehto vaatii lisäarvon.", new() { Exact = true }))
             .ToHaveCountAsync(0, new() { Timeout = 15000 });

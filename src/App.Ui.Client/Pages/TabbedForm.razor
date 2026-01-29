@@ -1,6 +1,7 @@
 @page "/tabbed-form"
 @rendermode InteractiveWebAssembly
 @using global::App.Contracts
+@inject IApiFormSubmitter FormSubmitter
 @implements IDisposable
 
 <PageTitle>Tabbed Form</PageTitle>
@@ -173,6 +174,10 @@
                 </div>
             </div>
 
+            <div class="text-xs text-slate-500">
+                API + mock integration · Server: <code>@FormSubmitter.ApiBaseUrl</code>
+            </div>
+
             @if (!string.IsNullOrWhiteSpace(_submitMessage))
             {
                 <div class="rounded-md border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800" role="status">
@@ -186,6 +191,7 @@
 @code {
     private readonly CustomerIntakeForm _model = new();
     private EditContext _editContext = null!;
+    private ValidationMessageStore? _messageStore;
     private int _activeTab;
     private string? _submitMessage;
     private bool _isSubmitting;
@@ -208,7 +214,13 @@
     protected override void OnInitialized()
     {
         _editContext = new EditContext(_model);
-        _onFieldChanged = (_, _) => _submitMessage = null;
+        _messageStore = new ValidationMessageStore(_editContext);
+        _onFieldChanged = (_, args) =>
+        {
+            _submitMessage = null;
+            _messageStore?.Clear(args.FieldIdentifier);
+            _editContext.NotifyValidationStateChanged();
+        };
         _editContext.OnFieldChanged += _onFieldChanged;
     }
 
@@ -231,17 +243,24 @@
     private async Task HandleSubmit(EditContext editContext)
     {
         _submitMessage = null;
-        var isValid = await editContext.ValidateAsync();
-        if (!isValid)
-        {
-            _submitMessage = "Please fix the validation errors.";
-            return;
-        }
 
         _isSubmitting = true;
         try
         {
-            _submitMessage = "Submission ready for CRM.";
+            if (_messageStore is null)
+            {
+                _submitMessage = "Unable to submit form.";
+                return;
+            }
+
+            var result = await FormSubmitter.SubmitAsync(
+                "api/tabbed-form",
+                _model,
+                editContext,
+                _messageStore,
+                "Submission completed."
+            );
+            _submitMessage = result.Message;
         }
         finally
         {

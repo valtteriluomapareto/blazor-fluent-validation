@@ -31,8 +31,10 @@ public static class ApiModule
             IValidator<PrefillIntegrationDemoForm>,
             PrefillIntegrationDemoFormValidator
         >();
+        services.AddSingleton<IValidator<CustomerIntakeForm>, CustomerIntakeFormValidator>();
         services.AddSingleton<IUsedNameLookup, MockUsedNameLookup>();
         services.AddSingleton<IPrefillIntegrationLookup, MockPrefillIntegrationLookup>();
+        services.AddSingleton<IFormSubmissionIntegration, MockFormSubmissionIntegration>();
 
         return services;
     }
@@ -41,7 +43,13 @@ public static class ApiModule
     {
         app.MapPost(
                 "/api/sample-form",
-                (HttpContext httpContext, SampleForm model, ILogger<ApiModuleLog> logger) =>
+                async (
+                    HttpContext httpContext,
+                    SampleForm model,
+                    IFormSubmissionIntegration submissionIntegration,
+                    ILogger<ApiModuleLog> logger,
+                    CancellationToken cancellationToken
+                ) =>
                 {
                     logger.LogInformation(
                         "Received sample form submission with NameLength={NameLength} Age={Age}",
@@ -78,6 +86,12 @@ public static class ApiModule
                             )
                         );
                     }
+
+                    await submissionIntegration.SubmitAsync(
+                        "sample-form",
+                        model,
+                        cancellationToken
+                    );
 
                     return Results.Ok(new SampleFormResponse("Form is valid."));
                 }
@@ -137,6 +151,62 @@ public static class ApiModule
             }
         );
 
+        MapFormEndpoint<ValidationExamplesForm>(
+            app,
+            "/api/validation-examples",
+            "validation-examples",
+            "Validation examples submitted to the integration.",
+            "Local"
+        );
+
+        MapFormEndpoint<CustomerIntakeForm>(
+            app,
+            "/api/complex-form",
+            "complex-form",
+            "Complex form submitted to the integration.",
+            "Local"
+        );
+
+        MapFormEndpoint<CustomerIntakeForm>(
+            app,
+            "/api/tabbed-form",
+            "tabbed-form",
+            "Tabbed form submitted to the integration.",
+            "Local"
+        );
+
+        MapFormEndpoint<PrefillIntegrationDemoForm>(
+            app,
+            "/api/prefill-integration-demo",
+            "prefill-integration-demo",
+            "Prefill demo submitted to the integration.",
+            "Local"
+        );
+
         return app;
+    }
+
+    private static void MapFormEndpoint<TForm>(
+        IEndpointRouteBuilder app,
+        string path,
+        string formName,
+        string successMessage,
+        params string[] ruleSets
+    )
+        where TForm : class
+    {
+        app.MapPost(
+                path,
+                async (
+                    TForm model,
+                    IFormSubmissionIntegration submissionIntegration,
+                    CancellationToken cancellationToken
+                ) =>
+                {
+                    await submissionIntegration.SubmitAsync(formName, model, cancellationToken);
+                    return Results.Ok(new FormSubmissionResponse(successMessage));
+                }
+            )
+            .AddEndpointFilter(new ValidationFilter<TForm>(ruleSets));
     }
 }

@@ -2,11 +2,7 @@
 @page "/sample-form-wasm"
 @rendermode InteractiveWebAssembly
 @using global::App.Contracts
-@using FormValidationTest.Client.Services.Validation
-@inject IConfiguration Configuration
-@inject HttpClient Http
-@inject NavigationManager NavigationManager
-@inject IValidationMessageLocalizer ValidationMessageLocalizer
+@inject IApiFormSubmitter FormSubmitter
 @implements IDisposable
 
 <PageTitle>Sample Form</PageTitle>
@@ -40,7 +36,7 @@
                 <button type="submit" class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled="@_isSubmitting">
                     @(_isSubmitting ? "Submitting..." : "Submit")
                 </button>
-                <span class="text-xs text-slate-500">Server: <code>@ApiBaseUrl</code></span>
+                <span class="text-xs text-slate-500">Server: <code>@FormSubmitter.ApiBaseUrl</code></span>
             </div>
 
             @if (!string.IsNullOrWhiteSpace(_submitMessage))
@@ -77,106 +73,29 @@
     private async Task HandleSubmit(EditContext editContext)
     {
         _submitMessage = null;
-        _messageStore?.Clear();
-        editContext.NotifyValidationStateChanged();
-
-        var isValid = await editContext.ValidateAsync();
-        if (!isValid)
-        {
-            _submitMessage = "Please fix the validation errors.";
-            return;
-        }
 
         _isSubmitting = true;
-        var apiBaseUri = GetApiBaseUri();
 
         try
         {
-            var response = await Http.PostAsJsonAsync(
-                new Uri(apiBaseUri, "api/sample-form"),
-                _model
-            );
-
-            if (response.IsSuccessStatusCode)
+            if (_messageStore is null)
             {
-                var apiResponse = await response.Content.ReadFromJsonAsync<SampleFormResponse>();
-                _submitMessage = apiResponse?.Message ?? "Form submitted.";
+                _submitMessage = "Unable to submit form.";
                 return;
             }
 
-            if (response.StatusCode == HttpStatusCode.BadRequest)
-            {
-                var errorResponse = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>();
-                if (errorResponse is not null && AddServerValidationErrors(errorResponse))
-                {
-                    _editContext.NotifyValidationStateChanged();
-                    _submitMessage = "Please fix the validation errors.";
-                    return;
-                }
-            }
-
-            _submitMessage = "Server error. Please try again.";
-        }
-        catch (HttpRequestException)
-        {
-            _submitMessage = $"Could not reach the API at {apiBaseUri}.";
+            var result = await FormSubmitter.SubmitAsync(
+                "api/sample-form",
+                _model,
+                editContext,
+                _messageStore
+            );
+            _submitMessage = result.Message;
         }
         finally
         {
             _isSubmitting = false;
         }
-    }
-
-    private string ApiBaseUrl =>
-        GetApiBaseUri().GetLeftPart(UriPartial.Authority);
-
-    private Uri GetApiBaseUri()
-    {
-        var configuredBaseUrl = Configuration["Api:BaseUrl"];
-        var baseUrl = string.IsNullOrWhiteSpace(configuredBaseUrl)
-            ? NavigationManager.BaseUri
-            : configuredBaseUrl;
-
-        return new Uri(baseUrl, UriKind.Absolute);
-    }
-
-    private bool AddServerValidationErrors(ValidationErrorResponse errorResponse)
-    {
-        var addedAny = false;
-        var handledFields = new HashSet<string>(StringComparer.Ordinal);
-
-        if (errorResponse.ErrorCodes is { Count: > 0 })
-        {
-            foreach (var (field, codes) in errorResponse.ErrorCodes)
-            {
-                errorResponse.Errors.TryGetValue(field, out var fallbackMessages);
-                var localizedMessages = ValidationMessageLocalizer.LocalizeMany(codes, fallbackMessages);
-                if (localizedMessages.Count == 0)
-                {
-                    continue;
-                }
-
-                _messageStore?.Add(new FieldIdentifier(_model, field), localizedMessages);
-                handledFields.Add(field);
-                addedAny = true;
-            }
-        }
-
-        if (errorResponse.Errors is { Count: > 0 })
-        {
-            foreach (var (field, messages) in errorResponse.Errors)
-            {
-                if (handledFields.Contains(field))
-                {
-                    continue;
-                }
-
-                _messageStore?.Add(new FieldIdentifier(_model, field), messages);
-                addedAny = true;
-            }
-        }
-
-        return addedAny;
     }
 
     public void Dispose()

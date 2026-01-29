@@ -4,6 +4,7 @@ using App.Contracts;
 using App.Validation;
 using FluentValidation;
 using FormValidationTest.Client;
+using FormValidationTest.Client.Services.Forms;
 using FormValidationTest.Client.Services.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,6 +54,10 @@ public sealed class ProgramBootstrapTests
         Assert.NotNull(provider.GetRequiredService<IUsedNameLookup>());
         Assert.IsType<ValidationMessageLocalizer>(
             provider.GetRequiredService<IValidationMessageLocalizer>()
+        );
+        Assert.Contains(
+            services,
+            descriptor => descriptor.ServiceType == typeof(IApiFormSubmitter)
         );
     }
 

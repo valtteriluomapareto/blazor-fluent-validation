@@ -3,6 +3,7 @@ using App.Api;
 using App.Contracts;
 using App.Validation;
 using FluentValidation;
+using FormValidationTest.Client.Services.Forms;
 using FormValidationTest.Client.Services.Http;
 using FormValidationTest.Client.Services.Validation;
 
@@ -27,6 +28,7 @@ builder
 builder.Services.AddApiServices();
 builder.Services.AddSingleton<IValidator<CustomerIntakeForm>, CustomerIntakeFormValidator>();
 builder.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
+builder.Services.AddScoped<IApiFormSubmitter, ApiFormSubmitter>();
 
 var app = builder.Build();
 

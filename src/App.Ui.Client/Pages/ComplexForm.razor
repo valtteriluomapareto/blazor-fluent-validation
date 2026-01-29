@@ -1,6 +1,7 @@
 @page "/complex-form"
 @rendermode InteractiveWebAssembly
 @using global::App.Contracts
+@inject IApiFormSubmitter FormSubmitter
 @implements IDisposable
 
 <PageTitle>Complex Form</PageTitle>
@@ -97,9 +98,10 @@
 
             <div class="flex items-center gap-3">
                 <button type="submit" class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled="@_isSubmitting">
-                    @(_isSubmitting ? "Saving..." : "Save draft")
+                    @(_isSubmitting ? "Submitting..." : "Save draft")
                 </button>
-                <span class="text-xs text-slate-500">Local validation only</span>
+                <span class="text-xs text-slate-500">API + mock integration</span>
+                <span class="text-xs text-slate-500">Server: <code>@FormSubmitter.ApiBaseUrl</code></span>
             </div>
 
             @if (!string.IsNullOrWhiteSpace(_submitMessage))
@@ -115,6 +117,7 @@
 @code {
     private readonly CustomerIntakeForm _model = new();
     private EditContext _editContext = null!;
+    private ValidationMessageStore? _messageStore;
     private string? _submitMessage;
     private bool _isSubmitting;
     private EventHandler<FieldChangedEventArgs>? _onFieldChanged;
@@ -134,24 +137,37 @@
     protected override void OnInitialized()
     {
         _editContext = new EditContext(_model);
-        _onFieldChanged = (_, _) => _submitMessage = null;
+        _messageStore = new ValidationMessageStore(_editContext);
+        _onFieldChanged = (_, args) =>
+        {
+            _submitMessage = null;
+            _messageStore?.Clear(args.FieldIdentifier);
+            _editContext.NotifyValidationStateChanged();
+        };
         _editContext.OnFieldChanged += _onFieldChanged;
     }
 
     private async Task HandleSubmit(EditContext editContext)
     {
         _submitMessage = null;
-        var isValid = await editContext.ValidateAsync();
-        if (!isValid)
-        {
-            _submitMessage = "Please fix the validation errors.";
-            return;
-        }
 
         _isSubmitting = true;
         try
         {
-            _submitMessage = "Draft saved. Ready for CRM submission.";
+            if (_messageStore is null)
+            {
+                _submitMessage = "Unable to submit form.";
+                return;
+            }
+
+            var result = await FormSubmitter.SubmitAsync(
+                "api/complex-form",
+                _model,
+                editContext,
+                _messageStore,
+                "Draft submitted."
+            );
+            _submitMessage = result.Message;
         }
         finally
         {

@@ -6,6 +6,7 @@ using App.Validation;
 using FluentValidation;
 using FormValidationTest.Client.Pages;
 using FormValidationTest.Client.Services;
+using FormValidationTest.Client.Services.Forms;
 using FormValidationTest.Client.Services.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,7 @@ public sealed class SampleFormValidationWasmPageTests : IDisposable
         _context.Services.AddSingleton<IUsedNameLookup, LocalUsedNameLookup>();
         _context.Services.AddSingleton<IValidator<SampleForm>, SampleFormValidator>();
         _context.Services.AddSingleton<IValidationMessageLocalizer, ValidationMessageLocalizer>();
+        _context.Services.AddScoped<IApiFormSubmitter, ApiFormSubmitter>();
 
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(

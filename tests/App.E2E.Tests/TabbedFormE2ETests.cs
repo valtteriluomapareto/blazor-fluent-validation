@@ -71,7 +71,10 @@ public sealed class TabbedFormE2ETests
 
         await Assertions
             .Expect(page.GetByRole(AriaRole.Status))
-            .ToHaveTextAsync("Submission ready for CRM.", new() { Timeout = 15000 });
+            .ToHaveTextAsync(
+                "Tabbed form submitted to the integration.",
+                new() { Timeout = 15000 }
+            );
     }
 
     [Fact]
@@ -210,7 +213,10 @@ public sealed class TabbedFormE2ETests
 
         await Assertions
             .Expect(page.GetByRole(AriaRole.Status))
-            .ToHaveTextAsync("Submission ready for CRM.", new() { Timeout = 15000 });
+            .ToHaveTextAsync(
+                "Tabbed form submitted to the integration.",
+                new() { Timeout = 15000 }
+            );
     }
 
     private static async Task NavigateAndWaitForWasmAsync(IPage page, string path)
