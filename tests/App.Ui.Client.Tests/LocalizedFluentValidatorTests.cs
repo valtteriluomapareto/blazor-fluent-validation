@@ -87,7 +87,70 @@ public sealed class LocalizedFluentValidatorTests : IDisposable
         );
     }
 
-    private void RenderForm(EditContext editContext, string[]? includeRuleSets, bool allRules)
+    [Fact]
+    public async Task LocalizedFluentValidator_ruleset_override_property_supersedes_parameter()
+    {
+        var model = new SampleForm { Name = "Server", Age = 10 };
+        var editContext = new EditContext(model);
+        editContext.Properties[LocalizedFluentValidator.RuleSetProperty] = new[] { "Server" };
+
+        _ = RenderForm(editContext, includeRuleSets: new[] { "Local" }, allRules: false);
+
+        var isValid = await editContext.ValidateAsync();
+        Assert.False(isValid);
+
+        var nameField = new FieldIdentifier(model, nameof(SampleForm.Name));
+        var ageField = new FieldIdentifier(model, nameof(SampleForm.Age));
+
+        Assert.Contains("Nimi ei voi olla 'Server'.", editContext.GetValidationMessages(nameField));
+        Assert.Empty(editContext.GetValidationMessages(ageField));
+    }
+
+    [Fact]
+    public async Task LocalizedFluentValidator_field_change_updates_target_field_only()
+    {
+        var model = new SampleForm { Name = string.Empty, Age = 10 };
+        var editContext = new EditContext(model);
+        var nameField = new FieldIdentifier(model, nameof(SampleForm.Name));
+        var ageField = new FieldIdentifier(model, nameof(SampleForm.Age));
+
+        var cut = RenderForm(editContext, includeRuleSets: new[] { "Local" }, allRules: false);
+
+        var isValid = await editContext.ValidateAsync();
+        Assert.False(isValid);
+        Assert.Contains("Nimi on pakollinen.", editContext.GetValidationMessages(nameField));
+        Assert.Contains(
+            "Iän tulee olla välillä 18–120.",
+            editContext.GetValidationMessages(ageField)
+        );
+
+        model.Name = "Valid";
+        editContext.NotifyFieldChanged(nameField);
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Empty(editContext.GetValidationMessages(nameField));
+            Assert.Contains(
+                "Iän tulee olla välillä 18–120.",
+                editContext.GetValidationMessages(ageField)
+            );
+        });
+
+        model.Age = 25;
+        editContext.NotifyFieldChanged(ageField);
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Empty(editContext.GetValidationMessages(nameField));
+            Assert.Empty(editContext.GetValidationMessages(ageField));
+        });
+    }
+
+    private IRenderedComponent<EditForm> RenderForm(
+        EditContext editContext,
+        string[]? includeRuleSets,
+        bool allRules
+    )
     {
         RenderFragment<EditContext> childContent = _ =>
             builder =>
@@ -138,7 +201,7 @@ public sealed class LocalizedFluentValidatorTests : IDisposable
                 builder.CloseComponent();
             };
 
-        _context.Render<EditForm>(parameters =>
+        return _context.Render<EditForm>(parameters =>
             parameters.Add(p => p.EditContext, editContext).Add(p => p.ChildContent, childContent)
         );
     }

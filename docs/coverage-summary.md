@@ -3,42 +3,42 @@
 This summary is based on the latest coverage run from:
 - Command: `./scripts/coverage.sh -c Release`
 - Source: `TestResults/coverage/report/Summary.txt`
-- Date: 2026-01-27
+- Date: 2026-01-29
 
 ## Executive Summary
-- Overall line coverage: **91.7%**
-- Overall branch coverage: **80%**
-- Strongest areas: `App.Contracts` (100%), `App.Validation` (95.5%), `App.Api` (91.9%)
-- Main remaining opportunities: `App.Ui.Client` (88.8%) still has a few concentrated gaps
+- Overall line coverage: **90.2%**
+- Overall branch coverage: **78.8%**
+- Strongest areas: `App.Contracts` (100%), `App.Validation` (95.5%), `App.Integrations` (91.5%)
+- Main remaining opportunities: `App.Ui.Client` (87.4%) still has a few concentrated gaps
 
 ## Coverage By Assembly (Line Coverage)
 - `App.Contracts`: **100%**
 - `App.Validation`: **95.5%**
-- `App.Api`: **91.9%**
+- `App.Api`: **85.9%**
 - `App.Integrations`: **91.5%**
-- `App.Ui.Client`: **88.8%**
+- `App.Ui.Client`: **87.4%**
 
 ## Notable Gaps And Risks
 The most important gaps are concentrated in the UI client, especially in user-critical pages and input components.
 
 High-risk coverage gaps:
 - `FormValidationTest.Client.Program`: **0%**
-- `FormValidationTest.Client.ClientProgram`: **63.3%**
+- `FormValidationTest.Client.ClientProgram`: **45.2%**
 
 Low-to-medium coverage gaps:
 - `ValidationExamples` page: **71%**
-- `PrefillIntegrationDemo` page: **78.2%**
-- `LocalizedFluentValidator`: **85.9%**
+- `PrefillIntegrationDemo` page: **79%**
+- `LocalizedFluentValidator`: **87.6%**
 
 Tabbed flows improved substantially:
 - `FormValidationTest.Client.Pages.TabbedForm`: **100%**
 - `FormValidationTest.Client.Pages.ComplexForm`: **100%**
 - `FormValidationTest.Client.Services.LocalUsedNameLookup`: **100%**
-- `FormValidationTest.Client.Components.Forms.FormDateField`: **93.7%**
-- `FormValidationTest.Client.Components.Forms.FormDecimalField`: **96.4%**
+- `FormValidationTest.Client.Components.Forms.FormDateField`: **94.7%**
+- `FormValidationTest.Client.Components.Forms.FormDecimalField`: **96.7%**
 - `FormValidationTest.Client.Components.Forms.FormFieldIdResolver`: **87%**
 - `FormValidationTest.Client.Components.Forms.FormTabs`: **94.7%**
-- `FormValidationTest.Client.Components.Forms.FormTextAreaField`: **96.1%**
+- `FormValidationTest.Client.Components.Forms.FormTextAreaField`: **94.8%**
 
 The remaining gaps are mostly around DI/bootstrap (`Program` / `ClientProgram`) and a few input/validation plumbing components.
 
@@ -58,9 +58,9 @@ Notes:
 ### P1: Increase Coverage In Core Form Inputs And Plumbing
 Form input components are the “engine room” of validation UX. Incrementally hardening them pays off.
 
-Suggested additions (bUnit):
+Completed (bUnit):
 - `LocalizedFluentValidator`:
-  - Add tests that exercise rule set selection and multi-field validation updates.
+  - Added tests for rule set override precedence and field-change validation updates.
 
 ### P2: Deepen Page And Validator Branch Coverage
 These are already decent, but have room for more branch coverage.
@@ -74,7 +74,7 @@ Suggested additions:
 ## Suggested Coverage Targets
 Pragmatic targets that match the current architecture and test style:
 - Keep `App.Validation`, `App.Api`, and `App.Contracts` above **90%** line coverage.
-- Raise `App.Ui.Client` from **88.8%** to at least **90%** line coverage.
+- Raise `App.Ui.Client` from **87.4%** to at least **90%** line coverage.
 - Aim for overall branch coverage above **80%**.
 
 ## How To Reproduce And Inspect
